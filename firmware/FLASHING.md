@@ -15,7 +15,7 @@ one question: **does the engine fit in the CPU budget?** LED 3 answers that
 
 ## One-time: install the Daisy bootloader
 
-This build is `APP_TYPE = BOOT_SRAM`, because the app is ~137 KB and the
+This build is `APP_TYPE = BOOT_SRAM`, because the app is ~142 KB and the
 STM32H750 has only **128 KB of internal flash**. The bootloader lives in
 internal flash and loads the app from QSPI into SRAM.
 
@@ -49,6 +49,30 @@ stock. You are not modifying anything you can't undo.
 **On boot, with nothing patched:** audio passes through. A Eurorack effect
 that is silent until you press a button reads as broken, so the module starts
 in passthrough (`monitor=1`).
+
+**For the first ~2.5 seconds, the LEDs are not showing normal status** — they
+are replaying the worst CPU load from your *previous* session, as a bar. On the
+very first boot after flashing there is no data yet, so you get a single dim
+blue LED 0. Audio is already passing through during the readout.
+
+| Lit | Last session's peak |
+|---|---|
+| LED 0 dim blue | no data — first boot after a flash |
+| LED 0 dim green | measured, under 25% |
+| LED 0 | over 25% |
+| LED 0–1 | over 50% |
+| LED 0–2 | over 75% |
+| LED 0–3, last red | over 90% — it did not fit |
+
+**This is the intended way to answer the CPU question.** Play hard for a few
+minutes with FX and Order Density up, a short Slice Res and a long loop; then
+power down and power up and read the bar. You cannot watch LED 3 while playing
+with both hands, and this does not ask you to.
+
+The peak is kept in the last 4 KB sector of the QSPI chip, which a reflash does
+not touch — so a stale reading from an older build would be a real hazard. The
+settings carry a magic + version word specifically so a new build refuses to
+adopt an old one's numbers and shows "no data" instead.
 
 **LED 0 — engine state:** dim blue idle, amber armed, red recording, green
 looping.

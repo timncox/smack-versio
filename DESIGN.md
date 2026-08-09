@@ -325,10 +325,42 @@ Knob → `smack_set_param("fx_density", "42")`. The param API is strings, so
 7 knobs every block is pointless churn in the audio thread. Dispatch at the
 top of the callback, before render.
 
-### Persistence
+### Persistence ✅ (built M5; the original list here was wrong)
 
-The Daisy's QSPI flash via `PersistentStorage` can hold seed, palette, switch
-prefs and the last-used lengths across power cycles. ⚠️ Not required for v1.
+This section used to say QSPI could hold "seed, palette, switch prefs and the
+last-used lengths". **That list is not implementable on this panel**, and the
+reason is physical rather than technical: on the Versio every one of those is
+an *absolute* control — a potentiometer or a 3-position switch — that reports
+its true position on the first ADC read. `dispatch_knobs()` overwrites any
+restored value before the first block of audio renders. Restoring them is a
+no-op.
+
+The Move has encoders and a screen, so state there is genuinely stateful. Here
+it is physical. Only values that **no control on the panel can express** are
+worth persisting, which turns out to be two:
+
+| Value | Why it can't be a knob |
+|---|---|
+| `free_run_bpm` | The tempo to use with nothing patched. The engine needs a BPM; 120 is arbitrary. Now it's whatever this module last locked to. |
+| `cpu_peak` | Last session's worst-case block load, replayed on the LEDs at boot — because the live LED-3 alarm (§4) can only be read by someone watching it, and you aren't, while playing. |
+
+Three implementation facts worth keeping:
+
+- **The sector is the last one on the chip (`0x7FF000`), not libDaisy's default
+  offset 0.** Offset 0 lies inside the low 256 KB that the BOOT_SRAM linker
+  script reserves for the bootloader (`QSPIFLASH ORIGIN = 0x90040000`), and the
+  bootloader is a prebuilt blob — nothing in the linker script says whether it
+  writes there. The top sector is provably clear of both the reserved region
+  and the app image at any app size, so the question never has to be answered.
+- **Saving is safe from the main loop, and only there.** A 4 KB erase blocks
+  for tens of milliseconds. Under `BOOT_SRAM` the code runs from SRAM, so an
+  erase never stalls instruction fetch the way it would for an app executing in
+  place from QSPI, and the audio callback is an interrupt that keeps rendering
+  through it. Never call `Save()` from the callback.
+- **`PersistentStorage` validates only its own one-word State tag**, which
+  survives a reflash — DFU writes the app image, not this sector. A `magic` +
+  `version` pair in the struct is the real guard against a new build adopting
+  an old layout's bytes and reporting a stale CPU figure as its own.
 
 ### Illustrative skeleton
 
@@ -380,7 +412,13 @@ open question §11).
 in practice. `SMACK_MAX_SECONDS` could go to several minutes if wanted;
 `SMACK_MAX_SLICES` (512) is the real ceiling on loop length × resolution.
 
-**Flash ✅** — reference firmwares are 85–91 KB against 8 MB.
+**Flash ⚠️ → resolved, but not the way this line originally claimed.** "85–91 KB
+against 8 MB" compares the wrong two numbers: the 8 MB is *QSPI*, and a default
+Daisy app runs from the STM32H750's **128 KB of internal flash**. This app is
+~142 KB. Our code is only 26 KB of that; the rest is libDaisy and the ST HAL.
+That is also why the reference firmwares are 85–91 KB — they were built to fit
+internal flash. Resolved with `APP_TYPE = BOOT_SRAM` (§6), which is why the
+module needs the Daisy bootloader installed once.
 
 **CPU ⚠️ — unprofiled, the one genuine unknown.** 480 MHz single-core M7
 versus the Move's Cortex-A53. The saving grace is that only 1–2 effects render
@@ -416,10 +454,21 @@ personal site. Both carry a "third-party firmware, use at your own risk, don't
 contact Noise Engineering about it" disclaimer — copy that.
 
 The mismatched-legend problem is solved by convention: you ship a faceplate
-template and users print or order one.
+template and users print or order one. ✅ Built — `faceplate/` generates one,
+with its geometry derived from the FRGMNTS 1:1 print template (see
+`faceplate/geometry.py` for the method and its confidence levels).
 
-Tim's existing Schwung store pattern (thin repo + `release.json` + tagged
-release tarballs) maps cleanly onto `.bin` + manual + faceplate.
+⚠️ **The Schwung store pattern does *not* transfer, contrary to what this
+section originally said.** `release.json` is read by `schwung-manager` to
+install Move module *tarballs*; a Versio `.bin` has no installer at all — you
+flash it with `dfu-util`. Shipping a `release.json` would advertise an install
+path that does not exist. `scripts/make-release.sh` therefore produces a plain
+versioned zip (bin + manual + disclaimer + flashing guide + faceplate +
+checksum), which is the shape both reference firmwares actually use.
+
+The NE disclaimer in §10 is a requirement, not flavour — `DISCLAIMER.md`
+carries it, quoting NE's own statement that their support team cannot help with
+custom firmware.
 
 ---
 
@@ -469,13 +518,13 @@ deliberately the whole deliverable for now.*
 Each one ends in something you can hear or use, and each is independently
 abandonable. **M1 is the only one that requires hardware to validate.**
 
-| # | Milestone | Ends with | Status (2026-08-08) |
+| # | Milestone | Ends with | Status (2026-08-09) |
 |---|---|---|---|
 | **M1** | **Host shim** — `DaisyVersio` init, `SetAudioBlockSize(128)`, float↔int16 at the block boundary, ring in SDRAM, the 2-function host struct (§6) | Audio in, loop captured on the button, loop plays back. **First sound.** | **Built, unvalidated** — compiles to a 138 KB `.bin`; needs a flash to confirm |
 | **M2** | **Clock adapter** — gate→24 ppqn synthesis, the three tiers, `0xFA` on start (§5) | Loops lock to the rack's clock | **Done and verified natively** — 7 tests; engine captures a bar from gate pulses to 0.02% |
 | **M3** | **Control surface** — 7 knobs with hysteresis on the quantized ones, both switches, button short/long (§4) | It's playable | **Built, unvalidated** — needs hands on knobs |
 | **M4** | **LED feedback** — state, playhead, blend, clock-source + CPU alarm on 4 RGB (§4) | Usable without a screen | **Built, unvalidated** |
-| **M5** | **Ship** — QSPI persistence, faceplate template, manual, `.bin` release + disclaimer (§10) | Distributable like FRGMNTS / WTF! | **Not started** — gated on M1 passing |
+| **M5** | **Ship** — QSPI persistence, faceplate template, manual, `.bin` release + disclaimer (§10) | Distributable like FRGMNTS / WTF! | **Built 2026-08-09.** Persistence verified natively (6 tests); faceplate, `MANUAL.md`, `DISCLAIMER.md` and a release zip all exist. **Not published** — that stays gated on M1 |
 
 "Built, unvalidated" means exactly that: it compiles, the memory budget is
 measured, and the parts testable without hardware are tested — but **nobody
@@ -488,6 +537,20 @@ tested while nothing is flashed.
 
 M1 is small precisely because the DSP is already done and now verified at
 48 kHz (§6). Everything after M1 is fitting an existing engine to a panel.
+
+**All five are now built (2026-08-09), and exactly one thing is still missing:
+someone has to flash it.** M2 and the M5 settings layer are verified natively;
+M1, M3 and M4 have never run. The dependency M5 has on M1 is not a build
+dependency — it is a *publishing* one, and it still holds. A release zip exists
+on disk and deliberately stays there: `scripts/make-release.sh` does not tag,
+push, or upload, because distributing firmware nobody has heard is not a thing
+a build script should be able to do on its own.
+
+Building M5 first turned out to be worth it rather than premature, because it
+changed M1's economics. The boot-time CPU readout (§6, §4) means the first
+flash no longer requires anyone to watch an LED while playing — the module
+records its own worst case and reports it at the next power-up. The question
+that gates everything now answers itself.
 
 ---
 
