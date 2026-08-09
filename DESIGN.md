@@ -22,6 +22,10 @@ it a clock without MIDI.
 surface, the hardware has 8× the memory needed, and two third-party firmwares
 already ship the hard parts (§3).
 
+**Confirmed 2026-08-08:** the engine runs green at 48 kHz natively — the
+whole sample-rate question costs two constants and no logic (§6). The port's
+remaining risk is CPU headroom and the clock adapter, not the DSP.
+
 ---
 
 ## 2. Hardware
@@ -237,6 +241,36 @@ Daisy block size.
 | `SMACK_DLY_LEN` | 8192 | re-check the delay-variant table — the comment notes a quarter-note echo already doesn't fit at 120 BPM, and 48 k makes it 8.8 % worse |
 | BPM-detect hop | 512 | re-derive the 8 s window and 60–180 BPM search bounds |
 
+**Verified natively 2026-08-08 ✅** — `make test` is fully green at 48 kHz
+(method and output in `~/tim-os/scratch/2026-08-08-smack-versio-48k/`). Only
+the two constants above changed; **no engine logic at all**. There is zero
+literal `44100` in `src/` outside the `#define` — biquads, `DET_BINS`,
+frames-per-tick, ringmod phase, the BPM-detect windows and reported BPM all
+already derive from `SMACK_SR`.
+
+The six 44.1 kHz assumptions that did exist were all in `test/host_sim.c`,
+now fixed and pushed upstream (branch `test/rate-agnostic-host-sim`). The
+subtle one: `FPT` (frames per MIDI clock tick) was hardcoded `918.75` =
+`44100/48`, so at 48 k the harness fed clock at the wrong rate and the engine
+correctly reported a tempo 8.8 % fast — a harness bug wearing an engine bug's
+clothes. Budget time for that class of confusion during the port.
+
+### Block size must be 128 ✅ (constraint found while testing)
+
+Daisy defaults to a **48-frame** block; the Move uses **128**. At `BLK=48`,
+`test_retro_capture_phase_chase` misses its ±2-frame tolerance.
+
+This is **not** a sample-rate problem — it reproduces at 44.1 kHz too, and
+disappears at `BLK=128` at both rates, so block size is the only variable.
+That matches the engine's design: the clock model uses a 96-tick regression
+window built to cancel "the host's 128-frame callback quantization"
+(`smack/CLAUDE.md`).
+
+**So call `SetAudioBlockSize(128)` in `hw.Init()`** — it puts the engine on
+the callback geometry it was validated against, at a cost of 2.7 ms of
+latency at 48 k. If that latency ever proves unacceptable, retro-capture
+phase alignment becomes real engineering work, not a constant swap.
+
 ### Allocation → static SDRAM
 
 Four `calloc` sites, all in `smack_create()` (`smack_core.c:681-690`). Daisy
@@ -343,9 +377,11 @@ trim the FX pool.
 - **Debugging:** no display. USB serial `Logger` when tethered; LED 3 as the
   always-visible clock-lock indicator otherwise.
 - **Keep `make test` working.** Smack's `test/host_sim.c` runs the engine
-  natively with a simulated clock and no hardware. Point it at the Versio
-  constants and the 48 k re-derivation gets verified on a laptop, before any
-  module is bought. **Do this first — it's free.**
+  natively with a simulated clock and no hardware. ✅ **Done 2026-08-08** —
+  the 48 k re-derivation is verified on a laptop, and the harness is now
+  rate-agnostic upstream, so the port keeps a real regression suite for free.
+  It is also the cheapest place to test the clock adapter (§5) before
+  flashing anything: feed it synthetic gate intervals instead of MIDI.
 
 ---
 
@@ -375,10 +411,13 @@ release tarballs) maps cleanly onto `.bin` + manual + faceplate.
    be an explicit switch choice? Real playing will decide.
 5. **Slice triggering has no input** — the gate is spoken for. Is per-slice CV
    trigger (Smack's `pad_play`) worth a switch mode that repurposes the gate?
-6. **Which Versio to buy** — all identical hardware ✅; pick on used price.
-7. ⚠️ **Is the 24 ppqn synthesis stable under a wobbly analog clock?** The
-   engine's regression window assumed 128-frame host callback quantization;
-   Daisy's default block is 48.
+6. ~~**Which Versio to buy**~~ — RESOLVED: Tim already owns one (2026-08-08).
+   All Versio modules are identical hardware ✅, so whichever he has works.
+7. ⚠️ **Is the 24 ppqn synthesis stable under a wobbly analog clock?** Still
+   open. The *block-size* half of this question is now answered — force
+   `SetAudioBlockSize(128)` and the engine is on validated geometry (§6) —
+   but how the tick synthesizer behaves under a jittery or swung external
+   clock is untested, and the native sim can now test it without hardware.
 
 ---
 
