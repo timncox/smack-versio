@@ -3,3 +3,6 @@ firmware/build/
 __pycache__/
 *.pyc
 dist/
+
+# Local project notes — deliberately not published (see git history scrub 2026-08-09)
+CLAUDE.md
