@@ -65,6 +65,33 @@ nav .logo em{color:var(--cy);font-style:normal}
 nav a.s{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--dim);border:none;flex:none;text-transform:uppercase}
 nav a.s:hover{color:var(--ink)}
 nav a.s b{color:var(--cy);font-weight:500;margin-right:5px}
+nav a.s.dl{color:var(--cy);margin-left:auto;padding-left:18px}
+nav a.s.dl:hover{color:#fff}
+
+/* ---------- download ---------- */
+.dlbox{display:grid;grid-template-columns:1.15fr 1fr;gap:30px;align-items:start;margin-top:8px}
+@media(max-width:760px){.dlbox{grid-template-columns:1fr}}
+.dlbtn{
+  display:block;background:linear-gradient(135deg,rgba(72,213,227,.14),rgba(72,213,227,.04));
+  border:1px solid var(--cy);border-radius:3px;padding:22px 24px;text-decoration:none;
+  border-bottom:1px solid var(--cy);transition:.18s;
+}
+.dlbtn:hover{background:linear-gradient(135deg,rgba(72,213,227,.24),rgba(72,213,227,.08));transform:translateY(-1px)}
+.dlbtn .n{font-family:var(--disp);font-weight:900;font-size:29px;text-transform:uppercase;color:var(--ink);letter-spacing:.02em;line-height:1}
+.dlbtn .f{font-family:var(--mono);font-size:11.5px;color:var(--cy);margin-top:8px;letter-spacing:.04em}
+.dlbtn .w{font-size:13.5px;color:#b6c3cc;margin-top:10px}
+.dlalt{margin-top:14px;display:flex;flex-wrap:wrap;gap:10px 20px;font-family:var(--mono);font-size:11.5px}
+.sha{font-family:var(--mono);font-size:10.5px;color:var(--dim);word-break:break-all;margin-top:14px;line-height:1.5}
+.sha b{color:var(--ink);font-weight:500}
+
+/* ---------- family ---------- */
+.fam{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:8px}
+.fam a{display:block;background:var(--panel);border:1px solid var(--line);border-radius:3px;
+       padding:16px 18px;text-decoration:none;border-bottom:1px solid var(--line);transition:.18s}
+.fam a:hover{border-color:rgba(72,213,227,.45);background:var(--panel2);transform:translateY(-1px)}
+.fam .fn{font-family:var(--disp);font-weight:900;font-size:21px;text-transform:uppercase;color:var(--ink);letter-spacing:.03em;line-height:1}
+.fam .fd{font-size:13px;color:var(--dim);margin-top:6px;line-height:1.45}
+.fam .fh{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cy);margin-top:9px}
 
 /* ---------- hero ---------- */
 header{padding:72px 0 40px;border-bottom:1px solid var(--line);position:relative}
@@ -175,6 +202,8 @@ footer a:hover{color:var(--cy)}
   <a class="s" href="#install"><b>06</b>Install</a>
   <a class="s" href="#faceplate"><b>07</b>Faceplate</a>
   <a class="s" href="#status"><b>08</b>Status</a>
+  <a class="s" href="#family"><b>09</b>Family</a>
+  <a class="s dl" href="#download"><b>↓</b>Download</a>
 </div></nav>
 
 <header id="top"><div class="wrap">
@@ -348,6 +377,38 @@ footer a:hover{color:var(--cy)}
     answered.</b></p>
 </div></section>
 
+<section id="download"><div class="wrap reveal">
+  <h2 class="sh">Download</h2>
+  <div class="sub">v0.1.0 — tagged as a pre-release, and meant literally</div>
+  <div class="dlbox">
+    <div>
+      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.1.0/smack-versio-0.1.0.zip">
+        <div class="n">Get v0.1.0 ↓</div>
+        <div class="f">smack-versio-0.1.0.zip · 110 KB</div>
+        <div class="w">Firmware, manual, flashing guide, disclaimer, printable faceplate
+          and a checksum.</div>
+      </a>
+      <div class="dlalt">
+        <a href="https://github.com/timncox/smack-versio/releases/download/v0.1.0/smack_versio-0.1.0.bin">just the .bin ↓</a>
+        <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
+        <a href="https://github.com/timncox/smack-versio">source</a>
+      </div>
+      <div class="sha"><b>smack_versio.bin</b> · 142,292 bytes<br>
+        SHA-256 769df66ca17d0d3be801444fb5e10645ea488f805d058a7dbe131ef7694c56fc</div>
+    </div>
+    <div class="alarm" style="margin-top:0">
+      <h3>⚠ Before you flash it</h3>
+      <p>This build has <b>never run on hardware</b>. Downloading it makes you its first
+        hardware test — which is genuinely useful, and worth knowing in advance.</p>
+      <p>It is third-party firmware. Noise Engineering did not write it and cannot support
+        it, so <b>please do not contact them about it</b>. Installing is fully reversible:
+        flashing any official NE firmware returns the module to stock.</p>
+      <p>If you run it, the boot CPU reading is the one thing worth
+        <a href="https://github.com/timncox/smack-versio/issues">reporting back</a>.</p>
+    </div>
+  </div>
+</div></section>
+
 <section id="install"><div class="wrap reveal">
   <h2 class="sh">Installing</h2>
   <div class="sub">06 — And getting back to stock</div>
@@ -433,6 +494,44 @@ footer a:hover{color:var(--cy)}
     <div class="card"><div class="k">Audio</div><h4>48 kHz · 128</h4><p>libDaisy offers no 44.1 kHz. The 128-frame block is required — the engine's clock regression was built against it.</p></div>
     <div class="card"><div class="k">Memory</div><h4>~70 s buffer</h4><p>13.4 MB ring in a 16 MB SDRAM pool, of 64 MB available.</p></div>
     <div class="card"><div class="k">Effects</div><h4>26</h4><p>One per lane at a time, not all at once — which is what makes the CPU question winnable.</p></div>
+  </div>
+</div></section>
+
+<section id="family"><div class="wrap reveal">
+  <h2 class="sh">The rest of them</h2>
+  <div class="sub">Schwung modules for the Ableton Move</div>
+  <p class="lede">Smack Versio is the odd one out — everything below runs on the Move under
+    <a href="https://github.com/charlesvestal/schwung">Schwung</a> rather than in a rack. Same
+    hands, same habits, and Smack itself is where this engine comes from.</p>
+  <div class="fam">
+    <a href="https://timncox.github.io/schwung-smack/">
+      <div class="fn">Smack</div>
+      <div class="fd">Quantized loop capture, auto-slicing and seeded glitch effects. The
+        original — this firmware runs its engine unmodified.</div>
+      <div class="fh">the parent</div>
+    </a>
+    <a href="https://timncox.github.io/schwung-mark/">
+      <div class="fn">Mark</div>
+      <div class="fd">A five-track loop station with sessions, sync, a web mixer and hosted
+        Schwung audio FX.</div>
+      <div class="fh">loop station</div>
+    </a>
+    <a href="https://timncox.github.io/schwung-belt/">
+      <div class="fn">Belt</div>
+      <div class="fd">Live vocal processor — autotune pitch correction, diatonic backing
+        harmonies, doubler and formant shift.</div>
+      <div class="fh">vocals</div>
+    </a>
+    <a href="https://timncox.github.io/schwung-mono/">
+      <div class="fn">Mono//6</div>
+      <div class="fd">A six-track Monomachine-inspired instrument.</div>
+      <div class="fh">synth</div>
+    </a>
+    <a href="https://timncox.github.io/schwung-work/">
+      <div class="fn">Work</div>
+      <div class="fd">Twenty-six machines — twenty-one effects and five sample sources.</div>
+      <div class="fh">fx + sources</div>
+    </a>
   </div>
 </div></section>
 

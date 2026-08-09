@@ -7,6 +7,10 @@ Alternative firmware for the Noise Engineering Versio platform (Daisy Seed).
 drawn at true scale from the real hole coordinates, click any control, plus a
 simulator for the boot-time CPU report.
 
+**⬇ [Download v0.1.0](https://github.com/timncox/smack-versio/releases/latest)** —
+firmware, manual, flashing guide and printable faceplate. Tagged a
+*pre-release*, and that is meant literally: see the warning below.
+
 > ### ⚠️ This has never run on hardware
 >
 > It compiles, its memory budget is measured, and everything testable without a
