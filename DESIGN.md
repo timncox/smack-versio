@@ -546,6 +546,19 @@ on disk and deliberately stays there: `scripts/make-release.sh` does not tag,
 push, or upload, because distributing firmware nobody has heard is not a thing
 a build script should be able to do on its own.
 
+**Publish checklist**, for whenever M1 passes and this actually ships:
+
+1. The zip is **not standalone yet.** `FLASHING.md` drives `make` targets from
+   this repo and the bootloader binary ships inside libDaisy — neither is in
+   the zip. Bundle raw `dfu-util` command lines and the bootloader `.bin`, or
+   point the flashing guide at the repo.
+2. `MANUAL.md`'s `firmware/FLASHING.md` links resolve in the repo but not at
+   zip root, where the file is flat.
+3. Confirm the knob-to-ADC order on hardware before printing faceplates
+   (`faceplate/MEASURE.md` §2) — a wrong order makes every legend wrong.
+4. Verify the button hole against the module (`MEASURE.md` §1) and set
+   `BUTTON_VERIFIED = True`.
+
 Building M5 first turned out to be worth it rather than premature, because it
 changed M1's economics. The boot-time CPU readout (§6, §4) means the first
 flash no longer requires anyone to watch an LED while playing — the module

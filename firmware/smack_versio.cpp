@@ -102,6 +102,29 @@ static Param P[P_COUNT] = {
     { "pitch_range",   1,  24, -32768, 0.0f },
 };
 
+/*
+ * How far the knob must move, in normalised units, before a new value is
+ * dispatched. Zero means "no deadband".
+ *
+ * "Few steps" is the wrong test for which params need one. SEED spans 0-127,
+ * so by span it looks continuous -- but a single step of it re-rolls the whole
+ * pattern, which is the loudest response any parameter here has to one LSB of
+ * ADC noise. A knob parked on a boundary would re-roll continuously.
+ *
+ * It gets a band of exactly one step rather than HYST, and the difference
+ * matters: HYST is 2% of travel, which is ~2.5 seeds wide, so using it would
+ * make turning the knob skip most of the seed space. One step is enough to
+ * stop chatter and narrow enough to still reach every seed.
+ */
+static float deadband_for(const Param &p, int idx)
+{
+    int span = p.hi - p.lo;
+    if (span <= 0)     return 0.0f;
+    if (idx == P_SEED) return 1.0f / (float)span; /* exactly one seed */
+    if (span <= 24)    return HYST;
+    return 0.0f; /* genuinely continuous: one unit of change is inaudible */
+}
+
 static int quantize(const Param &p, float norm)
 {
     int span = p.hi - p.lo;
@@ -122,12 +145,14 @@ static void dispatch_knobs(void)
         int v = quantize(P[i], norm);
         if (v == P[i].last) continue;
 
-        /* Coarse (few-step) params get a deadband so summed CV noise can't
-         * make them oscillate across a boundary. Continuous 0-100 params
-         * don't need it -- one unit of change is inaudible. */
-        if ((P[i].hi - P[i].lo) <= 24 && P[i].last != -32768) {
-            if (norm > P[i].last_norm - HYST && norm < P[i].last_norm + HYST)
-                continue;
+        /* Deadband, so summed CV noise can't oscillate a knob across a step
+         * boundary. See deadband_for() for why SEED needs one despite its
+         * 128-value span. */
+        float dead = deadband_for(P[i], i);
+        if (dead > 0.0f && P[i].last != -32768) {
+            float moved = norm - P[i].last_norm;
+            if (moved < 0.0f) moved = -moved;
+            if (moved < dead) continue;
         }
 
         P[i].last      = v;

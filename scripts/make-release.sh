@@ -72,6 +72,12 @@ you its first hardware test.
   faceplate/         printable panel overlay -- print at 100%, check the ruler
   SHA256SUMS         checksum for the binary
 
+NOT YET STANDALONE: FLASHING.md drives \`make\` targets from the source repo
+and the bootloader binary ships with libDaisy, neither of which is in this
+zip. Flash from a clone for now. Before this is ever published, either bundle
+dfu-util command lines and the bootloader .bin, or point FLASHING.md at the
+repo -- see the publish checklist in DESIGN.md section 13.
+
 Installing is reversible: flashing any official Noise Engineering firmware
 restores the module to stock.
 EOF

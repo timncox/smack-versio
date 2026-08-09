@@ -55,14 +55,17 @@ are replaying the worst CPU load from your *previous* session, as a bar. On the
 very first boot after flashing there is no data yet, so you get a single dim
 blue LED 0. Audio is already passing through during the readout.
 
+LEDs are named left to right as STATE · PLAY · BLEND · CLOCK (LED 0–3 in the
+source; the same four everywhere else in these docs).
+
 | Lit | Last session's peak |
 |---|---|
-| LED 0 dim blue | no data — first boot after a flash |
-| LED 0 dim green | measured, under 25% |
-| LED 0 | over 25% |
-| LED 0–1 | over 50% |
-| LED 0–2 | over 75% |
-| LED 0–3, last red | over 90% — it did not fit |
+| **STATE** dim blue | no data — first boot after a flash |
+| **STATE** dim green | measured, under 25% |
+| **STATE** | over 25% |
+| **STATE PLAY** | over 50% |
+| **STATE PLAY BLEND** | over 75% |
+| **STATE PLAY BLEND CLOCK**, last red | over 90% — it did not fit |
 
 **This is the intended way to answer the CPU question.** Play hard for a few
 minutes with FX and Order Density up, a short Slice Res and a long loop; then

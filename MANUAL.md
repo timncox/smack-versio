@@ -98,11 +98,13 @@ thing this version can do that the Move version cannot.
 | **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll the pattern |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
-**LENGTH, SLICE and SEED are stepped**, and stepped controls sitting exactly on
-a boundary would otherwise chatter between two values as CV noise moves them
-back and forth — re-slicing the loop continuously. There is a 2% deadband to
-stop that. If you find a knob position where a value flickers anyway, that
-deadband is too small; it's `HYST` in `firmware/smack_versio.cpp`.
+**LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on
+a boundary would otherwise chatter between two values as CV noise nudges it
+back and forth — re-slicing the loop, or re-rolling the pattern, continuously.
+Each stepped knob has a deadband to stop that: 2% of travel for the coarse ones,
+and exactly one seed for SEED, which needs a much narrower band or turning it
+would skip most of the 128 seeds. Both live in `deadband_for()` in
+`firmware/smack_versio.cpp`.
 
 ---
 
@@ -150,12 +152,12 @@ from your last session**, as a bar:
 
 | Lit | Meaning |
 |---|---|
-| dim blue on LED 1 | No data — first boot after flashing |
-| LED 1 dim green | Measured, and comfortably under 25% |
-| LED 1 | Peak was over 25% |
-| LED 1–2 | over 50% |
-| LED 1–3 | over 75% |
-| LED 1–4, last one red | over 90% — it did not fit |
+| **STATE** dim blue | No data — first boot after flashing |
+| **STATE** dim green | Measured, and comfortably under 25% |
+| **STATE** | Peak was over 25% |
+| **STATE PLAY** | over 50% |
+| **STATE PLAY BLEND** | over 75% |
+| **STATE PLAY BLEND CLOCK**, last one red | over 90% — it did not fit |
 
 Audio passes through during the readout. This exists because the live CPU alarm
 can only be read by someone looking at it, and you are not looking at it while
@@ -213,7 +215,7 @@ project's one genuinely open question is answered.
 |---|---|
 | No sound at all | Flash did not take, or the bootloader is missing |
 | Sound, but CAPTURE does nothing | Check the GATE switch; with nothing patched it should still work |
-| A value flickers at one knob position | `HYST` deadband too small |
+| A stepped value flickers at one knob position | Deadband too narrow — widen it in `deadband_for()` (`HYST` for LENGTH/SLICE/PITCH; the one-step band for SEED) |
 | The wrong knob does the wrong thing | Knob-to-ADC order — see [faceplate/MEASURE.md](faceplate/MEASURE.md) §2 |
 | All four LEDs red | Allocation failed — this would be a real bug, please report it |
 
