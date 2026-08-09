@@ -26,9 +26,10 @@ CONFIDENCE, PER GROUP
   jacks            HIGH   - 12 holes, one diameter, a clean 3x4 grid
   knobs            HIGH   - 7 holes at 8.99 mm, the standard pot bushing
   leds             HIGH   - 4 holes at 3.0 mm in a row, centred on the panel
-  switches, button MEDIUM - inferred by elimination from the remaining shapes;
-                            the FRGMNTS artwork has decorative rings that are
-                            hard to tell apart from real hardware. VERIFY.
+  switches         HIGH   - inferred by elimination, then confirmed against the
+                            hardware ("switches are on the left side")
+  button           GOOD   - position confirmed on the hardware 2026-08-09, but
+                            by eye rather than with calipers. See BUTTON below.
 
 We are extracting mechanical facts about Noise Engineering's hardware in order
 to draw original artwork. The FRGMNTS template's own footer restricts
@@ -85,20 +86,31 @@ SWITCH_PITCH = SWITCHES[1][1] - SWITCHES[0][1]  # 9.52 mm
 # circle is decoration (a printed ring), not hardware, and the extraction
 # gives us no other candidate.
 #
-# The first guess -- continue the switch column by one more SWITCH_PITCH --
-# does not fit either: it lands 0.07 mm inside the top jack row. (The overlap
-# check in make_faceplate.py found that; it is exactly the kind of error that
-# survives a visual once-over.)
+# CORRECTED 2026-08-09 from the hardware. Tim, looking at his module: the
+# switches are on the left and "button is in the middle", level with the lower
+# switch. So it is in the CENTRE column, not stacked under the switches.
 #
-# What is left is a constraint, not a measurement. In this column the button
-# must clear the switch above (67.34 + 2.55) and the jack row below
-# (83.19 - 3.40), which pins its centre to the range 72.9 .. 76.8 mm. We take
-# the middle of that window. It is the only region the *derived* hardware
-# leaves open, so it is a reasoned placement -- but nothing here observed a
-# button, and it is drawn dashed and flagged on the print for that reason.
+# Every previous attempt here was wrong, and worth recording because the
+# pattern is instructive. The extraction offered one button-sized candidate --
+# an 18.52 mm circle at (9.30, 72.27) -- which was decoration, not hardware.
+# Placing a button at that centre put its edge 0.6 mm inside the second switch.
+# Continuing the switch column by one more SWITCH_PITCH landed 0.07 mm inside
+# the top jack row. Both were caught by check_geometry(), and neither was
+# caught by looking at a render.
+#
+# The lesson is that the failures were real signal: the left column kept
+# refusing to fit a button because there is no button in the left column. A
+# constraint that will not close is sometimes telling you the premise is wrong,
+# not that the arithmetic is.
+#
+# Observed on hardware, not measured with calipers -- the column is the centre
+# one (x shared with the LENGTH and SEED knobs) and the row is the lower
+# switch's. Good enough to print and fit; MEASURE.md still asks for exact
+# numbers before anyone machines a panel.
 BUTTON_DIA = 6.00
-BUTTON = (8.35, 74.80)
-BUTTON_VERIFIED = False
+BUTTON = (25.10, 67.34)
+BUTTON_VERIFIED = True
+BUTTON_SOURCE = "observed on hardware 2026-08-09; not caliper-measured"
 
 # --- jacks ----------------------------------------------------------------
 JACK_DIA = 6.79

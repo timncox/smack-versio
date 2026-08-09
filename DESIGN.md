@@ -556,8 +556,10 @@ a build script should be able to do on its own.
    zip root, where the file is flat.
 3. Confirm the knob-to-ADC order on hardware before printing faceplates
    (`faceplate/MEASURE.md` §2) — a wrong order makes every legend wrong.
-4. Verify the button hole against the module (`MEASURE.md` §1) and set
-   `BUTTON_VERIFIED = True`.
+4. ~~Verify the button hole against the module~~ — done 2026-08-09. It is in
+   the **centre** column level with the lower switch, not stacked under the
+   switches as derived. Still eye-observed rather than caliper-measured, so
+   `MEASURE.md` §1 stands if a panel is ever machined.
 
 Building M5 first turned out to be worth it rather than premature, because it
 changed M1's economics. The boot-time CPU readout (§6, §4) means the first

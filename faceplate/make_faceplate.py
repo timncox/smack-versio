@@ -91,17 +91,14 @@ def panel_body(P):
         a(text(x + 4.6, y - 1.6, name, 2.0, P["ink"], "bold", anchor="start"))
         a(text(x + 4.6, y + 0.8, " / ".join(poss), 1.5, P["dim"], anchor="start"))
 
-    # button - dashed and flagged, because its position is a guess (geometry.py)
+    # button - centre column, so its label goes underneath like the knobs.
+    # (Alongside would run into the PITCH knob, which is only ~13 mm away.)
     bx, by = G.BUTTON
     unver = not getattr(G, "BUTTON_VERIFIED", True)
     a(circle(bx, by, G.BUTTON_DIA, P["hole"], P["accent"] if unver else P["holeline"],
              0.2, dash="0.7 0.5" if unver else None))
-    a(text(bx + 5.4, by - 0.6, G.BUTTON_LABEL[0], 2.0, P["accent"], "bold",
-           anchor="start"))
-    a(text(bx + 5.4, by + 1.8, G.BUTTON_LABEL[1], 1.5, P["dim"], anchor="start"))
-    # The caveat itself lives on the print sheet, not here -- at this size it
-    # lands on top of the first jack row's labels, and the dashed orange ring
-    # already says "this one is different".
+    a(text(bx, by + G.BUTTON_DIA / 2 + 2.4, G.BUTTON_LABEL[0], 2.1, P["accent"], "bold"))
+    a(text(bx, by + G.BUTTON_DIA / 2 + 4.5, G.BUTTON_LABEL[1], 1.5, P["dim"]))
 
     # jacks
     for (x, y), lab in zip(G.jacks(), G.JACK_LABELS):
@@ -170,9 +167,9 @@ def svg_printsheet(P):
         "1.  Verify the ruler above. Everything else depends on it.",
         "2.  Cut the outline, then the holes. Dashed circles are knob bushings;",
         "     the knob caps are wider than the hole, so pull the caps first.",
-        "3.  The ORANGE dashed circle (CAPTURE) is an unverified position — every",
-        "     other hole is derived from a 1:1 template, that one is inferred.",
-        "     Check it against your module before cutting it. See MEASURE.md.",
+        "3.  Hole positions come from a 1:1 template; the CAPTURE button was placed",
+        "     from the hardware by eye. Good enough to fit — measure before you",
+        "     machine anything. See MEASURE.md.",
         "4.  Fit behind the knobs and switches, or trim and use it as a bench card.",
         "5.  Turn each knob and watch which LED moves. If the legend is scrambled,",
         "     the knob-to-ADC order in smack_versio.cpp is wrong, not this print.",

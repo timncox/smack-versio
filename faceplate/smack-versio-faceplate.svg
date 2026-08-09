@@ -41,9 +41,9 @@
 <circle cx="8.35" cy="67.34" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
 <text x="12.95" y="65.74" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
 <text x="12.95" y="68.14" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK / AUTO / TRIG</text>
-<circle cx="8.35" cy="74.80" r="3.00" fill="#000000" stroke="#e8532a" stroke-width="0.2" stroke-dasharray="0.7 0.5"/>
-<text x="13.75" y="74.20" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#e8532a" text-anchor="start">CAPTURE</text>
-<text x="13.75" y="76.60" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">hold = re-roll</text>
+<circle cx="25.10" cy="67.34" r="3.00" fill="#000000" stroke="#5a5a5a" stroke-width="0.2"/>
+<text x="25.10" y="72.74" font-family="Helvetica, Arial, sans-serif" font-size="2.1" font-weight="bold" fill="#e8532a" text-anchor="middle">CAPTURE</text>
+<text x="25.10" y="74.84" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="middle">hold = re-roll</text>
 <circle cx="5.18" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
 <text x="5.18" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">FX</text>
 <circle cx="18.50" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>

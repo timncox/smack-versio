@@ -384,11 +384,16 @@ footer a:hover{color:var(--cy)}
     of a millimetre, from a transform that was never fitted to it. It also independently
     confirms the control surface: twelve jacks in three rows of four is 7&nbsp;CV + gate +
     4&nbsp;audio.</p>
-  <p><span class="tag no">inferred</span> One hole is not like the others. The button position
-    could not be observed — the only button-sized candidate in the artwork turned out to be
-    decoration, and two placements derived from the surrounding hardware both failed the
-    overlap check, one landing 0.6&nbsp;mm inside a switch. What ships is the middle of the only
-    gap the real hardware leaves, and it prints as a dashed amber ring for exactly that reason.</p>
+  <p><span class="tag no">corrected by hand</span> One hole never came out of the extraction at
+    all. The only button-sized candidate in the artwork was decoration, and both attempts to
+    derive the button from its neighbours failed the overlap check — one placing it 0.6&nbsp;mm
+    inside a switch, the other 0.07&nbsp;mm into the top jack row.</p>
+  <p>Those failures turned out to be the signal rather than the noise. The left column kept
+    refusing to fit a button <em>because there is no button in the left column</em> — it sits in
+    the centre, level with the lower switch, which is what the module actually shows. A
+    constraint that will not close is sometimes telling you the premise is wrong rather than the
+    arithmetic. It is now placed from the hardware, by eye; <code>MEASURE.md</code> still asks
+    for calipers before anyone machines a panel.</p>
   <p><b>Print the print sheet at 100% and check the 50&nbsp;mm ruler on it with a real ruler
     before cutting.</b> That ruler exists because every way printing goes wrong — "fit to page",
     silently scaling to Letter — is invisible except as a ruler that is not 50&nbsp;mm.</p>
@@ -409,7 +414,8 @@ footer a:hover{color:var(--cy)}
       <tr><td>Panel frame</td><td><span class="tag ok">verified</span></td><td>Reproduces the Eurorack mounting standard to 0.01 mm</td></tr>
       <tr><td>Host shim · controls · LEDs</td><td><span class="tag no">never run</span></td><td>Compiles. Nobody has heard it</td></tr>
       <tr><td>Knob → ADC order</td><td><span class="tag no">assumed</span></td><td>Assumed to be panel reading order; untested</td></tr>
-      <tr><td>Button hole position</td><td><span class="tag no">inferred</span></td><td>Constrained by neighbours, never observed</td></tr>
+      <tr><td>Switch positions</td><td><span class="tag ok">confirmed</span></td><td>Derived by elimination, then checked against the hardware</td></tr>
+      <tr><td>Button hole position</td><td><span class="tag ok">observed</span></td><td>Placed from the module by eye, not caliper-measured</td></tr>
       <tr><td>CPU headroom</td><td><span class="tag no">unmeasured</span></td><td>The one thing that needs hardware. See the boot report</td></tr>
     </tbody>
   </table>
@@ -578,12 +584,12 @@ const PANEL = {
     }
   ],
   "button": {
-    "x": 8.35,
-    "y": 74.8,
+    "x": 25.1,
+    "y": 67.34,
     "d": 6.0,
     "name": "CAPTURE",
     "sub": "hold = re-roll",
-    "verified": false
+    "verified": true
   },
   "jacks": [
     {
@@ -756,10 +762,10 @@ function drawPanel() {
   }, b.verified ? "" : "unver", {
     k: "Momentary", t: b.name, s: "tap = capture · hold = " + b.sub.replace("hold = ", ""),
     d: "Tap and the last N steps of what you just played become a loop. Hold past 0.6 s and the " +
-       "pattern re-rolls without touching the audio. " +
-       (b.verified ? "" : "⚠ This is the one hole whose position was never observed — it is the middle of the only gap the surrounding hardware leaves. Verify before cutting."),
+       "pattern re-rolls without touching the audio. This is the only hole the template " +
+       "extraction never found — its position comes from looking at the module.",
     m: ["x <b>" + b.x + " mm</b>", "y <b>" + b.y + " mm</b>",
-        "confidence <b style='color:var(--am)'>" + (b.verified ? "measured" : "inferred") + "</b>"]
+        "confidence <b>observed, not measured</b>"]
   });
 
   /* labels */
@@ -778,9 +784,11 @@ function drawPanel() {
     const t = el("text", { x: s.x + s.d / 2 + 1.3, y: s.y + .7, "text-anchor": "start" });
     t.setAttribute("class", "plabel"); t.textContent = s.name; gP.appendChild(t);
   });
-  const bt = el("text", { x: b.x + b.d / 2 + 1.3, y: b.y + .7, "text-anchor": "start" });
+  /* The button is in the centre column, so its label goes underneath — running
+     it alongside would collide with the PITCH knob 13 mm away. */
+  const bt = el("text", { x: b.x, y: b.y + b.d / 2 + 2.4, "text-anchor": "middle" });
   bt.setAttribute("class", "plabel");
-  bt.setAttribute("fill", "var(--am)");
+  bt.setAttribute("fill", "var(--ink)");
   bt.textContent = b.name; gP.appendChild(bt);
 }
 

@@ -9,20 +9,27 @@ checking, in this order.
 
 ---
 
-## 1. The button position — the one known gap
+## 1. The button position — corrected from the hardware, still not measured
 
-**Status: inferred, not observed.** Every other hole came out of the vector
-geometry of a real 1:1 template. The button did not: the only button-sized
-candidate in that artwork turned out to be decoration, and the two placements
-that follow from the surrounding hardware both failed the overlap check (one
-landed inside the second switch, the other 0.07 mm into the top jack row).
+**Status: observed 2026-08-09, by eye rather than with calipers.**
 
-What is in the file now is the middle of the only window the derived hardware
-leaves open — between the lower switch and the first jack row, centres
-72.9 mm to 76.8 mm from the top edge. It is drawn as a dashed orange ring on
-the print for exactly this reason.
+Every other hole came out of the vector geometry of a real 1:1 template. The
+button did not, and the two attempts to derive it were both wrong: the only
+button-sized candidate in the artwork was decoration, and placing a button
+there put its edge 0.6 mm inside a switch; continuing the switch column by one
+more pitch landed 0.07 mm inside the top jack row. `check_geometry()` caught
+both.
 
-To fix it:
+Those failures were the useful part. The left column kept refusing to fit a
+button **because there is no button in the left column** — it is in the centre,
+level with the lower switch, which is what the hardware shows. A constraint
+that will not close is sometimes telling you the premise is wrong rather than
+the arithmetic.
+
+What is in `geometry.py` now matches the module. It is good enough to print,
+cut and fit. It is *not* good enough to send to a fabricator, because "centre
+column, level with the lower switch" is a description, not a dimension. If you
+are machining a panel:
 
 ```
 measure from the TOP EDGE of the panel to the centre of the button
@@ -33,7 +40,7 @@ Then in `geometry.py`:
 
 ```python
 BUTTON = (x_from_left, y_from_top)
-BUTTON_VERIFIED = True   # stops it printing as a dashed warning
+BUTTON_SOURCE = "caliper-measured <date>"
 ```
 
 ## 2. The knob-to-ADC mapping — the one that actually ruins the legend
