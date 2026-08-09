@@ -1,0 +1,33 @@
+# Native tests for the Versio firmware — runs on the laptop, no hardware.
+#
+#   make -f firmware/Makefile.test
+#
+# Covers the clock adapter (M2) and its integration with the vendored engine.
+# The engine's own suite lives upstream in ~/tim-os/smack (`make test`).
+
+CC     ?= cc
+CFLAGS  = -O2 -g -Wall -Wextra
+BUILD   = firmware/build
+
+.PHONY: test clean
+
+test: $(BUILD)/test_clock_adapter $(BUILD)/test_versio_alloc
+	./$(BUILD)/test_clock_adapter
+	./$(BUILD)/test_versio_alloc
+
+$(BUILD)/test_clock_adapter: firmware/test/test_clock_adapter.c \
+                             firmware/clock_adapter.c \
+                             firmware/vendor/smack_core.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $^ -o $@ -lm
+
+# Links smack_core_versio.c — the same unit the firmware builds — so the
+# calloc/free redirect is exercised for real, not simulated.
+$(BUILD)/test_versio_alloc: firmware/test/test_versio_alloc.c \
+                            firmware/versio_alloc.c \
+                            firmware/smack_core_versio.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -I firmware $^ -o $@ -lm
+
+clean:
+	rm -rf $(BUILD)

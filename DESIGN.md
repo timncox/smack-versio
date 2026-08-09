@@ -271,6 +271,29 @@ the callback geometry it was validated against, at a cost of 2.7 ms of
 latency at 48 k. If that latency ever proves unacceptable, retro-capture
 phase alignment becomes real engineering work, not a constant swap.
 
+### 128 KB of internal flash is the binding constraint ✅ (found while building)
+
+The Daisy Seed has 8 MB of QSPI flash, which §8 called "a non-constraint" —
+but the **STM32H750 has only 128 KB of *internal* flash**, and that is where a
+default (`BOOT_NONE`) app lives. The built firmware is ~137 KB.
+
+Measured breakdown: the engine is **22.5 KB** and the host shim ~3.5 KB. The
+other **~112 KB is libDaisy and the ST HAL**, which `DaisySeed::Init()` pulls
+in wholesale — including *both* USB stacks (`hal_hcd` + `hal_pcd`). Our code
+is not the problem and trimming effects would not fix it.
+
+Tried and rejected: dropping the USB serial logger (−7.1 KB, still 7.6 KB
+over) and LTO (−1.7 KB; libDaisy.a carries no LTO bytecode, so cross-module
+LTO can't reach the 112 KB that matters).
+
+**Resolution: `APP_TYPE = BOOT_SRAM`.** The Daisy bootloader lives in internal
+flash and loads the app from QSPI into SRAM — 138 KB of 480 KB used, so there
+is real headroom now instead of a build that breaks whenever the engine
+grows. Cost: the module needs the bootloader installed once, which is
+**reversible** (flashing any official NE firmware overwrites internal flash
+and restores stock). This is why WTF! and FRGMNTS are 85–91 KB — they were
+built to fit internal flash; we chose headroom instead.
+
 ### Allocation → static SDRAM
 
 Four `calloc` sites, all in `smack_create()` (`smack_core.c:681-690`). Daisy
@@ -446,13 +469,17 @@ deliberately the whole deliverable for now.*
 Each one ends in something you can hear or use, and each is independently
 abandonable. **M1 is the only one that requires hardware to validate.**
 
-| # | Milestone | Ends with | Needs Versio? |
+| # | Milestone | Ends with | Status (2026-08-08) |
 |---|---|---|---|
-| **M1** | **Host shim** — `DaisyVersio` init, `SetAudioBlockSize(128)`, float↔int16 at the block boundary, ring as static `DSY_SDRAM_BSS`, the 2-function host struct, 2–3 knobs hardcoded (§6) | Audio in, loop captured on the button, loop plays back. Free-running tempo, no slicing FX. **First sound.** | Yes — and this is where CPU gets profiled |
-| **M2** | **Clock adapter** — gate→24 ppqn synthesis, the three tiers, `0xFA` on start (§5) | Loops lock to the rack's clock | No — prototype in `smack`'s native sim with synthetic gate intervals |
-| **M3** | **Control surface** — all 7 knobs with hysteresis on the quantized ones, both switches, button short/long, CV behaviour (§4) | It's playable | Partly |
-| **M4** | **LED feedback** — state, playhead, blend, clock-source on 4 RGB (§4) | Usable without a screen | Yes |
-| **M5** | **Ship** — QSPI persistence, faceplate template, manual, `.bin` release + disclaimer (§10) | Distributable like FRGMNTS / WTF! | Yes |
+| **M1** | **Host shim** — `DaisyVersio` init, `SetAudioBlockSize(128)`, float↔int16 at the block boundary, ring in SDRAM, the 2-function host struct (§6) | Audio in, loop captured on the button, loop plays back. **First sound.** | **Built, unvalidated** — compiles to a 138 KB `.bin`; needs a flash to confirm |
+| **M2** | **Clock adapter** — gate→24 ppqn synthesis, the three tiers, `0xFA` on start (§5) | Loops lock to the rack's clock | **Done and verified natively** — 7 tests; engine captures a bar from gate pulses to 0.02% |
+| **M3** | **Control surface** — 7 knobs with hysteresis on the quantized ones, both switches, button short/long (§4) | It's playable | **Built, unvalidated** — needs hands on knobs |
+| **M4** | **LED feedback** — state, playhead, blend, clock-source + CPU alarm on 4 RGB (§4) | Usable without a screen | **Built, unvalidated** |
+| **M5** | **Ship** — QSPI persistence, faceplate template, manual, `.bin` release + disclaimer (§10) | Distributable like FRGMNTS / WTF! | **Not started** — gated on M1 passing |
+
+"Built, unvalidated" means exactly that: it compiles, the memory budget is
+measured, and the parts testable without hardware are tested — but **nobody
+has heard it**. A `.bin` on disk is not a working module.
 
 The ordering is deliberate: **M1 answers the only question that can kill the
 project** (does the engine fit in the CPU budget?), and M2 — the piece with
