@@ -32,7 +32,7 @@ firmware and faceplates — buy whichever is cheapest used.
 
 | | |
 |---|---|
-| MCU | STM32H750, 480 MHz Cortex-M7, FPU ✅ |
+| MCU | STM32H750, 480 MHz Cortex-M7, FPU ✅ ([Seed docs][seed]) |
 | RAM | **64 MB SDRAM**, 8 MB flash ✅ ([NE blog][ne-fw]) |
 | Audio | stereo in / stereo out, 24-bit ✅ |
 | Knobs | **7**, each summing with its CV jack ✅ |
@@ -64,9 +64,11 @@ official firmware only ([NE blog][ne-fw]).
    *cannot* read a CV jack independently of its knob. A CV jack can only
    offset its own parameter, never act as a second gate input without
    sacrificing that knob.
-2. **Sample rates are 8/16/32/48/96 kHz** ✅ — there is no 44.1 kHz. Smack is
-   compiled at 44100 (`SMACK_SR`), so the port runs at 48 k and every derived
-   constant re-derives (§6).
+2. **Sample rates are 8/16/32/48/96 kHz** ✅ — `SaiHandle::Config::SampleRate`
+   is exactly `SAI_8KHZ / SAI_16KHZ / SAI_32KHZ / SAI_48KHZ / SAI_96KHZ`
+   ([sai.h][sai]); there is no 44.1 kHz. Smack is compiled at 44100
+   (`SMACK_SR`), so the port runs at 48 k and every derived constant
+   re-derives (§6).
 
 ---
 
@@ -406,3 +408,5 @@ adds a seventh thing in the same domain, on hardware Tim doesn't own yet.
 [wtf]: https://2020.dubrussell.com/resources/wtf/
 [frgmnts]: https://acidclank.gumroad.com/l/frgmntsversio
 [crcltr]: https://github.com/s3g/crcltr
+[seed]: https://docs.daisy.audio/hardware/Seed/
+[sai]: https://github.com/electro-smith/libDaisy/blob/master/src/per/sai.h
