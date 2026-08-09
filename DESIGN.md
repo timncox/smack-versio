@@ -436,8 +436,31 @@ decide up front that the density+seed instrument is the product.*
 
 **4. Project sprawl.** There are already six active Schwung modules with
 pending hardware verification (smack, filltron, mark, belt, mono, work). This
-adds a seventh thing in the same domain, on hardware Tim doesn't own yet.
-*Mitigation: this doc is deliberately the whole deliverable for now.*
+adds a seventh thing in the same domain. *Mitigation: this doc is
+deliberately the whole deliverable for now.*
+
+---
+
+## 13. Build order — five milestones
+
+Each one ends in something you can hear or use, and each is independently
+abandonable. **M1 is the only one that requires hardware to validate.**
+
+| # | Milestone | Ends with | Needs Versio? |
+|---|---|---|---|
+| **M1** | **Host shim** — `DaisyVersio` init, `SetAudioBlockSize(128)`, float↔int16 at the block boundary, ring as static `DSY_SDRAM_BSS`, the 2-function host struct, 2–3 knobs hardcoded (§6) | Audio in, loop captured on the button, loop plays back. Free-running tempo, no slicing FX. **First sound.** | Yes — and this is where CPU gets profiled |
+| **M2** | **Clock adapter** — gate→24 ppqn synthesis, the three tiers, `0xFA` on start (§5) | Loops lock to the rack's clock | No — prototype in `smack`'s native sim with synthetic gate intervals |
+| **M3** | **Control surface** — all 7 knobs with hysteresis on the quantized ones, both switches, button short/long, CV behaviour (§4) | It's playable | Partly |
+| **M4** | **LED feedback** — state, playhead, blend, clock-source on 4 RGB (§4) | Usable without a screen | Yes |
+| **M5** | **Ship** — QSPI persistence, faceplate template, manual, `.bin` release + disclaimer (§10) | Distributable like FRGMNTS / WTF! | Yes |
+
+The ordering is deliberate: **M1 answers the only question that can kill the
+project** (does the engine fit in the CPU budget?), and M2 — the piece with
+the most design risk — needs no hardware at all, so it can be built and
+tested while nothing is flashed.
+
+M1 is small precisely because the DSP is already done and now verified at
+48 kHz (§6). Everything after M1 is fitting an existing engine to a panel.
 
 ---
 
