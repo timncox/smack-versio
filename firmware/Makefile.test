@@ -6,14 +6,16 @@
 # The engine's own suite lives upstream in ~/tim-os/smack (`make test`).
 
 CC     ?= cc
+CXX    ?= c++
 CFLAGS  = -O2 -g -Wall -Wextra
 BUILD   = firmware/build
 
 .PHONY: test clean
 
-test: $(BUILD)/test_clock_adapter $(BUILD)/test_versio_alloc
+test: $(BUILD)/test_clock_adapter $(BUILD)/test_versio_alloc $(BUILD)/test_settings
 	./$(BUILD)/test_clock_adapter
 	./$(BUILD)/test_versio_alloc
+	./$(BUILD)/test_settings
 
 $(BUILD)/test_clock_adapter: firmware/test/test_clock_adapter.c \
                              firmware/clock_adapter.c \
@@ -28,6 +30,12 @@ $(BUILD)/test_versio_alloc: firmware/test/test_versio_alloc.c \
                             firmware/smack_core_versio.c
 	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -I firmware $^ -o $@ -lm
+
+# settings.h is C++ (PersistentStorage compares via operator!=), but it pulls in
+# no libDaisy headers, so the wear-limiting logic tests on the laptop.
+$(BUILD)/test_settings: firmware/test/test_settings.cpp firmware/settings.h
+	@mkdir -p $(BUILD)
+	$(CXX) $(CFLAGS) firmware/test/test_settings.cpp -o $@
 
 clean:
 	rm -rf $(BUILD)

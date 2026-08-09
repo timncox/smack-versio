@@ -16,8 +16,10 @@
  *     no edits at all
  */
 #include "daisy_versio.h"
+#include "util/PersistentStorage.h"
 #include "clock_adapter.h"
 #include "versio_alloc.h"
+#include "settings.h"
 
 extern "C" {
 #include "vendor/smack_core.h"
@@ -41,6 +43,17 @@ static uint8_t DSY_SDRAM_BSS g_pool[POOL_BYTES];
 static smack_t         *S;
 static clock_adapter_t  CLK;
 static host_api_v1_t    HOST;
+
+/* Persistent settings live in the last QSPI sector (see settings.h). The
+ * storage object only holds a reference to the peripheral, so constructing it
+ * at static-init time is safe -- nothing touches the chip until Init(). */
+static PersistentStorage<VersioSettings> STORE(hw.seed.qspi);
+static VersioSettings                   *CFG = NULL;
+
+/* How often the main loop offers the settings for saving. The offer is cheap;
+ * PersistentStorage only erases when VersioSettings::operator!= says the change
+ * was worth it, so this is a ceiling on write frequency, not a write rate. */
+#define SAVE_INTERVAL_MS 10000u
 
 #define BLOCK_SIZE 128
 
@@ -276,6 +289,48 @@ static void update_leds(void)
     hw.UpdateLeds();
 }
 
+/* ---- boot-time CPU report ----------------------------------------------- */
+
+/*
+ * Replays the *previous* session's worst-case block load on the four LEDs.
+ *
+ * DESIGN.md §8 calls CPU headroom the one open question that can kill this
+ * project, and LED 3's live alarm can only be read by someone watching it --
+ * which you are not, while playing with both hands. So the module records its
+ * own peak while you play and tells you at the next power-up, when you can
+ * actually look. Read it as a bar: more LEDs lit means less headroom.
+ *
+ * Runs after StartAudio() so the module is already passing audio through
+ * during the readout -- there is no reason to hold sound hostage for it.
+ */
+static void show_cpu_peak_readout(float peak)
+{
+    for(int i = 0; i < 4; i++)
+        hw.SetLed(i, 0.0f, 0.0f, 0.0f);
+
+    if(peak <= 0.0f)
+    {
+        /* No data: first boot after a flash, or the sector was just reset.
+         * Distinct from "measured, and low" so the two never get confused. */
+        hw.SetLed(0, 0.0f, 0.0f, 0.25f); /* dim blue */
+    }
+    else
+    {
+        /* Always light something, so "plenty of headroom" cannot be mistaken
+         * for "dead module". */
+        hw.SetLed(0, 0.0f, peak >= 0.25f ? 0.6f : 0.15f, 0.0f);
+        if(peak >= 0.50f)
+            hw.SetLed(1, 0.0f, 0.6f, 0.0f); /* green  - over half   */
+        if(peak >= 0.75f)
+            hw.SetLed(2, 1.0f, 0.5f, 0.0f); /* amber  - getting tight */
+        if(peak >= 0.90f)
+            hw.SetLed(3, 1.0f, 0.0f, 0.0f); /* red    - it did not fit */
+    }
+
+    hw.UpdateLeds();
+    hw.DelayMs(2500);
+}
+
 /* ---- boot --------------------------------------------------------------- */
 
 int main(void)
@@ -287,13 +342,29 @@ int main(void)
 
     versio_alloc_init(g_pool, POOL_BYTES);
 
+    /* Settings, before anything that wants a tempo. A struct written by some
+     * other firmware -- or by an older layout of this one -- must never be
+     * adopted, and DFU reflashing does not clear this sector, so the
+     * magic/version guard is the only thing that catches it. */
+    VersioSettings defaults = settings_defaults();
+    STORE.Init(defaults, SETTINGS_QSPI_OFFSET);
+    CFG = &STORE.GetSettings();
+    if(!settings_valid(*CFG))
+        STORE.RestoreDefaults();
+
+    /* Last session's peak, before this session starts overwriting it. */
+    float boot_peak = CFG->cpu_peak;
+
     memset(&HOST, 0, sizeof(HOST));
     HOST.api_version      = 1;
     HOST.sample_rate      = SMACK_SR;
     HOST.frames_per_block = BLOCK_SIZE;
     HOST.get_bpm          = host_get_bpm;
 
-    clk_init(&CLK, SMACK_SR, 120.0f);
+    /* Free-run at whatever tempo this module last locked to, not at an
+     * arbitrary 120 -- with nothing patched to the gate, that is the only
+     * memory the panel cannot express. */
+    clk_init(&CLK, SMACK_SR, CFG->free_run_bpm);
 
     S = smack_create(&HOST);
 
@@ -320,8 +391,44 @@ int main(void)
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
 
+    /* Report last session, then start recording this one. */
+    show_cpu_peak_readout(boot_peak);
+    CFG->cpu_peak = 0.0f;
+    cpu.Reset();
+
+    uint32_t last_save = System::GetNow();
+
     for (;;) {
         update_leds();
+
+        /* Worst block this session. Clamped because an overrunning callback
+         * can report over 100%, and a value outside 0..1 would fail
+         * settings_valid() on the next boot and throw the reading away. */
+        float mx = cpu.GetMaxCpuLoad();
+        if (mx > 1.0f) mx = 1.0f;
+        if (mx > CFG->cpu_peak) CFG->cpu_peak = mx;
+
+        /* The tempo we actually locked to becomes the next free-run default. */
+        if (clk_locked(&CLK)) {
+            float b = clk_bpm(&CLK);
+            if (b > 20.0f && b < 300.0f) CFG->free_run_bpm = b;
+        }
+
+        /*
+         * Saving erases a 4 KB QSPI sector, which blocks for tens of ms. That
+         * is safe *here and only here*, for two reasons specific to this
+         * build: under APP_TYPE = BOOT_SRAM the code runs from SRAM, so an
+         * erase never stalls instruction fetch the way it would for an app
+         * executing in place from QSPI; and the audio callback is an
+         * interrupt, so it keeps rendering straight through. Never call
+         * Save() from the callback.
+         */
+        uint32_t now = System::GetNow();
+        if (now - last_save >= SAVE_INTERVAL_MS) {
+            last_save = now;
+            STORE.Save(); /* no-op unless operator!= says it was worth it */
+        }
+
         hw.DelayMs(8); /* ~120 Hz LED refresh; audio runs in the callback */
     }
 }

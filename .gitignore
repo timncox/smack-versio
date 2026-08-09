@@ -1,2 +1,4 @@
 .claude/worktrees/
 firmware/build/
+__pycache__/
+*.pyc

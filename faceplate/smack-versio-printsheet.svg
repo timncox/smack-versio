@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="105.0mm" height="148.0mm" viewBox="0 0 105.0 148.0">
+<rect x="0" y="0" width="105.0" height="148.0" fill="#ffffff"/>
+<path d="M24.78,8.00 L26.48,8.00 M28.08,8.00 L29.78,8.00 M27.28,5.50 L27.28,7.20 M27.28,8.80 L27.28,10.50" stroke="#000000" stroke-width="0.12" fill="none"/>
+<path d="M75.22,8.00 L76.92,8.00 M78.52,8.00 L80.22,8.00 M77.72,5.50 L77.72,7.20 M77.72,8.80 L77.72,10.50" stroke="#000000" stroke-width="0.12" fill="none"/>
+<path d="M24.78,136.34 L26.48,136.34 M28.08,136.34 L29.78,136.34 M27.28,133.84 L27.28,135.54 M27.28,137.14 L27.28,138.84" stroke="#000000" stroke-width="0.12" fill="none"/>
+<path d="M75.22,136.34 L76.92,136.34 M78.52,136.34 L80.22,136.34 M77.72,133.84 L77.72,135.54 M77.72,137.14 L77.72,138.84" stroke="#000000" stroke-width="0.12" fill="none"/>
+<g transform="translate(27.28,8.00)"><rect x="0" y="0" width="50.44" height="128.34" rx="1.2" fill="#141414"/>
+<rect x="4.87" y="1.39" width="5.47" height="3.2" rx="1.60" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<rect x="40.38" y="1.39" width="5.47" height="3.2" rx="1.60" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<rect x="4.87" y="123.73" width="5.47" height="3.2" rx="1.60" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<rect x="40.38" y="123.73" width="5.47" height="3.2" rx="1.60" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="25.22" y="9.20" font-family="Helvetica, Arial, sans-serif" font-size="4.4" font-weight="bold" fill="#f2f2f2" text-anchor="middle" letter-spacing="0.55">SMACK</text>
+<text x="25.22" y="12.40" font-family="Helvetica, Arial, sans-serif" font-size="1.9" font-weight="normal" fill="#8a8a8a" text-anchor="middle">loop &#183; slice &#183; glitch</text>
+<circle cx="17.23" cy="19.77" r="1.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="17.23" y="23.57" font-family="Helvetica, Arial, sans-serif" font-size="1.2" font-weight="normal" fill="#8a8a8a" text-anchor="middle">STATE</text>
+<circle cx="22.30" cy="19.77" r="1.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="22.30" y="23.57" font-family="Helvetica, Arial, sans-serif" font-size="1.2" font-weight="normal" fill="#8a8a8a" text-anchor="middle">PLAY</text>
+<circle cx="29.28" cy="19.77" r="1.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="29.28" y="23.57" font-family="Helvetica, Arial, sans-serif" font-size="1.2" font-weight="normal" fill="#8a8a8a" text-anchor="middle">BLEND</text>
+<circle cx="34.35" cy="19.77" r="1.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="34.35" y="23.57" font-family="Helvetica, Arial, sans-serif" font-size="1.2" font-weight="normal" fill="#8a8a8a" text-anchor="middle">CLOCK</text>
+<circle cx="7.72" cy="18.50" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="7.72" y="25.90" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">FX</text>
+<text x="7.72" y="28.40" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">density</text>
+<circle cx="43.30" cy="18.50" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="43.30" y="25.90" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">ORDER</text>
+<text x="43.30" y="28.40" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">density</text>
+<circle cx="25.10" cy="28.65" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="25.10" y="36.05" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">LENGTH</text>
+<text x="25.10" y="38.55" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">8/16/32/64</text>
+<circle cx="7.72" cy="39.43" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="7.72" y="46.83" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SLICE</text>
+<text x="7.72" y="49.33" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">resolution</text>
+<circle cx="43.30" cy="39.43" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="43.30" y="46.83" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">BLEND</text>
+<text x="43.30" y="49.33" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">clean/glitch</text>
+<circle cx="25.10" cy="49.31" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="25.10" y="56.71" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SEED</text>
+<text x="25.10" y="59.21" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">pattern</text>
+<circle cx="43.30" cy="60.36" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
+<text x="43.30" y="67.76" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">PITCH</text>
+<text x="43.30" y="70.26" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">range</text>
+<circle cx="8.35" cy="57.82" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="12.95" y="56.22" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">CLK</text>
+<text x="12.95" y="58.62" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">/2 / =1 / x2</text>
+<circle cx="8.35" cy="67.34" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
+<text x="12.95" y="65.74" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
+<text x="12.95" y="68.14" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK / AUTO / TRIG</text>
+<circle cx="8.35" cy="74.80" r="3.00" fill="#000000" stroke="#e8532a" stroke-width="0.2" stroke-dasharray="0.7 0.5"/>
+<text x="13.75" y="74.20" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#e8532a" text-anchor="start">CAPTURE</text>
+<text x="13.75" y="76.60" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">hold = re-roll</text>
+<circle cx="5.18" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="5.18" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">FX</text>
+<circle cx="18.50" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="18.50" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">ORDER</text>
+<circle cx="31.82" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="31.82" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">LENGTH</text>
+<circle cx="44.50" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="44.50" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SLICE</text>
+<circle cx="5.18" cy="97.15" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="5.18" y="92.55" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">BLEND</text>
+<circle cx="18.50" cy="97.15" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="18.50" y="92.55" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SEED</text>
+<circle cx="31.82" cy="97.15" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="31.82" y="92.55" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">PITCH</text>
+<circle cx="44.50" cy="97.15" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="44.50" y="92.55" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">CLK</text>
+<circle cx="5.18" cy="111.10" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="5.18" y="106.50" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">IN L</text>
+<circle cx="18.50" cy="111.10" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="18.50" y="106.50" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">IN R</text>
+<circle cx="31.82" cy="111.10" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="31.82" y="106.50" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">OUT L</text>
+<circle cx="44.50" cy="111.10" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
+<text x="44.50" y="106.50" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">OUT R</text>
+<text x="25.22" y="122.74" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="middle">third-party firmware</text>
+<text x="25.22" y="124.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="middle">not a Noise Engineering product</text></g>
+<path d="M27.50,148.34 L77.50,148.34" stroke="#000000" stroke-width="0.25" fill="none"/>
+<path d="M27.50,148.34 L27.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="27.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">0</text>
+<path d="M37.50,148.34 L37.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="37.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">10</text>
+<path d="M47.50,148.34 L47.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="47.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">20</text>
+<path d="M57.50,148.34 L57.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="57.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">30</text>
+<path d="M67.50,148.34 L67.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="67.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">40</text>
+<path d="M77.50,148.34 L77.50,150.94" stroke="#000000" stroke-width="0.25"/>
+<text x="77.50" y="153.94" font-family="Helvetica, Arial, sans-serif" font-size="2.4" font-weight="normal" fill="#000000" text-anchor="middle">50</text>
+<text x="52.50" y="145.94" font-family="Helvetica, Arial, sans-serif" font-size="2.6" font-weight="bold" fill="#000000" text-anchor="middle">CHECK THIS FIRST &#8212; this line must measure exactly 50 mm</text>
+<text x="52.50" y="157.74" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#444444" text-anchor="middle">If it does not, reprint at 100% / &#8220;Actual size&#8221;. Do not cut until it does.</text>
+<text x="6.00" y="164.34" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">1.  Verify the ruler above. Everything else depends on it.</text>
+<text x="6.00" y="167.64" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">2.  Cut the outline, then the holes. Dashed circles are knob bushings;</text>
+<text x="6.00" y="170.94" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">     the knob caps are wider than the hole, so pull the caps first.</text>
+<text x="6.00" y="174.24" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">3.  The ORANGE dashed circle (CAPTURE) is an unverified position — every</text>
+<text x="6.00" y="177.54" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">     other hole is derived from a 1:1 template, that one is inferred.</text>
+<text x="6.00" y="180.84" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">     Check it against your module before cutting it. See MEASURE.md.</text>
+<text x="6.00" y="184.14" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">4.  Fit behind the knobs and switches, or trim and use it as a bench card.</text>
+<text x="6.00" y="187.44" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">5.  Turn each knob and watch which LED moves. If the legend is scrambled,</text>
+<text x="6.00" y="190.74" font-family="Helvetica, Arial, sans-serif" font-size="2.2" font-weight="normal" fill="#333333" text-anchor="start">     the knob-to-ADC order in smack_versio.cpp is wrong, not this print.</text>
+</svg>
