@@ -3,6 +3,12 @@
 **Live loop capture, sliced and re-ordered, with seeded per-slice glitch.**
 Alternative firmware for the Noise Engineering Versio platform.
 
+> There is a web version of this manual at
+> **<https://timncox.github.io/smack-versio/>** with an interactive panel
+> diagram drawn from the real hole coordinates. This file is the text of
+> record; `docs/index.html` is generated alongside it by hand, so if the two
+> disagree, trust this one.
+
 > **Version 0.1.0 — pre-hardware-validation.**
 > This firmware compiles, its memory budget is measured, and the parts that can
 > be tested without hardware are tested. It has never been run on a module.

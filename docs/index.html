@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMACK VERSIO — Operation Manual</title>
+<meta name="description" content="Operation manual for Smack Versio: live loop capture, slicing and seeded per-slice glitch, as alternative firmware for the Noise Engineering Versio.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>◎</text></svg>">
+<script>document.documentElement.classList.add("js")</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/*
+  Smack Versio — operation manual.
+
+  The palette carries meaning and is not decoration: CYAN is anything derived,
+  measured or test-verified; AMBER is anything assumed, inferred or unrun. That
+  is DESIGN.md's own ✅/⚠️ convention rendered in colour, and on this project it
+  is the most important thing a reader can know — a firmware that has never run
+  on hardware has no business looking as confident as one that has.
+*/
+:root{
+  --bg:#07090b; --panel:#0d1116; --panel2:#121820; --ink:#dfe7ec; --dim:#7d8b96;
+  --line:rgba(223,231,236,.12); --grid:rgba(120,200,220,.055);
+
+  --cy:#48d5e3;            /* derived / verified / measured */
+  --am:#ffab3d;            /* assumed / inferred / never run */
+
+  --led-state:#3ea8ff; --led-play:#3ad17a; --led-blend:#c07bff; --led-clock:#ff4d4d;
+
+  --disp:"Saira Condensed",Impact,sans-serif;
+  --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  --body:"IBM Plex Sans","Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;overflow-x:hidden}
+
+/* drafting-table atmosphere: a millimetre grid that fades out, plus grain */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 12px),
+    repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 12px),
+    repeating-linear-gradient(0deg,rgba(120,200,220,.09) 0 1px,transparent 1px 60px),
+    repeating-linear-gradient(90deg,rgba(120,200,220,.09) 0 1px,transparent 1px 60px);
+  mask-image:radial-gradient(ellipse 85% 60% at 50% 0%,#000 0%,transparent 78%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:99;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+a{color:var(--cy);text-decoration:none;border-bottom:1px solid rgba(72,213,227,.3)}
+a:hover{border-bottom-color:var(--cy)}
+code,kbd{font-family:var(--mono);font-size:.82em;background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:.1em .42em;white-space:nowrap}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(7,9,11,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:54px;overflow-x:auto;scrollbar-width:none}
+nav .wrap::-webkit-scrollbar{display:none}
+nav .logo{font-family:var(--disp);font-weight:900;font-size:21px;letter-spacing:.06em;color:var(--ink);border:none;flex:none}
+nav .logo em{color:var(--cy);font-style:normal}
+nav a.s{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--dim);border:none;flex:none;text-transform:uppercase}
+nav a.s:hover{color:var(--ink)}
+nav a.s b{color:var(--cy);font-weight:500;margin-right:5px}
+
+/* ---------- hero ---------- */
+header{padding:72px 0 40px;border-bottom:1px solid var(--line);position:relative}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--cy);margin-bottom:14px}
+h1.title{font-family:var(--disp);font-weight:900;font-size:clamp(56px,12vw,132px);line-height:.84;letter-spacing:.01em;text-transform:uppercase}
+h1.title em{font-style:normal;color:var(--cy);-webkit-text-stroke:1px var(--cy);color:transparent}
+.tagline{font-family:var(--disp);font-weight:500;font-size:clamp(18px,3vw,27px);color:var(--dim);margin-top:14px;letter-spacing:.02em}
+
+/* the warning is the first thing anyone should read */
+.alarm{
+  margin-top:34px;border:1px solid rgba(255,171,61,.42);border-left:3px solid var(--am);
+  background:linear-gradient(90deg,rgba(255,171,61,.09),rgba(255,171,61,.02) 60%,transparent);
+  padding:20px 24px;border-radius:2px;
+}
+.alarm h3{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--am);margin-bottom:9px;font-weight:600}
+.alarm p{font-size:15.5px;max-width:74ch}
+.alarm p+p{margin-top:9px}
+.alarm b{color:var(--ink)}
+
+/* ---------- sections ---------- */
+section{padding:74px 0;border-bottom:1px solid var(--line)}
+h2.sh{font-family:var(--disp);font-weight:900;font-size:clamp(30px,5vw,50px);text-transform:uppercase;letter-spacing:.015em;line-height:1;margin-bottom:8px}
+.sub{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:30px}
+.lede{font-size:18px;max-width:70ch;margin-bottom:26px;color:#c9d4dc}
+p{max-width:72ch}
+p+p{margin-top:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:26px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:22px}
+.card h4{font-family:var(--disp);font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:7px}
+.card .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin-bottom:10px}
+.card p{font-size:14.5px;color:#bcc8d2}
+
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:14.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:500}
+td:first-child{font-family:var(--mono);font-size:13px;color:var(--ink);white-space:nowrap}
+tbody tr:hover{background:rgba(72,213,227,.035)}
+
+.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:2.5px 7px;border-radius:2px;white-space:nowrap}
+.tag.ok{color:var(--cy);border:1px solid rgba(72,213,227,.4);background:rgba(72,213,227,.07)}
+.tag.no{color:var(--am);border:1px solid rgba(255,171,61,.4);background:rgba(255,171,61,.07)}
+
+/* ---------- panel drawing ---------- */
+.drawing{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:38px;align-items:start}
+@media(max-width:820px){.drawing{grid-template-columns:1fr}}
+.plate{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px;position:relative}
+.plate svg{width:100%;height:auto;display:block;overflow:visible}
+.hole{cursor:pointer;transition:fill .16s,stroke .16s}
+.hole:hover{stroke:var(--cy);stroke-width:.5}
+.hole.sel{stroke:var(--cy);stroke-width:.6}
+.hole.unver{stroke:var(--am);stroke-dasharray:.9 .7}
+.hole.unver:hover,.hole.unver.sel{stroke:var(--am);stroke-width:.6}
+.dim{stroke:var(--cy);stroke-width:.12;opacity:.5}
+.dimtxt{font-family:var(--mono);font-size:2.1px;fill:var(--cy);opacity:.75;letter-spacing:.02em}
+.plabel{font-family:var(--mono);font-size:2.05px;fill:var(--dim);letter-spacing:.03em}
+
+.readout{position:sticky;top:78px}
+.readout .rk{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--cy);margin-bottom:8px}
+.readout h3{font-family:var(--disp);font-size:clamp(30px,4.6vw,46px);text-transform:uppercase;line-height:.95;letter-spacing:.02em;margin-bottom:4px}
+.readout .rs{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:16px}
+.readout .rd{font-size:15.5px;color:#c6d2da;min-height:7.2em}
+.readout .meta{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--dim);display:grid;gap:5px}
+.readout .meta b{color:var(--ink);font-weight:500}
+.hint{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px}
+
+.toggles{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px}
+.tg{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);background:var(--panel2);border:1px solid var(--line);border-radius:2px;padding:7px 12px;cursor:pointer;transition:.16s}
+.tg:hover{color:var(--ink);border-color:rgba(72,213,227,.4)}
+.tg[aria-pressed="true"]{color:var(--cy);border-color:var(--cy);background:rgba(72,213,227,.09)}
+
+/* ---------- LED / CPU simulator ---------- */
+.sim{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:26px}
+.leds{display:flex;gap:20px;justify-content:center;margin:8px 0 22px}
+.ledw{text-align:center}
+.led{width:46px;height:46px;border-radius:50%;background:#0a0d10;border:1px solid var(--line);
+     transition:background .25s,box-shadow .25s;margin-bottom:9px}
+.ledw span{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+input[type=range]{width:100%;accent-color:var(--cy);margin:4px 0 12px}
+.simval{font-family:var(--disp);font-weight:900;font-size:44px;line-height:1;letter-spacing:.02em}
+.simcap{font-family:var(--mono);font-size:11.5px;color:var(--dim);letter-spacing:.05em}
+.verdict{margin-top:16px;font-size:15px;min-height:3em;color:#c6d2da}
+
+pre{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--cy);border-radius:3px;
+    padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;color:#c3d2da}
+pre b{color:var(--cy);font-weight:400}
+pre i{color:var(--dim);font-style:normal}
+
+footer{padding:54px 0 70px;color:var(--dim);font-size:14px}
+footer .fl{font-family:var(--disp);font-weight:900;font-size:26px;text-transform:uppercase;color:var(--ink);letter-spacing:.05em;margin-bottom:12px}
+footer a{color:var(--dim);border-bottom-color:rgba(125,139,150,.3)}
+footer a:hover{color:var(--cy)}
+
+.reveal{opacity:0;transform:translateY(14px)}
+.js .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.3,1)}
+@media(prefers-reduced-motion:reduce){.reveal,.js .reveal.in{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="logo" href="#top">SMACK<em>·</em>VERSIO</a>
+  <a class="s" href="#what"><b>01</b>What</a>
+  <a class="s" href="#panel"><b>02</b>Panel</a>
+  <a class="s" href="#play"><b>03</b>Playing</a>
+  <a class="s" href="#clock"><b>04</b>Clock</a>
+  <a class="s" href="#leds"><b>05</b>LEDs</a>
+  <a class="s" href="#install"><b>06</b>Install</a>
+  <a class="s" href="#faceplate"><b>07</b>Faceplate</a>
+  <a class="s" href="#status"><b>08</b>Status</a>
+</div></nav>
+
+<header id="top"><div class="wrap">
+  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.1.0</div>
+  <h1 class="title">Smack<br><em>Versio</em></h1>
+  <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
+
+  <div class="alarm">
+    <h3>⚠ This firmware has never run on hardware</h3>
+    <p>It compiles, its memory budget is measured, and everything testable without a module
+      is tested — the clock adapter, the settings layer, the allocator and the DSP engine at
+      48&nbsp;kHz all have passing native test suites. <b>But nobody has heard a single sound
+      out of it.</b></p>
+    <p>If you flash this, you are running its first hardware test. Throughout this manual,
+      <span style="color:var(--cy)">cyan</span> marks what has been measured or verified and
+      <span style="color:var(--am)">amber</span> marks what is assumed. Read the colours.</p>
+  </div>
+</div></header>
+
+<section id="what"><div class="wrap reveal">
+  <h2 class="sh">What it does</h2>
+  <div class="sub">01 — The idea</div>
+  <p class="lede">Audio runs through the module continuously and is <em>always</em> being
+    recorded. Press CAPTURE and the last N steps of what you just played become a loop — no
+    arming, no deciding in advance that you wanted it.</p>
+  <div class="cols">
+    <div class="card">
+      <div class="k">Retro-capture</div>
+      <h4>You never miss it</h4>
+      <p>The good take is usually the one you weren't recording. The buffer is always rolling,
+        so CAPTURE reaches backwards instead of forwards.</p>
+    </div>
+    <div class="card">
+      <div class="k">Seeded</div>
+      <h4>One knob, whole arrangement</h4>
+      <p>Which slices get re-ordered, which get an effect, and which effect — all follow from a
+        single SEED. Turn it for a different arrangement of the same audio. Same seed, same
+        result, every time.</p>
+    </div>
+    <div class="card">
+      <div class="k">Density, not editing</div>
+      <h4>Steer the statistics</h4>
+      <p>The Move version has 23 pads and a screen for per-slice editing. Seven knobs cannot do
+        that, so this steers the <em>probabilities</em> instead — how much re-ordering, how many
+        effects.</p>
+    </div>
+  </div>
+  <p style="margin-top:26px">It is a port of <a href="https://github.com/timncox/schwung-smack">Smack</a>,
+    a module for the Ableton Move. The DSP engine is the same code, vendored unmodified — so the
+    sound is not a reimplementation of the original, it <em>is</em> the original.</p>
+</div></section>
+
+<section id="panel"><div class="wrap reveal">
+  <h2 class="sh">The panel</h2>
+  <div class="sub">02 — Drawn at true scale · click any control</div>
+  <p class="lede">Every hole below sits where it sits on a real Versio. The coordinates were
+    extracted from a 1:1 print template rather than guessed, and the drawing is generated from
+    the same file the faceplate generator uses.</p>
+
+  <div class="toggles">
+    <button class="tg" id="tgDim" aria-pressed="true">Dimensions</button>
+    <button class="tg" id="tgConf" aria-pressed="false">Confidence</button>
+  </div>
+
+  <div class="drawing">
+    <div class="plate">
+      <svg id="panelSvg" viewBox="-13 -8 78 146" role="img" aria-label="Smack Versio panel diagram">
+        <g id="gDim"></g>
+        <g id="gPanel"></g>
+      </svg>
+    </div>
+    <div class="readout" id="ro">
+      <div class="rk" id="roK">Select a control</div>
+      <h3 id="roT">The panel</h3>
+      <div class="rs" id="roS">7 knobs · 4 LEDs · 2 switches · 1 button · 12 jacks</div>
+      <div class="rd" id="roD">Hover or click anything on the drawing. The four audio jacks and
+        the gate are fixed Versio hardware; everything else is what this firmware makes of
+        them.</div>
+      <div class="meta" id="roM">
+        <div>plate <b>50.44 × 128.34 mm</b> · 10 HP</div>
+        <div>jack pitch <b>13.32 mm</b> across, <b>13.96 mm</b> down</div>
+        <div>source <b>1:1 template, vector-extracted</b></div>
+      </div>
+      <div class="hint">Every knob has its own CV input. FX and ORDER under CV is the thing
+        this version does that the Move version cannot.</div>
+    </div>
+  </div>
+</div></section>
+
+<section id="play"><div class="wrap reveal">
+  <h2 class="sh">Playing it</h2>
+  <div class="sub">03 — Five steps to the first loop</div>
+  <pre><b>1</b>  Patch audio to <i>IN L / IN R</i>. It passes through immediately —
+   the module is not silent before you touch it.
+<b>2</b>  Patch a clock to <i>CLK</i>. No clock? It free-runs. That is fine.
+<b>3</b>  Play something.
+<b>4</b>  Tap <i>CAPTURE</i>. The last few bars become a loop and start playing.
+<b>5</b>  Bring up <i>FX</i> and <i>ORDER</i>. Turn <i>SEED</i> until you like it.</pre>
+  <p style="margin-top:22px"><b>Hold CAPTURE for more than half a second to re-roll</b> — same
+    loop, new pattern. Everything else is the same knobs you already turned.</p>
+  <p><b>LENGTH, SLICE and SEED are stepped</b>, and a stepped control parked exactly on a
+    boundary would otherwise chatter between two values as CV noise nudges it back and forth.
+    Each has a deadband to stop that. SEED's is deliberately narrower than the others — a
+    single step of SEED re-rolls the whole pattern, so it needs the protection, but a wide
+    band would make the knob skip most of the 128 seeds.</p>
+</div></section>
+
+<section id="clock"><div class="wrap reveal">
+  <h2 class="sh">The clock</h2>
+  <div class="sub">04 — One jack, two jobs</div>
+  <p class="lede">The Versio has exactly one gate jack, and this module wants two things from
+    it: a tempo, and a "capture now" trigger. The GATE switch decides which.</p>
+  <div class="cols">
+    <div class="card"><div class="k">Switch up</div><h4>CLK</h4>
+      <p>The jack is a clock. Tempo comes from the pulse intervals.</p></div>
+    <div class="card"><div class="k">Switch centre</div><h4>Auto</h4>
+      <p>Worked out from what arrives — a steady train reads as a clock, sporadic hits read as
+        triggers. <span class="tag no">feel unverified</span></p></div>
+    <div class="card"><div class="k">Switch down</div><h4>Trig</h4>
+      <p>The jack is a capture trigger. Tempo is inferred from the gaps between hits.</p></div>
+  </div>
+  <p style="margin-top:26px">Internally the module turns gate edges into 24&nbsp;ppqn MIDI clock,
+    because that is what the engine already speaks — so the timing model that runs on the Move
+    runs here untouched. This is the piece with the most design risk in the whole port, and it
+    is also the most thoroughly tested: <span class="tag ok">verified</span> a synthetic gate
+    train drives the real engine to capture a bar of 95,985 frames against a 96,000 target,
+    an error of 0.02%.</p>
+  <p><b>With nothing patched it free-runs</b> — at the last tempo it successfully locked to,
+    remembered across power cycles, rather than a fixed 120.</p>
+</div></section>
+
+<section id="leds"><div class="wrap reveal">
+  <h2 class="sh">Reading the LEDs</h2>
+  <div class="sub">05 — Four lights are the entire display</div>
+  <table>
+    <thead><tr><th>LED</th><th>Shows</th></tr></thead>
+    <tbody>
+      <tr><td style="color:var(--led-state)">STATE</td><td>dim blue idle · amber armed · red recording · green looping</td></tr>
+      <tr><td style="color:var(--led-play)">PLAY</td><td>Ramps once per pass through the loop. Moving = a loop is playing</td></tr>
+      <tr><td style="color:var(--led-blend)">BLEND</td><td>The BLEND knob's position</td></tr>
+      <tr><td style="color:var(--led-clock)">CLOCK</td><td>blue external · purple inferred · white free-running · <b style="color:var(--led-clock)">red = CPU above 80%</b></td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:18px"><b>All four solid red</b> means the engine could not allocate its
+    buffer. That should be impossible — it needs 12.98&nbsp;MB of a 16&nbsp;MB pool,
+    <span class="tag ok">measured</span> — but it fails loudly rather than running silently
+    broken.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">The boot report</h3>
+  <div class="sub" style="margin-bottom:20px">The one number this project needs</div>
+  <p class="lede">You cannot watch a status LED while playing with both hands. So the module
+    measures its own worst-case load while you play, and shows it on the LEDs at the
+    <em>next</em> power-up — when you can actually look.</p>
+
+  <div class="sim">
+    <div class="leds" id="simLeds">
+      <div class="ledw"><div class="led" data-i="0"></div><span>State</span></div>
+      <div class="ledw"><div class="led" data-i="1"></div><span>Play</span></div>
+      <div class="ledw"><div class="led" data-i="2"></div><span>Blend</span></div>
+      <div class="ledw"><div class="led" data-i="3"></div><span>Clock</span></div>
+    </div>
+    <label for="cpu" class="simcap">Drag — last session's peak CPU load</label>
+    <input type="range" id="cpu" min="0" max="100" value="0" step="1">
+    <div class="simval" id="cpuVal">no data</div>
+    <div class="simcap" id="cpuCap">first boot after flashing</div>
+    <div class="verdict" id="cpuVerdict">A single dim blue light means the module has not
+      measured anything yet. Play hard for a few minutes, power-cycle, and come back.</div>
+  </div>
+  <p style="margin-top:22px">Play hard — FX and ORDER up, short SLICE, long LENGTH — then power
+    down and up. <b>If it never reaches the red, the one question that can kill this project is
+    answered.</b></p>
+</div></section>
+
+<section id="install"><div class="wrap reveal">
+  <h2 class="sh">Installing</h2>
+  <div class="sub">06 — And getting back to stock</div>
+  <p class="lede">The micro-USB port is on the <b>back of the Daisy Seed</b>, so the module comes
+    out of the case. Expect that in the edit loop.</p>
+  <pre><i># once — the Daisy bootloader (hold BOOT, tap RESET, release BOOT)</i>
+<b>make -C firmware program-boot</b>
+
+<i># every time — power-cycle first, then while the bootloader waits</i>
+<b>make -C firmware program-dfu</b></pre>
+  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~142&nbsp;KB and
+    the STM32H750 has only <b>128&nbsp;KB of internal flash</b>, so it runs from SRAM via the
+    bootloader. Only 26&nbsp;KB of that is this project — the rest is libDaisy and the ST HAL.
+    It is also why the two reference firmwares are 85–91&nbsp;KB: they were built to fit
+    internal flash.</p>
+  <p><b>Everything here is reversible.</b> Flashing any official Noise Engineering firmware
+    overwrites internal flash and returns the module to stock. Nothing is cut, soldered, or
+    one-way.</p>
+</div></section>
+
+<section id="faceplate"><div class="wrap reveal">
+  <h2 class="sh">The faceplate</h2>
+  <div class="sub">07 — Where these coordinates came from</div>
+  <p class="lede">Your module's panel says whatever it said before, so the repository generates a
+    printable overlay with the right words on it.</p>
+  <pre><b>python3 faceplate/make_faceplate.py</b></pre>
+  <p style="margin-top:22px">The geometry was <em>derived</em>, not measured. Page 5 of the
+    FRGMNTS Versio manual is a 1:1 print template; converting it to vectors gives exact hole
+    centres, because a bezier circle's control points share its bounding box.</p>
+  <p><span class="tag ok">self-validating</span> The reason to trust that at all is what fell
+    out of it: the derived panel outline is 50.44&nbsp;×&nbsp;128.34&nbsp;mm — 10&nbsp;HP by
+    3&nbsp;U — and the four mounting slots land 2.99&nbsp;mm and 125.33&nbsp;mm from the top
+    edge, 7.60&nbsp;mm from the left. That is the Eurorack mechanical standard to a hundredth
+    of a millimetre, from a transform that was never fitted to it. It also independently
+    confirms the control surface: twelve jacks in three rows of four is 7&nbsp;CV + gate +
+    4&nbsp;audio.</p>
+  <p><span class="tag no">inferred</span> One hole is not like the others. The button position
+    could not be observed — the only button-sized candidate in the artwork turned out to be
+    decoration, and two placements derived from the surrounding hardware both failed the
+    overlap check, one landing 0.6&nbsp;mm inside a switch. What ships is the middle of the only
+    gap the real hardware leaves, and it prints as a dashed amber ring for exactly that reason.</p>
+  <p><b>Print the print sheet at 100% and check the 50&nbsp;mm ruler on it with a real ruler
+    before cutting.</b> That ruler exists because every way printing goes wrong — "fit to page",
+    silently scaling to Letter — is invisible except as a ruler that is not 50&nbsp;mm.</p>
+</div></section>
+
+<section id="status"><div class="wrap reveal">
+  <h2 class="sh">What is real</h2>
+  <div class="sub">08 — Verified, and not</div>
+  <p class="lede">The most useful thing about this project is knowing which half of it is
+    trustworthy. Nothing below is rounded up.</p>
+  <table>
+    <thead><tr><th>Piece</th><th>State</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Clock adapter</td><td><span class="tag ok">verified</span></td><td>7 native tests; captures a bar from synthetic gate pulses to 0.02%</td></tr>
+      <tr><td>Persistent settings</td><td><span class="tag ok">verified</span></td><td>6 native tests covering the flash-wear limiter and the version guard</td></tr>
+      <tr><td>Engine @ 48 kHz</td><td><span class="tag ok">verified</span></td><td>Upstream suite passes unmodified at 48 k; two constants changed</td></tr>
+      <tr><td>SDRAM allocator</td><td><span class="tag ok">verified</span></td><td>Engine runs on the bump pool, 12.98 MB of 16 MB</td></tr>
+      <tr><td>Panel frame</td><td><span class="tag ok">verified</span></td><td>Reproduces the Eurorack mounting standard to 0.01 mm</td></tr>
+      <tr><td>Host shim · controls · LEDs</td><td><span class="tag no">never run</span></td><td>Compiles. Nobody has heard it</td></tr>
+      <tr><td>Knob → ADC order</td><td><span class="tag no">assumed</span></td><td>Assumed to be panel reading order; untested</td></tr>
+      <tr><td>Button hole position</td><td><span class="tag no">inferred</span></td><td>Constrained by neighbours, never observed</td></tr>
+      <tr><td>CPU headroom</td><td><span class="tag no">unmeasured</span></td><td>The one thing that needs hardware. See the boot report</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:24px">If you flash this, the boot CPU reading and whether the knob legend
+    comes out in the right order are the two things worth reporting back.
+    <a href="https://github.com/timncox/smack-versio/issues">Open an issue</a> — a report from
+    the first person to run it is worth more than anything measurable on a laptop.</p>
+</div></section>
+
+<section><div class="wrap reveal">
+  <h2 class="sh">Specifications</h2>
+  <div class="sub">Appendix</div>
+  <div class="cols">
+    <div class="card"><div class="k">Platform</div><h4>Daisy Seed</h4><p>STM32H750, 480 MHz Cortex-M7, 64 MB SDRAM. Noise Engineering Versio, 10 HP.</p></div>
+    <div class="card"><div class="k">Audio</div><h4>48 kHz · 128</h4><p>libDaisy offers no 44.1 kHz. The 128-frame block is required — the engine's clock regression was built against it.</p></div>
+    <div class="card"><div class="k">Memory</div><h4>~70 s buffer</h4><p>13.4 MB ring in a 16 MB SDRAM pool, of 64 MB available.</p></div>
+    <div class="card"><div class="k">Effects</div><h4>26</h4><p>One per lane at a time, not all at once — which is what makes the CPU question winnable.</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="fl">Smack·Versio</div>
+  <p style="max-width:70ch;margin-bottom:14px">Third-party firmware. Noise Engineering did not
+    write it, did not review it, and cannot support it — <b style="color:var(--ink)">please do
+    not contact them about it</b>. Versio and Noise Engineering are their trademarks; this
+    project is not affiliated with or endorsed by them.</p>
+  <p style="max-width:70ch">Engine from <a href="https://github.com/timncox/schwung-smack">Smack</a>.
+    The port owes its shape to <a href="https://2020.dubrussell.com/resources/wtf/">WTF!</a> by
+    dubrussell and <a href="https://acidclank.gumroad.com/l/frgmntsversio">FRGMNTS Versio</a> by
+    Acidclank, which proved this hardware can do this kind of work.
+    MIT licensed · <a href="https://github.com/timncox/smack-versio">source</a></p>
+</div></footer>
+
+<script>
+/* == BEGIN GENERATED GEOMETRY -- scripts/emit_geometry_js.py == */
+const PANEL = {
+  "panel": {
+    "w": 50.44,
+    "h": 128.34
+  },
+  "mounts": [
+    {
+      "x": 7.6,
+      "y": 2.99,
+      "w": 5.47,
+      "h": 3.2
+    },
+    {
+      "x": 43.11,
+      "y": 2.99,
+      "w": 5.47,
+      "h": 3.2
+    },
+    {
+      "x": 7.6,
+      "y": 125.33,
+      "w": 5.47,
+      "h": 3.2
+    },
+    {
+      "x": 43.11,
+      "y": 125.33,
+      "w": 5.47,
+      "h": 3.2
+    }
+  ],
+  "knobs": [
+    {
+      "x": 7.72,
+      "y": 18.5,
+      "d": 8.99,
+      "name": "FX",
+      "sub": "density"
+    },
+    {
+      "x": 43.3,
+      "y": 18.5,
+      "d": 8.99,
+      "name": "ORDER",
+      "sub": "density"
+    },
+    {
+      "x": 25.1,
+      "y": 28.65,
+      "d": 8.99,
+      "name": "LENGTH",
+      "sub": "8/16/32/64"
+    },
+    {
+      "x": 7.72,
+      "y": 39.43,
+      "d": 8.99,
+      "name": "SLICE",
+      "sub": "resolution"
+    },
+    {
+      "x": 43.3,
+      "y": 39.43,
+      "d": 8.99,
+      "name": "BLEND",
+      "sub": "clean/glitch"
+    },
+    {
+      "x": 25.1,
+      "y": 49.31,
+      "d": 8.99,
+      "name": "SEED",
+      "sub": "pattern"
+    },
+    {
+      "x": 43.3,
+      "y": 60.36,
+      "d": 8.99,
+      "name": "PITCH",
+      "sub": "range"
+    }
+  ],
+  "leds": [
+    {
+      "x": 17.23,
+      "y": 19.77,
+      "d": 3.0,
+      "name": "STATE"
+    },
+    {
+      "x": 22.3,
+      "y": 19.77,
+      "d": 3.0,
+      "name": "PLAY"
+    },
+    {
+      "x": 29.28,
+      "y": 19.77,
+      "d": 3.0,
+      "name": "BLEND"
+    },
+    {
+      "x": 34.35,
+      "y": 19.77,
+      "d": 3.0,
+      "name": "CLOCK"
+    }
+  ],
+  "switches": [
+    {
+      "x": 8.35,
+      "y": 57.82,
+      "d": 5.1,
+      "name": "CLK",
+      "pos": [
+        "/2",
+        "=1",
+        "x2"
+      ]
+    },
+    {
+      "x": 8.35,
+      "y": 67.34,
+      "d": 5.1,
+      "name": "GATE",
+      "pos": [
+        "CLK",
+        "AUTO",
+        "TRIG"
+      ]
+    }
+  ],
+  "button": {
+    "x": 8.35,
+    "y": 74.8,
+    "d": 6.0,
+    "name": "CAPTURE",
+    "sub": "hold = re-roll",
+    "verified": false
+  },
+  "jacks": [
+    {
+      "x": 5.18,
+      "y": 83.19,
+      "d": 6.79,
+      "name": "FX"
+    },
+    {
+      "x": 18.5,
+      "y": 83.19,
+      "d": 6.79,
+      "name": "ORDER"
+    },
+    {
+      "x": 31.82,
+      "y": 83.19,
+      "d": 6.79,
+      "name": "LENGTH"
+    },
+    {
+      "x": 44.5,
+      "y": 83.19,
+      "d": 6.79,
+      "name": "SLICE"
+    },
+    {
+      "x": 5.18,
+      "y": 97.15,
+      "d": 6.79,
+      "name": "BLEND"
+    },
+    {
+      "x": 18.5,
+      "y": 97.15,
+      "d": 6.79,
+      "name": "SEED"
+    },
+    {
+      "x": 31.82,
+      "y": 97.15,
+      "d": 6.79,
+      "name": "PITCH"
+    },
+    {
+      "x": 44.5,
+      "y": 97.15,
+      "d": 6.79,
+      "name": "CLK"
+    },
+    {
+      "x": 5.18,
+      "y": 111.1,
+      "d": 6.79,
+      "name": "IN L"
+    },
+    {
+      "x": 18.5,
+      "y": 111.1,
+      "d": 6.79,
+      "name": "IN R"
+    },
+    {
+      "x": 31.82,
+      "y": 111.1,
+      "d": 6.79,
+      "name": "OUT L"
+    },
+    {
+      "x": 44.5,
+      "y": 111.1,
+      "d": 6.79,
+      "name": "OUT R"
+    }
+  ],
+  "jackPitchX": 13.32,
+  "jackPitchY": 13.96
+};
+/* == END GENERATED GEOMETRY == */
+
+/* ---------- panel drawing ---------- */
+const NS = "http://www.w3.org/2000/svg";
+const gP = document.getElementById("gPanel");
+const gD = document.getElementById("gDim");
+
+function el(n, a) {
+  const e = document.createElementNS(NS, n);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+}
+
+const INFO = {};   /* id -> readout content */
+let selected = null;
+
+function addHole(id, shape, attrs, cls, info) {
+  const e = el(shape, attrs);
+  e.setAttribute("class", "hole " + (cls || ""));
+  e.dataset.id = id;
+  INFO[id] = info;
+  gP.appendChild(e);
+  return e;
+}
+
+function drawPanel() {
+  const P = PANEL.panel;
+  gP.appendChild(el("rect", {
+    x: 0, y: 0, width: P.w, height: P.h, rx: 1.2,
+    fill: "#0a0e12", stroke: "rgba(223,231,236,.22)", "stroke-width": .25
+  }));
+
+  PANEL.mounts.forEach((m, i) => addHole("mount" + i, "rect", {
+    x: m.x - m.w / 2, y: m.y - m.h / 2, width: m.w, height: m.h, rx: m.h / 2,
+    fill: "#05070a", stroke: "rgba(223,231,236,.3)", "stroke-width": .18
+  }, "", {
+    k: "Mechanical", t: "Mounting slot", s: "M3 oval · " + m.w + " × " + m.h + " mm",
+    d: "Eurorack standard: 3.0 mm from the plate edge, first hole 7.5 mm in. These four " +
+       "landing exactly on the standard is what proves the whole coordinate frame is placed " +
+       "correctly — they were never fitted to it.",
+    m: ["x <b>" + m.x + " mm</b> from left", "y <b>" + m.y + " mm</b> from top", "confidence <b>derived</b>"]
+  }));
+
+  PANEL.jacks.forEach((j, i) => addHole("jack" + i, "circle", {
+    cx: j.x, cy: j.y, r: j.d / 2, fill: "#05070a",
+    stroke: "rgba(223,231,236,.3)", "stroke-width": .2
+  }, "", {
+    k: i < 8 ? "CV input" : "Audio I/O", t: j.name,
+    s: "3.5 mm jack · ⌀" + j.d + " mm",
+    d: i < 8
+      ? (j.name === "CLK"
+         ? "The gate input. Clock, capture trigger, or both — the GATE switch decides. One jack doing two jobs is the central design problem of this port."
+         : "Sums with the " + j.name + " knob in analogue hardware, so a knob at noon with CV at the jack behaves like a knob being turned.")
+      : "Fixed Versio hardware. Audio passes through here from the moment the module boots.",
+    m: ["x <b>" + j.x + " mm</b>", "y <b>" + j.y + " mm</b>",
+        "column pitch <b>" + PANEL.jackPitchX + " mm</b>", "row pitch <b>" + PANEL.jackPitchY + " mm</b>"]
+  }));
+
+  PANEL.knobs.forEach((k, i) => addHole("knob" + i, "circle", {
+    cx: k.x, cy: k.y, r: k.d / 2, fill: "#0d1319",
+    stroke: "rgba(223,231,236,.34)", "stroke-width": .22
+  }, "", {
+    k: "Knob " + (i + 1) + " · " + k.sub, t: k.name, s: "⌀" + k.d + " mm bushing · CV summed",
+    d: KNOB_TEXT[i],
+    m: ["x <b>" + k.x + " mm</b>", "y <b>" + k.y + " mm</b>", "ADC channel <b style='color:var(--am)'>assumed " + i + "</b>"]
+  }));
+
+  PANEL.leds.forEach((l, i) => addHole("led" + i, "circle", {
+    cx: l.x, cy: l.y, r: l.d / 2, fill: LED_FILL[i],
+    stroke: "rgba(223,231,236,.3)", "stroke-width": .15
+  }, "", {
+    k: "LED " + i, t: l.name, s: "⌀" + l.d + " mm RGB",
+    d: LED_TEXT[i],
+    m: ["x <b>" + l.x + " mm</b>", "y <b>" + l.y + " mm</b>", "confidence <b>derived</b>"]
+  }));
+
+  PANEL.switches.forEach((s, i) => addHole("sw" + i, "circle", {
+    cx: s.x, cy: s.y, r: s.d / 2, fill: "#05070a",
+    stroke: "rgba(223,231,236,.3)", "stroke-width": .2
+  }, "", {
+    k: "Switch " + i, t: s.name, s: "3-position · " + s.pos.join(" / "),
+    d: i === 0
+      ? "Multiplies or divides the incoming clock, so the loop grid can sit at half or double the rack's tempo without retiming anything upstream."
+      : "What the gate jack means. AUTO tries to tell a steady clock from sporadic triggers — whether that actually feels right in use is unverified.",
+    m: ["x <b>" + s.x + " mm</b>", "y <b>" + s.y + " mm</b>", "confidence <b>derived</b>"]
+  }));
+
+  const b = PANEL.button;
+  addHole("btn", "circle", {
+    cx: b.x, cy: b.y, r: b.d / 2, fill: "#120c05",
+    stroke: b.verified ? "rgba(223,231,236,.3)" : "var(--am)", "stroke-width": .28
+  }, b.verified ? "" : "unver", {
+    k: "Momentary", t: b.name, s: "tap = capture · hold = " + b.sub.replace("hold = ", ""),
+    d: "Tap and the last N steps of what you just played become a loop. Hold past 0.6 s and the " +
+       "pattern re-rolls without touching the audio. " +
+       (b.verified ? "" : "⚠ This is the one hole whose position was never observed — it is the middle of the only gap the surrounding hardware leaves. Verify before cutting."),
+    m: ["x <b>" + b.x + " mm</b>", "y <b>" + b.y + " mm</b>",
+        "confidence <b style='color:var(--am)'>" + (b.verified ? "measured" : "inferred") + "</b>"]
+  });
+
+  /* labels */
+  PANEL.knobs.forEach(k => {
+    const t = el("text", { x: k.x, y: k.y + k.d / 2 + 2.6, "text-anchor": "middle" });
+    t.setAttribute("class", "plabel"); t.textContent = k.name; gP.appendChild(t);
+  });
+  PANEL.jacks.forEach(j => {
+    const t = el("text", { x: j.x, y: j.y - j.d / 2 - 1.1, "text-anchor": "middle" });
+    t.setAttribute("class", "plabel"); t.textContent = j.name; gP.appendChild(t);
+  });
+  /* Switches and the button sit in the left column with room beside them, so
+     their labels go alongside rather than underneath -- same as the printed
+     overlay, and without them that column reads as unexplained holes. */
+  PANEL.switches.forEach(s => {
+    const t = el("text", { x: s.x + s.d / 2 + 1.3, y: s.y + .7, "text-anchor": "start" });
+    t.setAttribute("class", "plabel"); t.textContent = s.name; gP.appendChild(t);
+  });
+  const bt = el("text", { x: b.x + b.d / 2 + 1.3, y: b.y + .7, "text-anchor": "start" });
+  bt.setAttribute("class", "plabel");
+  bt.setAttribute("fill", "var(--am)");
+  bt.textContent = b.name; gP.appendChild(bt);
+}
+
+const KNOB_TEXT = [
+  "How many slices get an effect, from none to all. Under CV this is the thing the Move version cannot do.",
+  "How much the slice order is scrambled. At zero the loop plays straight; at full it is rearranged every pass.",
+  "Loop length in steps: 8, 16, 32 or 64. Stepped, with a deadband so CV noise cannot re-slice the loop continuously.",
+  "How finely the loop is cut. Shorter slices mean more of them, which is also the expensive direction for CPU.",
+  "Crossfades the clean loop against the glitched pattern. The whole instrument in one knob.",
+  "Which pattern. Same seed, same result, every time — this is the 'I don't like this one' knob.",
+  "How far the pitch-shifting effects are allowed to move, in semitones."
+];
+const LED_TEXT = [
+  "Engine state: dim blue idle, amber armed, red recording, green looping.",
+  "Ramps once per pass through the loop. If this is moving, a loop is captured and playing.",
+  "Mirrors the BLEND knob, so you can see where the crossfade sits without looking down.",
+  "Clock source — blue external, purple inferred, white free-running. It also goes red above 80% CPU, because on the first flash that question outranks everything else."
+];
+const LED_FILL = ["#0d2033", "#0d2b1c", "#1d1030", "#2b0d0d"];
+
+function drawDims() {
+  gD.innerHTML = "";
+  const P = PANEL.panel, o = 5.4;
+  function line(x1, y1, x2, y2) { const l = el("line", { x1, y1, x2, y2 }); l.setAttribute("class", "dim"); gD.appendChild(l); }
+  function tick(x, y, v) { line(x - (v ? 0 : 0), y, x + (v ? 0 : 0), y); }
+  function txt(x, y, s, anchor, rot) {
+    const t = el("text", { x, y, "text-anchor": anchor || "middle" });
+    t.setAttribute("class", "dimtxt");
+    if (rot) t.setAttribute("transform", `rotate(-90 ${x} ${y})`);
+    t.textContent = s; gD.appendChild(t);
+  }
+  /* width */
+  line(0, -o, P.w, -o); line(0, -o - 1.1, 0, -o + 1.1); line(P.w, -o - 1.1, P.w, -o + 1.1);
+  txt(P.w / 2, -o - 1.6, P.w.toFixed(2) + " mm  ·  10 HP");
+  /* height */
+  line(-o, 0, -o, P.h); line(-o - 1.1, 0, -o + 1.1, 0); line(-o - 1.1, P.h, -o + 1.1, P.h);
+  txt(-o - 1.7, P.h / 2, P.h.toFixed(2) + " mm  ·  3 U", "middle", true);
+  /* jack pitch */
+  const j0 = PANEL.jacks[0], j1 = PANEL.jacks[1], jy = j0.y + j0.d / 2 + 3.2;
+  line(j0.x, jy, j1.x, jy); line(j0.x, jy - .9, j0.x, jy + .9); line(j1.x, jy - .9, j1.x, jy + .9);
+  txt((j0.x + j1.x) / 2, jy + 2.4, PANEL.jackPitchX + " mm");
+  /* mount inset */
+  const m = PANEL.mounts[0];
+  line(P.w + 2.2, 0, P.w + 2.2, m.y); line(P.w + 1.3, 0, P.w + 3.1, 0); line(P.w + 1.3, m.y, P.w + 3.1, m.y);
+  txt(P.w + 3.6, m.y / 2 + .7, m.y + " mm", "start");
+}
+
+function select(id) {
+  document.querySelectorAll(".hole.sel").forEach(e => e.classList.remove("sel"));
+  const info = INFO[id]; if (!info) return;
+  const e = gP.querySelector(`[data-id="${id}"]`); if (e) e.classList.add("sel");
+  selected = id;
+  document.getElementById("roK").innerHTML = info.k;
+  document.getElementById("roT").textContent = info.t;
+  document.getElementById("roS").textContent = info.s;
+  document.getElementById("roD").innerHTML = info.d;
+  document.getElementById("roM").innerHTML = info.m.map(x => "<div>" + x + "</div>").join("");
+}
+
+gP.addEventListener("click", e => { const id = e.target.dataset && e.target.dataset.id; if (id) select(id); });
+gP.addEventListener("mousemove", e => { const id = e.target.dataset && e.target.dataset.id; if (id && id !== selected) select(id); });
+
+/* toggles */
+const tgDim = document.getElementById("tgDim"), tgConf = document.getElementById("tgConf");
+tgDim.addEventListener("click", () => {
+  const on = tgDim.getAttribute("aria-pressed") === "true";
+  tgDim.setAttribute("aria-pressed", String(!on));
+  gD.style.display = on ? "none" : "";
+});
+tgConf.addEventListener("click", () => {
+  const on = tgConf.getAttribute("aria-pressed") === "true";
+  tgConf.setAttribute("aria-pressed", String(!on));
+  /* Confidence view: everything derived from the 1:1 template goes cyan; the one
+     hole that was inferred rather than observed goes amber. */
+  gP.querySelectorAll(".hole").forEach(h => {
+    if (on) { h.style.stroke = ""; h.style.strokeWidth = ""; }
+    else {
+      const unver = h.classList.contains("unver");
+      h.style.stroke = unver ? "var(--am)" : "var(--cy)";
+      h.style.strokeWidth = unver ? ".55" : ".32";
+    }
+  });
+});
+
+/* ---------- boot CPU readout simulator ---------- */
+const cpu = document.getElementById("cpu");
+const leds = [...document.querySelectorAll("#simLeds .led")];
+const GLOW = c => `0 0 16px ${c}, 0 0 4px ${c} inset`;
+
+function renderCpu() {
+  const v = +cpu.value, f = v / 100;
+  leds.forEach(l => { l.style.background = "#0a0d10"; l.style.boxShadow = "none"; });
+
+  const val = document.getElementById("cpuVal"),
+        cap = document.getElementById("cpuCap"),
+        ver = document.getElementById("cpuVerdict");
+
+  if (v === 0) {
+    leds[0].style.background = "#0d2233"; leds[0].style.boxShadow = GLOW("rgba(62,168,255,.35)");
+    val.textContent = "no data"; val.style.color = "var(--dim)";
+    cap.textContent = "first boot after flashing";
+    ver.textContent = "A single dim blue light means the module has not measured anything yet. " +
+      "Play hard for a few minutes, power-cycle, and come back.";
+    return;
+  }
+  const green = "#3ad17a", amber = "#ffab3d", red = "#ff4d4d";
+  const light = (i, c) => { leds[i].style.background = c; leds[i].style.boxShadow = GLOW(c); };
+
+  light(0, f >= .25 ? green : "#173a26");
+  if (f >= .50) light(1, green);
+  if (f >= .75) light(2, amber);
+  if (f >= .90) light(3, red);
+
+  val.textContent = v + "%";
+  val.style.color = f >= .90 ? red : f >= .75 ? amber : "var(--cy)";
+  cap.textContent = "worst block of last session";
+  ver.innerHTML =
+    f >= .90 ? "<b style='color:var(--am)'>It did not fit.</b> Audio was almost certainly breaking up. Drop to one lane or trim the effect pool — the design has both escape routes." :
+    f >= .75 ? "Tight but running. Fine for the settings you used; a longer loop or shorter slices would push it over." :
+    f >= .50 ? "Comfortable. Real headroom left for heavier settings." :
+    f >= .25 ? "Easy. The engine is nowhere near the budget." :
+               "Barely touched it. If this holds under heavy settings, the CPU question is closed for good.";
+}
+cpu.addEventListener("input", renderCpu);
+
+/* ---------- reveal ---------- */
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+  }), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".reveal").forEach(e => io.observe(e));
+} else {
+  document.querySelectorAll(".reveal").forEach(e => e.classList.add("in"));
+}
+
+drawPanel(); drawDims(); renderCpu();
+</script>
+</body>
+</html>

@@ -3,6 +3,10 @@
 **Live loop capture, sliced and re-ordered, with seeded per-slice glitch.**
 Alternative firmware for the Noise Engineering Versio platform (Daisy Seed).
 
+**📖 [Operation manual](https://timncox.github.io/smack-versio/)** — the panel
+drawn at true scale from the real hole coordinates, click any control, plus a
+simulator for the boot-time CPU report.
+
 > ### ⚠️ This has never run on hardware
 >
 > It compiles, its memory budget is measured, and everything testable without a
