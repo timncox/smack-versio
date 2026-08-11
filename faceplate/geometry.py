@@ -153,6 +153,6 @@ SWITCH_LABELS = [
     ("GATE", ["CLK", "AUTO", "TRIG"]),
 ]
 
-BUTTON_LABEL = ("CAPTURE", "hold = re-roll")
+BUTTON_LABEL = ("CAPTURE", "hold = re-roll · 2 s = live")
 
 LED_LABELS = ["STATE", "PLAY", "BLEND", "CLOCK"]

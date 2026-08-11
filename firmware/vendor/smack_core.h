@@ -17,17 +17,18 @@
 #include "plugin_api_v1.h"
 
 /* ------------------------------------------------------------------------
- * VENDORED from timncox/schwung-smack @ 169905d ("Release Smack 0.15.2").
+ * VENDORED from timncox/schwung-smack @ 805b7c6 (live mode, branch
+ * worktree-smack-live-mode -- NOT yet merged to main).
  * smack_core.c and plugin_api_v1.h alongside are byte-identical to that SHA.
  * The ONLY edits in this directory are the two constants below.
  *
- * Do not fix bugs here — fix them upstream in ~/tim-os/smack and re-vendor,
+ * Do not fix bugs here -- fix them upstream in ~/tim-os/smack and re-vendor,
  * or the two copies drift. Re-vendor with:
  *   git -C ~/tim-os/smack show <sha>:src/smack_core.c > smack_core.c   (etc.)
  * ------------------------------------------------------------------------ */
 
 /* 48000, not 44100: libDaisy offers 8/16/32/48/96 kHz only (sai.h). Verified
- * 2026-08-08 — `make test` green at 48 k with no engine logic change. */
+ * 2026-08-08 -- `make test` green at 48 k with no engine logic change. */
 #define SMACK_SR          48000
 #define SMACK_MAX_SECONDS 70               /* 16 bars at 55 BPM */
 #define SMACK_RING_FRAMES (SMACK_SR * SMACK_MAX_SECONDS)
@@ -35,7 +36,15 @@
 /* 105 not 96: keeps the fade at ~2.18 ms of wall time at 48 k. */
 #define SMACK_EDGE_FADE   105              /* ~2.2 ms fade at slice/loop edges */
 
-typedef enum { SMACK_IDLE = 0, SMACK_ARMED, SMACK_RECORDING, SMACK_LOOPING } smack_state_t;
+/* SMACK_LIVE is appended so the existing codes stay stable for UIs that
+ * report state as an integer. */
+typedef enum {
+    SMACK_IDLE = 0,
+    SMACK_ARMED,
+    SMACK_RECORDING,
+    SMACK_LOOPING,
+    SMACK_LIVE       /* no captured loop: the pattern runs on the input */
+} smack_state_t;
 
 typedef enum {
     SMACK_FX_NONE = 0,

@@ -295,15 +295,17 @@ footer a:hover{color:var(--cy)}
 
 <section id="play"><div class="wrap reveal">
   <h2 class="sh">Playing it</h2>
-  <div class="sub">03 — Five steps to the first loop</div>
-  <pre><b>1</b>  Patch audio to <i>IN L / IN R</i>. It passes through immediately —
-   the module is not silent before you touch it.
+  <div class="sub">03 — It is already playing before you press anything</div>
+  <pre><b>1</b>  Patch audio to <i>IN L / IN R</i>. The pattern is already running on it —
+   not silent, and not merely passing through.
 <b>2</b>  Patch a clock to <i>CLK</i>. No clock? It free-runs. That is fine.
-<b>3</b>  Play something.
-<b>4</b>  Tap <i>CAPTURE</i>. The last few bars become a loop and start playing.
-<b>5</b>  Bring up <i>FX</i> and <i>ORDER</i>. Turn <i>SEED</i> until you like it.</pre>
-  <p style="margin-top:22px"><b>Hold CAPTURE for more than half a second to re-roll</b> — same
-    loop, new pattern. Everything else is the same knobs you already turned.</p>
+<b>3</b>  Bring up <i>FX</i> and <i>BLEND</i>. Play something. That is the instrument.
+<b>4</b>  Tap <i>CAPTURE</i> when you play something worth keeping. The last few
+   bars become a loop and the pattern moves onto that.
+<b>5</b>  Turn <i>SEED</i> until you like it. Hold <i>CAPTURE</i> 2 s to go back to live.</pre>
+  <p style="margin-top:22px"><b>Hold CAPTURE for more than half a second to re-roll</b> — new
+    pattern, whether you are on a loop or on the live input. <b>Hold it for two seconds</b>
+    to throw the loop away and work on the input again.</p>
   <p><b>LENGTH, SLICE and SEED are stepped</b>, and a stepped control parked exactly on a
     boundary would otherwise chatter between two values as CV noise nudges it back and forth.
     Each has a deadband to stop that. SEED's is deliberately narrower than the others — a
@@ -341,7 +343,7 @@ footer a:hover{color:var(--cy)}
   <table>
     <thead><tr><th>LED</th><th>Shows</th></tr></thead>
     <tbody>
-      <tr><td style="color:var(--led-state)">STATE</td><td>dim blue idle · amber armed · red recording · green looping</td></tr>
+      <tr><td style="color:var(--led-state)">STATE</td><td>cyan live · amber armed · red recording · green looping</td></tr>
       <tr><td style="color:var(--led-play)">PLAY</td><td>Ramps once per pass through the loop. Moving = a loop is playing</td></tr>
       <tr><td style="color:var(--led-blend)">BLEND</td><td>The BLEND knob's position</td></tr>
       <tr><td style="color:var(--led-clock)">CLOCK</td><td>blue external · purple inferred · white free-running · <b style="color:var(--led-clock)">red = CPU above 80%</b></td></tr>
@@ -687,7 +689,7 @@ const PANEL = {
     "y": 67.34,
     "d": 6.0,
     "name": "CAPTURE",
-    "sub": "hold = re-roll",
+    "sub": "hold = re-roll \u00b7 2 s = live",
     "verified": true
   },
   "jacks": [
@@ -820,7 +822,7 @@ function drawPanel() {
       ? (j.name === "CLK"
          ? "The gate input. Clock, capture trigger, or both — the GATE switch decides. One jack doing two jobs is the central design problem of this port."
          : "Sums with the " + j.name + " knob in analogue hardware, so a knob at noon with CV at the jack behaves like a knob being turned.")
-      : "Fixed Versio hardware. Audio passes through here from the moment the module boots.",
+      : "Fixed Versio hardware. Audio is being processed here from the moment the module boots.",
     m: ["x <b>" + j.x + " mm</b>", "y <b>" + j.y + " mm</b>",
         "column pitch <b>" + PANEL.jackPitchX + " mm</b>", "row pitch <b>" + PANEL.jackPitchY + " mm</b>"]
   }));
@@ -860,9 +862,11 @@ function drawPanel() {
     stroke: b.verified ? "rgba(223,231,236,.3)" : "var(--am)", "stroke-width": .28
   }, b.verified ? "" : "unver", {
     k: "Momentary", t: b.name, s: "tap = capture · hold = " + b.sub.replace("hold = ", ""),
-    d: "Tap and the last N steps of what you just played become a loop. Hold past 0.6 s and the " +
-       "pattern re-rolls without touching the audio. This is the only hole the template " +
-       "extraction never found — its position comes from looking at the module.",
+    d: "The module boots into live mode, so this button is the whole state machine. Tap and the " +
+       "last N steps of what you just played become a loop. Hold past 0.6 s and the pattern " +
+       "re-rolls. Hold past 2 s and the loop is dropped, back to processing the input. This is " +
+       "the only hole the template extraction never found — its position comes from looking at " +
+       "the module.",
     m: ["x <b>" + b.x + " mm</b>", "y <b>" + b.y + " mm</b>",
         "confidence <b>observed, not measured</b>"]
   });
@@ -901,7 +905,7 @@ const KNOB_TEXT = [
   "How far the pitch-shifting effects are allowed to move, in semitones."
 ];
 const LED_TEXT = [
-  "Engine state: dim blue idle, amber armed, red recording, green looping.",
+  "Engine state: cyan live, amber armed, red recording, green looping.",
   "Ramps once per pass through the loop. If this is moving, a loop is captured and playing.",
   "Mirrors the BLEND knob, so you can see where the crossfade sits without looking down.",
   "Clock source — blue external, purple inferred, white free-running. It also goes red above 80% CPU, because on the first flash that question outranks everything else."

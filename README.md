@@ -38,8 +38,12 @@ Read [DISCLAIMER.md](DISCLAIMER.md) before flashing.
 ## What it does
 
 Audio runs through the module continuously and is always being recorded into a
-rolling buffer. Press **CAPTURE** and the last N steps of what you just played
-become a loop — no arming, no deciding in advance that you wanted it.
+rolling buffer. From the moment it is patched, the glitch pattern runs **on the
+live input** — that is the resting state, not silence and not a bypass.
+
+Press **CAPTURE** and the last N steps of what you just played become a loop —
+no arming, no deciding in advance that you wanted it. Hold it for two seconds
+to drop the loop and go back to the live input.
 
 That loop is cut into a grid of slices. The slices get re-ordered, and a
 proportion of them get an effect. Which slices, which effects, and in what

@@ -155,8 +155,33 @@ the most exciting thing this port gains.**
 | Knob 7 | **Depth** | global fxp bias / pitch range |
 | SW_0 | **Clock ratio** | `÷2 / =1 / ×2` — ticks per input pulse (§5) |
 | SW_1 | **Gate role** | `CLK / TRIG / AUTO` (§5) |
-| Button | **Capture** (short) / **Re-Roll** (long) | FRGMNTS's lesson |
+| Button | **Capture** (short) / **Re-Roll** (>0.6 s) / **back to Live** (>2 s) | FRGMNTS's lesson; §4.1 |
 | Gate | clock and/or capture trigger | §5 |
+
+#### 4.1 Live mode is the resting state (2026-08-10)
+
+The engine gained a mode that runs the seeded pattern directly on the input
+with no captured loop: the clean side is the input at zero latency, and the
+seven effects that would need to read audio that has not arrived yet source
+from the previous slice instead. Upstream calls it `live`.
+
+On a Eurorack panel that is not a feature, it is the correct *default*. The
+shim already conceded the point in a comment — "a Eurorack effect that is
+silent until you press a button reads as broken" — and answered it with bare
+passthrough. Passthrough clears the bar for "not broken" and nothing else: the
+module is inert until you commit to a capture. Booting into live means the
+glitcher is working the moment it is patched, and Capture becomes what it
+should always have been — *keep this* — rather than the switch that turns the
+module on.
+
+That costs no control, which matters on a panel where every knob and both
+switches are already spent (§6's persistence problem is the same scarcity).
+The button absorbs it: tap = capture, >0.6 s = re-roll, >2 s = drop the loop
+and go back to live. Holding past 2 s crosses the re-roll threshold on the
+way, which is harmless — entering live re-rolls anyway.
+
+STATE LED gains cyan for live; dim blue now only ever means "not running",
+which on this build you should never see.
 
 **Quantized knobs need hysteresis.** Loop Length, Slice Res and Seed are
 discrete, and the knob reading includes summed CV noise. Without a deadband

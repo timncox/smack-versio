@@ -3,7 +3,7 @@
  * Engineering Versio firmware.
  *
  * The DSP is smack_core, vendored unchanged from timncox/schwung-smack
- * @169905d (see vendor/smack_core.h). This file is only the host shim: it
+ * @805b7c6 (see vendor/smack_core.h). This file is only the host shim: it
  * wires the Versio's 7 knobs, 2 switches, button, gate and 4 LEDs to the
  * engine's string parameter API, and turns the gate jack into the 24 ppqn
  * MIDI clock the engine already speaks (clock_adapter.c).
@@ -187,12 +187,20 @@ static void dispatch_switches(void)
     }
 }
 
-/* ---- button: short = capture, long = re-roll ---------------------------- */
+/* ---- button: short = capture, long = re-roll, very long = back to live ---
+ *
+ * The module boots into live mode, so the button is the whole state machine:
+ * tap to freeze what you just played into a loop, hold to re-roll the
+ * pattern, hold longer to throw the loop away and go back to processing the
+ * input. Holding past 2 s passes through the re-roll threshold on the way,
+ * which is harmless — entering live re-rolls anyway. */
 
-#define LONG_PRESS_MS 600.0f
+#define LONG_PRESS_MS  600.0f
+#define LIVE_PRESS_MS 2000.0f
 
 static bool  btn_down      = false;
 static bool  btn_long_done = false;
+static bool  btn_live_done = false;
 
 static void handle_button(void)
 {
@@ -201,12 +209,19 @@ static void handle_button(void)
     if (hw.tap.RisingEdge()) {
         btn_down      = true;
         btn_long_done = false;
+        btn_live_done = false;
     }
 
     if (btn_down && !btn_long_done && hw.tap.Pressed()
         && hw.tap.TimeHeldMs() > LONG_PRESS_MS) {
         smack_set_param(S, "reroll", "1"); /* new pattern, same loop */
         btn_long_done = true;
+    }
+
+    if (btn_down && !btn_live_done && hw.tap.Pressed()
+        && hw.tap.TimeHeldMs() > LIVE_PRESS_MS) {
+        smack_set_param(S, "live", "1");   /* drop the loop, back to the input */
+        btn_live_done = true;
     }
 
     if (btn_down && !hw.tap.Pressed()) {
@@ -265,7 +280,7 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
 /*
  * With no display these four LEDs are the entire status surface, so they
  * answer the questions you actually have while patching:
- *   0  what is the engine doing        (idle / armed / recording / looping)
+ *   0  what is the engine doing        (live / armed / recording / looping)
  *   1  where is the playhead           (pulses once per loop pass)
  *   2  blend position                  (clean loop <-> glitch pattern)
  *   3  clock source + CPU alarm        (see below)
@@ -285,6 +300,7 @@ static void update_leds(void)
         case 1:  hw.SetLed(0, 1.0f, 0.5f, 0.0f); break; /* armed     amber */
         case 2:  hw.SetLed(0, 1.0f, 0.0f, 0.0f); break; /* recording red   */
         case 3:  hw.SetLed(0, 0.0f, 1.0f, 0.0f); break; /* looping   green */
+        case 4:  hw.SetLed(0, 0.0f, 0.8f, 1.0f); break; /* live      cyan  */
         default: hw.SetLed(0, 0.0f, 0.0f, 0.15f);       /* idle      dim   */
     }
 
@@ -407,11 +423,16 @@ int main(void)
         }
     }
 
-    /* Pre-capture behaviour: pass audio through. A Eurorack effect that is
-     * silent until you press a button reads as broken. */
+    /* Pre-capture behaviour: run the pattern on the input. A Eurorack effect
+     * that is silent until you press a button reads as broken — and one that
+     * only passes audio through until you press a button reads as inert. In
+     * live mode the module is already the glitcher the moment it is patched:
+     * the Wet knob blends clean against pattern, FX Density sets how much
+     * happens, and a tap freezes what you just heard into a loop. */
     smack_set_param(S, "monitor", "1");
     smack_set_param(S, "hw_input", "1");
     smack_set_param(S, "wet", "100");
+    smack_set_param(S, "live", "1");
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);

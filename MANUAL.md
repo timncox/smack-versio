@@ -42,9 +42,14 @@ Use at your own risk. No warranty, express or implied.
 ## What it does
 
 Audio runs through the module continuously and is always being recorded into a
-rolling buffer. When you press **CAPTURE**, the last N steps of what you just
-played become a loop — you do not have to arm anything first or know in advance
-that you wanted it.
+rolling buffer. From the moment you patch it in, the glitch pattern is already
+running **on the live input** — no capture, no loop, nothing to press. That is
+the module's resting state.
+
+When you press **CAPTURE**, the last N steps of what you just played become a
+loop and the pattern moves onto that instead — you do not have to arm anything
+first or know in advance that you wanted it. Hold **CAPTURE** for two seconds
+to throw the loop away and go back to working on the live input.
 
 That loop is then cut into a grid of slices. The slices get re-ordered, and a
 proportion of them get an effect applied — which slices, which effects, and in
@@ -70,16 +75,19 @@ than editing individual slices.
 
 ## Quick start
 
-1. Patch audio into **IN L** / **IN R**. It passes through immediately — the
-   module is not silent before you do anything.
+1. Patch audio into **IN L** / **IN R**. The module is already glitching it —
+   it is not silent, and it is not merely passing through, before you do
+   anything.
 2. Patch a clock into **CLK** if you have one. If you don't, it free-runs.
-3. Play something.
-4. Tap **CAPTURE**. The last few bars become a loop and start playing.
-5. Turn **FX** and **ORDER** up. Turn **SEED** until you like the pattern.
-6. **BLEND** decides how much of the mangling you hear.
+3. Turn **FX** up and **BLEND** to taste. Play something. That is the whole
+   instrument already.
+4. Tap **CAPTURE** when you play something worth keeping. The last few bars
+   become a loop and start playing.
+5. Turn **SEED** until you like the pattern.
+6. Hold **CAPTURE** for two seconds to drop the loop and go back to live.
 
-Hold **CAPTURE** for more than half a second to re-roll: same loop, new
-pattern.
+Hold **CAPTURE** for more than half a second to re-roll: new pattern, whether
+you are on a loop or on the live input.
 
 ---
 
@@ -101,7 +109,7 @@ thing this version can do that the Move version cannot.
 | **PITCH** | How far pitch-shifting effects are allowed to move |
 | **CLK** switch | Clock ratio: `/2`, `=1`, `×2` |
 | **GATE** switch | What the gate jack means — see below |
-| **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll the pattern |
+| **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll. Hold >2 s: drop the loop, back to live |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
 **LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on
@@ -142,7 +150,7 @@ Four RGB LEDs are the entire status display.
 
 | LED | Shows |
 |---|---|
-| **STATE** | dim blue idle · amber armed · red recording · green looping |
+| **STATE** | cyan live · amber armed · red recording · green looping |
 | **PLAY** | Ramps once per pass through the loop. Moving = a loop is playing |
 | **BLEND** | The BLEND knob's position |
 | **CLOCK** | blue external · purple inferred · white free-running · **red = CPU above 80%** |
