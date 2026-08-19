@@ -38,7 +38,21 @@ C_SOURCES = clock_adapter.c versio_alloc.c smack_core_versio.c
 
 # The engine ships lo-fi varispeed on purpose; -ffast-math would also let the
 # compiler reorder the float paths the seeded FX depend on. Leave it off.
-OPT = -Os
+#
+# -O3, not -Os. The first hardware run reported a stored CPU peak over 90% and
+# the audio callback was overrunning its 2.67 ms block, which is what a buzz
+# and a starved main loop look like. The engine was being compiled for SIZE --
+# every DSP inner loop in smack_core included.
+#
+# That -Os was inherited from the attempt to squeeze a BOOT_NONE image into
+# 128 KB of internal flash. This is a BOOT_SRAM build: the app lives in SRAM,
+# where it occupies 151,740 of 480 KB. Size was never the constraint here, so
+# -Os was buying nothing and costing throughput on the one axis that can kill
+# the project.
+#
+# If a BOOT_NONE build is ever revived (see BOOT_NONE.md), that configuration
+# genuinely is flash-bound and will want -Os back -- set it there, not here.
+OPT = -O3
 
 SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
 include $(SYSTEM_FILES_DIR)/Makefile
