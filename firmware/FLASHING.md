@@ -36,8 +36,11 @@ stock. You are not modifying anything you can't undo.
 
 ## Every time: flash the app
 
-1. Power-cycle the module. The bootloader waits briefly at boot — while it's
-   waiting, the Daisy enumerates as a DFU device.
+1. Power-cycle the module. The bootloader waits **2000 ms** at boot — that is
+   the `-2000ms` in `dsy_bootloader_v6_4-intdfu-2000ms.bin` — and the Daisy
+   enumerates as a DFU device for that window only. Run the next command
+   inside it; if you miss it the app has already started, so power-cycle and
+   try again.
 2. ```
    make -C firmware program-dfu
    ```
@@ -125,8 +128,19 @@ under CV is the thing this module gains over the Move version.
 - **No DFU device**: it's a power-only USB cable, or the BOOT/RESET sequence
   didn't take. Retry step 1.
 - **Nothing happens after flashing**: the bootloader may not have been
-  installed. `dfu-util -l` while the module boots should show the Daisy PID
-  rather than the ST PID.
+  installed — but **you cannot tell that from the PID.** libDaisy sets
+  `DAISY_PID = df11` and `STM_PID = df11` in `core/Makefile`, so the STM32's
+  built-in DFU and the Daisy bootloader both enumerate as `0483:df11`. Two
+  things do discriminate:
+  - **Timing.** The bootloader's DFU window closes after 2000 ms and the
+    device drops off `dfu-util -l`. The STM32's built-in DFU — entered by
+    holding BOOT — stays enumerated indefinitely. A device that vanishes
+    ~2 s after power-up is the bootloader doing its job.
+  - **The alt-setting `name=` string** in `dfu-util -l`, which names the
+    memory region the mode exposes: internal flash at `0x08000000` for ST's
+    DFU, the QSPI region at `0x90000000` for the bootloader. Read the strings
+    off your own `dfu-util -l`; they are deliberately not quoted here because
+    nobody has run this on hardware yet.
 - **Sound but no capture**: check SW_1 and whether anything is patched to the
   gate. With nothing patched it free-runs at 120 BPM, which is fine — Capture
   should still work.
