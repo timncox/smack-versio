@@ -55,6 +55,15 @@ static VersioSettings                   *CFG = NULL;
  * was worth it, so this is a ceiling on write frequency, not a write rate. */
 #define SAVE_INTERVAL_MS 10000u
 
+/*
+ * libDaisy's software PWM expects Update() at its Init() samplerate, which
+ * RgbLed leaves at the 1000.0f default. Everything that holds an LED state
+ * has to pump it at this rate or the carrier drops below flicker fusion.
+ */
+#define LED_REFRESH_HZ   1000u
+#define LED_RECALC_MS    8u     /* colours only need ~125 Hz; PWM needs 1 kHz */
+#define READOUT_HOLD_MS  2500u
+
 #define BLOCK_SIZE 128
 
 /* ---- host shim (the entire host surface smack_core needs) --------------- */
@@ -311,6 +320,38 @@ static void update_leds(void)
     else
         hw.SetLed(3, 0.0f, 0.3f, 1.0f);             /* external      blue */
 
+    /* Deliberately no UpdateLeds() here -- see refresh_leds(). This function
+     * only decides colours; pushing them runs on a much faster clock. */
+}
+
+/*
+ * Software PWM, and the reason the panel looked dead on the first hardware
+ * run.
+ *
+ * The Versio's LEDs are plain GPIO, not a driver chip, so libDaisy makes
+ * brightness by toggling the pin inside Led::Update():
+ *
+ *     pwm_ += 120.f / samplerate_;
+ *     hw_pin_.Write(bright_ > pwm_ ? on_ : off_);
+ *
+ * RgbLed::Init() never passes a samplerate, so samplerate_ is the 1000.0f
+ * default, and led.h says plainly that it "sets the rate at which Update()
+ * will be called". Call it slower and the PWM carrier drops with it: the old
+ * 125 Hz main loop (DelayMs(8)) produced about 15 Hz, far below flicker
+ * fusion.
+ *
+ * Worse, Led::Set() cubes its argument for gamma. LED 0's idle 0.15 becomes
+ * 0.15^3 ~= 0.003 -- a 0.3% duty cycle at 15 Hz, indistinguishable from off.
+ * The panel was not dead; it was being strobed too slowly and too faintly to
+ * see.
+ *
+ * The boot readout escaped this by accident: it calls UpdateLeds() exactly
+ * once and then blocks in DelayMs(2500), so the pin is written once and held
+ * -- 100% duty. That is why the readout was the one thing that worked, and
+ * why its working was misleading rather than reassuring.
+ */
+static void refresh_leds(void)
+{
     hw.UpdateLeds();
 }
 
@@ -352,8 +393,16 @@ static void show_cpu_peak_readout(float peak)
             hw.SetLed(3, 1.0f, 0.0f, 0.0f); /* red    - it did not fit */
     }
 
-    hw.UpdateLeds();
-    hw.DelayMs(2500);
+    /* Hold the bar by pumping the software PWM at its rated 1 kHz, not by
+     * writing once and sleeping. A single UpdateLeds() followed by
+     * DelayMs(2500) latches the pin for the whole hold, i.e. 100% duty on
+     * every lit LED -- which would erase the only thing this readout encodes.
+     * "Measured and low" is 0.15 green and "measured, over a quarter" is 0.6;
+     * at a latched 100% those are the same picture. */
+    for (uint32_t t = 0; t < READOUT_HOLD_MS; t++) {
+        refresh_leds();
+        hw.DelayMs(1);
+    }
 }
 
 /* ---- boot --------------------------------------------------------------- */
@@ -421,10 +470,29 @@ int main(void)
     CFG->cpu_peak = 0.0f;
     cpu.Reset();
 
-    uint32_t last_save = System::GetNow();
+    uint32_t last_save   = System::GetNow();
+    uint32_t last_recalc = 0;
 
     for (;;) {
-        update_leds();
+        /*
+         * Two different clocks on purpose.
+         *
+         * refresh_leds() is the software PWM and must run at ~1 kHz or the
+         * panel strobes below flicker fusion and reads as dead -- that was
+         * the first hardware run's failure.
+         *
+         * update_leds() only decides colours, and it is the expensive half:
+         * three smack_get_param() calls, each an snprintf. Running that at
+         * 1 kHz would triple the main loop's cost for no visible benefit,
+         * so it stays at ~125 Hz, which is already faster than anyone can
+         * see a colour change.
+         */
+        uint32_t t_led = System::GetNow();
+        if (t_led - last_recalc >= LED_RECALC_MS) {
+            last_recalc = t_led;
+            update_leds();
+        }
+        refresh_leds();
 
         /* Worst block this session. Clamped because an overrunning callback
          * can report over 100%, and a value outside 0..1 would fail
@@ -454,6 +522,6 @@ int main(void)
             STORE.Save(); /* no-op unless operator!= says it was worth it */
         }
 
-        hw.DelayMs(8); /* ~120 Hz LED refresh; audio runs in the callback */
+        hw.DelayMs(1); /* ~1 kHz, the rate libDaisy's software PWM expects */
     }
 }
