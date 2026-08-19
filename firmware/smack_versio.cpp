@@ -301,6 +301,10 @@ static void update_leds(void)
     if (P[P_WET].last < 0) wet = 0.0f;
     hw.SetLed(2, wet, 0.35f * (1.0f - wet), 1.0f - wet);
 
+#ifndef DIAG_HEARTBEAT
+    /* LED 3 belongs to the heartbeat in a diagnostic build -- writing it here
+     * too would just overwrite the blink with a steady colour and prove
+     * nothing. */
     float load = cpu.GetAvgCpuLoad();
     if (load > 0.80f)
         hw.SetLed(3, 1.0f, 0.0f, 0.0f);              /* CPU alarm      red */
@@ -310,6 +314,7 @@ static void update_leds(void)
         hw.SetLed(3, 0.5f, 0.0f, 0.8f);             /* inferred    purple */
     else
         hw.SetLed(3, 0.0f, 0.3f, 1.0f);             /* external      blue */
+#endif
 
     hw.UpdateLeds();
 }
@@ -424,6 +429,29 @@ int main(void)
     uint32_t last_save = System::GetNow();
 
     for (;;) {
+#ifdef DIAG_HEARTBEAT
+        /*
+         * DIAGNOSTIC BUILD ONLY -- not for release. See DIAGNOSE.md.
+         *
+         * The panel went dark after the boot readout on the first hardware
+         * run. Everything in update_leds() is downstream of a smack_get_param
+         * call, so a dark panel cannot distinguish "the main loop is not
+         * running" from "the loop runs but the engine reads fail". This
+         * writes LED 3 and pushes it to the driver BEFORE touching the engine
+         * or anything else, so it blinks if and only if the main loop is
+         * alive.
+         *
+         *   LED 3 blinking white ~2 Hz -> loop is alive; the fault is in the
+         *                                 engine reads or in LEDs 0-2.
+         *   LED 3 dark or frozen       -> the loop never runs past here.
+         */
+        {
+            uint32_t t  = System::GetNow();
+            float    on = ((t / 250u) & 1u) ? 0.6f : 0.0f;
+            hw.SetLed(3, on, on, on);
+            hw.UpdateLeds();
+        }
+#endif
         update_leds();
 
         /* Worst block this session. Clamped because an overrunning callback

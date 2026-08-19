@@ -52,3 +52,15 @@ override CFLAGS   += -flto
 override CPPFLAGS += -flto
 override LDFLAGS  += -flto -Os
 endif
+
+# Diagnostic build: blink LED 3 from the top of the main loop, before any
+# engine call, so a dark panel tells you whether the loop is running at all.
+# See DIAGNOSE.md. Always clean first -- the sources are identical between a
+# diagnostic and a release build, so make will not rebuild on the flag change
+# alone and you will happily flash the wrong one.
+#
+#   make -C firmware clean && make -C firmware DIAG=1 && make -C firmware program-dfu
+ifeq ($(DIAG), 1)
+override CFLAGS   += -DDIAG_HEARTBEAT
+override CPPFLAGS += -DDIAG_HEARTBEAT
+endif
