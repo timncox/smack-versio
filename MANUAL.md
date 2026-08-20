@@ -242,6 +242,12 @@ It runs last, after BLEND, on the module's whole output. So it works on your dry
 input before you have captured anything at all, which nothing else on this panel
 does.
 
+**It takes over the moment the knob next reaches the centre**, not the moment you
+select it. You choose the filter by turning PITCH to the *right*, which is also a
+filter position — without the wait, closing the layer would drop a highpass onto
+whatever is playing. Bring the knob back to the notch and it picks up from there,
+which is where a filter sits between gestures anyway.
+
 The trade is that PITCH range loses its knob and is pinned at **one octave**
 while the filter has it. That is a deliberate swap and not a compromise: pitch
 range is a set-and-forget parameter and a filter sweep is a performance one.

@@ -317,6 +317,20 @@ static bool        G_PUNCHING = false;
  */
 static volatile float G_DJ_CTL = 0.0f;
 
+/*
+ * Has the PITCH knob passed through the notch since it was given the filter?
+ *
+ * You SELECT the DJ filter by turning PITCH to the right, which is also a
+ * filter position -- so without this, closing the config layer would drop a
+ * highpass at roughly 1 kHz straight onto whatever is playing. That breaks the
+ * layer's one promise, which is that leaving it never jumps anything.
+ *
+ * So the filter stays bypassed until the knob next reaches the centre notch,
+ * and picks up from there. The notch is where a DJ filter lives between
+ * gestures anyway, so the move that arms it is the move you were going to make.
+ */
+static bool G_DJ_ARMED = false;
+
 /* Button state. Declared here rather than beside handle_button() because
  * moving the gate switch has to reset it -- a press that began under one role
  * must not be completed under another. */
@@ -413,6 +427,8 @@ static void apply_config(void)
              * control -- pin it at one octave, which is what it is worth when
              * nothing can steer it. */
             smack_set_param(S, "pitch_range", "12");
+            G_DJ_CTL   = 0.0f;
+            G_DJ_ARMED = false; /* wait for the notch -- see G_DJ_ARMED */
         } else {
             /* Handing the knob back: the engine must take its real position,
              * not the one the filter left behind. This IS the boot path, and
@@ -448,6 +464,13 @@ static void update_dj_ctl(void)
     if (n < 0.5f - DEAD)      c = (n - (0.5f - DEAD)) / SPAN; /* -1 .. 0  LP */
     else if (n > 0.5f + DEAD) c = (n - (0.5f + DEAD)) / SPAN; /*  0 .. +1 HP */
 
+    /* Freshly handed the knob: stay out of circuit until it reaches the notch,
+     * so that selecting the filter cannot itself apply one. */
+    if (!G_DJ_ARMED) {
+        if (c != 0.0f) { G_DJ_CTL = 0.0f; return; }
+        G_DJ_ARMED = true;
+    }
+
     if (c < -1.0f) c = -1.0f;
     if (c >  1.0f) c =  1.0f;
     G_DJ_CTL = c;
@@ -477,10 +500,15 @@ static void set_gate_role(gate_role_t role)
     btn_cleared = false;
     btn_tap_n   = 0;
 
-    /* The config layer is reachable only from the centre, so it cannot outlive
-     * a move away from it -- otherwise the knobs would still be addressing
-     * settings in a position whose LEDs no longer say so. */
-    if (G_CONFIG && role != GATE_NORMAL) config_exit();
+    /*
+     * Only PUNCH closes the config layer, because only PUNCH takes the button
+     * away -- there would be no way left to leave. DUAL keeps every button
+     * gesture, so the layer works there and there is no reason to evict it.
+     *
+     * This has to agree with what handle_button() will open, or the switch
+     * would kick you out of somewhere you can walk straight back into.
+     */
+    if (G_CONFIG && role == GATE_PUNCH) config_exit();
 
     G_GATE = role;
     smack_set_param(S, "channel_mode", role == GATE_DUAL ? "1" : "0");
