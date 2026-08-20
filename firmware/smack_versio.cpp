@@ -580,6 +580,65 @@ static void refresh_leds(void)
     hw.UpdateLeds();
 }
 
+#ifdef DIAG_KNOBMAP
+/*
+ * Knob identification. DIAGNOSE.md.
+ *
+ * The panel-position -> ADC-index mapping was assumed to be panel reading
+ * order and is wrong: BLEND turned up where the diagram says ORDER. Two
+ * reported symptoms are not enough to derive a 7-way permutation, and
+ * libDaisy cannot help -- its knobs are named KNOB_0..KNOB_6 against an
+ * adc_pin[] table that describes traces, not panel positions.
+ *
+ * So ask the hardware. Turn one knob; the module reports which ADC index
+ * moved, in binary on LEDs 0-2 (LED0 = bit0), with LED 3 white while a knob
+ * is actually being turned. Indices 0..6 all fit in three bits.
+ *
+ * Work along the panel in the order the diagram shows and write down what
+ * each position reports. That is the mapping, measured rather than assumed.
+ */
+static void knobmap_service(void)
+{
+    static float    seen[P_COUNT] = {0};
+    static int      last   = -1;
+    static uint32_t last_t = 0;
+    static bool     primed = false;
+
+    if (!primed) {
+        for (int i = 0; i < P_COUNT; i++) seen[i] = hw.GetKnobValue(i);
+        primed = true;
+    }
+
+    /* Biggest mover since the previous pass, so a knob being turned wins over
+     * ADC noise on the six that are not. */
+    int   best = -1;
+    float bestd = 0.02f; /* ignore anything smaller than obvious jitter */
+    for (int i = 0; i < P_COUNT; i++) {
+        float v = hw.GetKnobValue(i);
+        float d = v - seen[i];
+        if (d < 0.0f) d = -d;
+        if (d > bestd) { bestd = d; best = i; }
+        seen[i] = v;
+    }
+
+    uint32_t now = System::GetNow();
+    if (best >= 0) { last = best; last_t = now; }
+
+    for (int i = 0; i < 4; i++) hw.SetLed(i, 0.0f, 0.0f, 0.0f);
+    if (last >= 0) {
+        /* binary, LED0 = bit0 */
+        if (last & 1) hw.SetLed(0, 0.0f, 1.0f, 0.0f);
+        if (last & 2) hw.SetLed(1, 0.0f, 1.0f, 0.0f);
+        if (last & 4) hw.SetLed(2, 0.0f, 1.0f, 0.0f);
+        /* index 0 lights nothing in binary, so mark "a knob was identified"
+         * separately -- otherwise ADC 0 is indistinguishable from idle. */
+        if (last == 0) hw.SetLed(0, 0.6f, 0.0f, 0.6f); /* magenta = index 0 */
+    }
+    if (now - last_t < 300u) hw.SetLed(3, 0.6f, 0.6f, 0.6f); /* turning now */
+    hw.UpdateLeds();
+}
+#endif
+
 #ifdef DIAG_BOOTSTAGE
 /*
  * Boot-stage indicator. DIAGNOSE.md.
@@ -804,6 +863,11 @@ int main(void)
          * calls, and press latency is felt directly. */
         handle_button();
 
+#ifdef DIAG_KNOBMAP
+        knobmap_service();
+        hw.DelayMs(1);
+        continue; /* nothing else runs in knob-identification builds */
+#endif
         /* Knobs and switches are rate-limited -- see KNOB_DISPATCH_MS. */
         if (t_led - last_knobs >= KNOB_DISPATCH_MS) {
             last_knobs = t_led;

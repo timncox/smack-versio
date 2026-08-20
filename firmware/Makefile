@@ -87,6 +87,14 @@ ifeq ($(DIAG), 1)
 override CFLAGS   += -DDIAG_HEARTBEAT
 override CPPFLAGS += -DDIAG_HEARTBEAT
 endif
+# DIAG=4 identifies knobs. Turn one; the panel reports which ADC index moved,
+# in binary on LEDs 0-2 (magenta on LED 0 means index 0). Use it to measure the
+# panel-position -> ADC-index mapping instead of assuming it.
+ifeq ($(DIAG), 4)
+override CFLAGS   += -DDIAG_KNOBMAP
+override CPPFLAGS += -DDIAG_KNOBMAP
+endif
+
 ifeq ($(DIAG), 3)
 override CFLAGS   += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
 override CPPFLAGS += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
