@@ -240,10 +240,25 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
 {
     cpu.OnBlockStart();
 
-    hw.ProcessAllControls();
-    handle_button();
-    dispatch_switches();
-    dispatch_knobs();
+    /*
+     * Controls are NOT read here. They are handled in the main loop.
+     *
+     * dispatch_knobs() calls smack_set_param(), and the engine does real work
+     * inside it -- a seed change runs roll_pattern(), which regenerates the
+     * whole pattern synchronously. Doing that inside a 2.67 ms audio budget
+     * overruns the block and is audible as glitching whenever the Seed knob
+     * moves. Every other knob paid a smaller version of the same tax: one
+     * snprintf per change, in an interrupt.
+     *
+     * The engine never expected this. Its own comments refer to "the shadow
+     * UI's knob cache" -- on the Move build set_param comes from the UI
+     * thread, and only smack_process() runs in audio. Putting the dispatch in
+     * the callback was a porting mistake.
+     *
+     * What stays here is what is genuinely per-block: the gate edge and the
+     * clock advance need frame accuracy, and the conversion and process calls
+     * are the audio work itself.
+     */
 
     /* Gate edge -> clock. One jack does double duty: in INFER/AUTO the
      * intervals between triggers supply the tempo (DESIGN.md §5). */
@@ -593,6 +608,13 @@ int main(void)
             hw.SetLed(3, on, on, on);
         }
 #endif
+        /* Controls, at ~1 kHz -- faster than the 375 Hz block rate they used
+         * to be polled at, and now outside the audio interrupt. */
+        hw.ProcessAllControls();
+        handle_button();
+        dispatch_switches();
+        dispatch_knobs();
+
         if (t_led - last_recalc >= LED_RECALC_MS) {
             last_recalc = t_led;
             update_leds();
