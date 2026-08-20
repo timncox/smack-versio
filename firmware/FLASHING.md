@@ -51,7 +51,11 @@ stock. You are not modifying anything you can't undo.
 
 **On boot, with nothing patched:** audio passes through. A Eurorack effect
 that is silent until you press a button reads as broken, so the module starts
-in passthrough (`monitor=1`).
+in passthrough. The engine's own monitor path is off (`monitor=0`) and the
+dry/wet crossfade happens in the host callback instead, which is the only
+point where the live input and the effected loop still exist separately.
+With nothing captured, BLEND is bypassed entirely and the input passes
+through untouched.
 
 **For the first ~2.5 seconds, the LEDs are not showing normal status** — they
 are replaying the worst CPU load from your *previous* session, as a bar. On the
@@ -117,6 +121,7 @@ rather than running silent.
 | SW_1 | Gate role: right CLK, centre AUTO, left TRIG |
 | **Button, tap** | **Re-roll** — new pattern, same loop |
 | **Button, hold** (>600 ms) | **Capture** — grab the last N steps |
+| **Button, double-tap** | **LIVE** — re-capture once per loop pass; LED 0 cyan |
 | **Button, hold** (>2 s) | **Clear** — drop the loop, back to passthrough |
 | Gate in | Clock and/or capture trigger, per SW_1 |
 | CV in ×7 | Sums with its knob (analog, always active) |

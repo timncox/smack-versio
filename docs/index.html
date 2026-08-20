@@ -424,8 +424,9 @@ footer a:hover{color:var(--cy)}
     <div class="alarm" style="margin-top:0;border-left-color:var(--led-clock);border-color:rgba(255,77,77,.5);background:linear-gradient(90deg,rgba(255,77,77,.10),rgba(255,77,77,.02) 60%,transparent)">
       <h3 style="color:var(--led-clock)">⚠ Do not flash v0.1.0</h3>
       <p><b>v0.1.0 hard-faults on boot.</b> It was tagged before the firmware had ever run on
-        hardware, and the first module to run it never produced a sound: the audio callback
-        overran its buffer on every block. The download above is left in place only so the
+        hardware, and the first module to run it produced only a steady buzz — the audio
+        callback overran its buffer on every block, so it emitted noise rather than
+        anything you patched into it. The download above is left in place only so the
         checksums on the release stay honest.</p>
       <p><b>Wait for v0.2.0</b>, which is what this manual describes — or build from
         <a href="https://github.com/timncox/smack-versio">source</a> in the meantime.</p>
