@@ -11,12 +11,62 @@ trouble, which is encouraging and is not a measurement. The boot report is the
 measurement — play hard, power cycle, read the LED bar (see below). Nobody has
 done that yet.
 
+## The easy way: flash it from a browser
+
+**No terminal, no `dfu-util`.** Electro-Smith's Daisy Web Programmer at
+<https://flash.daisy.audio/> talks to the module over WebUSB from Chrome or
+Edge, and it can do both steps this firmware needs.
+
+1. **Flash the Daisy bootloader** — once, ever. Put the Daisy in DFU (hold
+   BOOT, tap RESET, release BOOT), connect, and use the programmer's
+   **bootloader** tab. Pick a **v6.4** image.
+2. **Flash the app.** Power-cycle the module. The bootloader gives you a grace
+   period — its LED pulses — and enumerates as a DFU device. Use the
+   programmer's **file upload** tab and give it `smack_versio.bin` from the
+   release.
+
+**You do not have to enter an address.** The app has to land at `0x90040000`,
+not at the start of QSPI, and the programmer works that out from the device:
+when the writable region begins at `0x90000000` it adds `0x40000` itself.
+That is not a guess — it is `app/dfu-util.js` in
+[electro-smith/Programmer](https://github.com/electro-smith/Programmer):
+
+```js
+let segment = device.getFirstWritableSegment();
+if (segment) {
+    if (segment.start === 0x90000000)
+        segment.start += 0x40000
+    device.startAddress = segment.start;
+```
+
+**One caveat, stated plainly.** That code is the *previous* version of the
+tool, which is the one whose source can be read; `flash.daisy.audio` is a newer
+rewrite whose logic ships as WebAssembly. It is the same vendor, the same
+bootloader and the same memory map, so the behaviour is almost certainly
+unchanged — but nobody has yet flashed *this* firmware with *that* tool. If you
+do, the check is simple: the module should boot and pass audio. If it comes up
+dead, fall back to the `dfu-util` route below, which is known good.
+
+### Noise Engineering's own uploader is a different thing
+
+<https://portal.noiseengineering.us/> flashes **Noise Engineering's** firmwares
+onto their modules, chosen from a list. It is how you put the module **back to
+stock** — which is worth knowing, and is the reason none of this is permanent.
+It is not a way to install this firmware, and third-party Versio firmware in
+general is installed with the Daisy tool above.
+
 ## What you need
 
 - The Versio out of the case — the micro-USB is on the **back** of the Daisy
   Seed, not the panel.
 - `dfu-util` (already installed on this machine: 0.10).
 - A USB cable that carries data, not just power.
+
+## The manual way: `dfu-util`
+
+Everything below is the command-line route. It is what these instructions were
+built and tested against, and it is the fallback if the browser tool gives you
+trouble.
 
 ## One-time: install the Daisy bootloader
 

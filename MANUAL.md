@@ -236,6 +236,15 @@ module comes out of the case. This build needs the Daisy bootloader installed
 once, because the app is larger than the STM32H750's 128 KB of internal flash
 and runs from SRAM instead.
 
+**You do not need a terminal for either step.** Electro-Smith's [Daisy Web
+Programmer](https://flash.daisy.audio/) flashes the bootloader and then the
+firmware from Chrome or Edge, and works out the app's `0x90040000` address
+itself — you never type one.
+
+Noise Engineering's own uploader at <https://portal.noiseengineering.us/> is a
+different tool: it flashes *their* firmwares, which is how you put the module
+back to stock. It will not install this one.
+
 ---
 
 ## The faceplate

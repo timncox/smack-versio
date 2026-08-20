@@ -457,13 +457,40 @@ footer a:hover{color:var(--cy)}
   <h2 class="sh">Installing</h2>
   <div class="sub">06 — And getting back to stock</div>
   <p class="lede">The micro-USB port is on the <b>back of the Daisy Seed</b>, so the module comes
-    out of the case. Expect that in the edit loop.</p>
+    out of the case either way. Expect that in the edit loop.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:34px 0 6px;letter-spacing:.02em">From a browser</h3>
+  <p><b>No terminal needed.</b> Electro-Smith's <a href="https://flash.daisy.audio/">Daisy Web
+    Programmer</a> talks to the module over WebUSB from Chrome or Edge, and does both steps:</p>
+  <pre><i># once, ever — hold BOOT, tap RESET, release BOOT, then:</i>
+<b>bootloader tab → a v6.4 image</b>
+
+<i># every time — power-cycle, then while the bootloader's LED pulses:</i>
+<b>file upload tab → smack_versio.bin</b></pre>
+  <p style="margin-top:22px"><span class="tag ok">from its source</span> You never type an
+    address. The app has to land at <code>0x90040000</code> rather than the start of QSPI, and
+    the programmer derives that from the device — when the writable region begins at
+    <code>0x90000000</code> it adds <code>0x40000</code> itself. That is
+    <a href="https://github.com/electro-smith/Programmer">app/dfu-util.js</a>, not an
+    assumption.</p>
+  <p><span class="tag no">untested here</span> That source is the previous version of the tool;
+    <code>flash.daisy.audio</code> is a rewrite whose logic ships as WebAssembly. Same vendor,
+    same bootloader, same memory map — but nobody has yet flashed <em>this</em> firmware with
+    <em>that</em> tool. If it comes up dead, the command-line route below is known good.</p>
+  <p><b>Noise Engineering's own uploader is a different thing.</b>
+    <a href="https://portal.noiseengineering.us/">portal.noiseengineering.us</a> flashes
+    <em>their</em> firmwares from a list — it is how you go back to stock, which is why none of
+    this is permanent. It is not a way to install this.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From a terminal</h3>
+  <p>What these instructions were built and tested against, and the fallback if the browser
+    tool gives you trouble.</p>
   <pre><i># once — the Daisy bootloader (hold BOOT, tap RESET, release BOOT)</i>
 <b>make -C firmware program-boot</b>
 
 <i># every time — power-cycle first, then while the bootloader waits</i>
 <b>make -C firmware program-dfu</b></pre>
-  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~142&nbsp;KB and
+  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~158&nbsp;KB and
     the STM32H750 has only <b>128&nbsp;KB of internal flash</b>, so it runs from SRAM via the
     bootloader. Only 26&nbsp;KB of that is this project — the rest is libDaisy and the ST HAL.
     It is also why the two reference firmwares are 85–91&nbsp;KB: they were built to fit

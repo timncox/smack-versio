@@ -1,5 +1,17 @@
 # Fitting in internal flash (and why that matters)
 
+> **2026-08-20: the reason for wanting this has mostly gone away.** The premise
+> below is that `BOOT_SRAM` costs the user a terminal and a button chord. It
+> does not have to: the Daisy Web Programmer flashes both the bootloader and a
+> `BOOT_SRAM` app from a browser, and works out the `0x90040000` app address by
+> itself. See "flash it from a browser" in FLASHING.md.
+>
+> So a `BOOT_NONE` port would buy one less click, in exchange for rebuilding
+> libDaisy at `-Os -flto` — which is exactly the change most likely to move CPU
+> load, the one number this project still has not measured. Not worth it on
+> those terms. The measurements below stay because they are real and because
+> the trade may look different once the CPU bar has been read.
+
 **Result, measured 2026-08-19: it fits, with 16 KB to spare.** A `BOOT_NONE`
 build lands at **114,472 bytes of 131,072 — 87.3%.** The Makefile's standing
 claim that a plain internal-flash build is impossible is now out of date; it
