@@ -1,10 +1,9 @@
 # Fitting in internal flash (and why that matters)
 
-> **2026-08-20: the reason for wanting this has mostly gone away.** The premise
-> below is that `BOOT_SRAM` costs the user a terminal and a button chord. It
-> does not have to: the Daisy Web Programmer flashes both the bootloader and a
-> `BOOT_SRAM` app from a browser, and works out the `0x90040000` app address by
-> itself. See "flash it from a browser" in FLASHING.md.
+> **2026-08-20: done, and it works.** A `BOOT_NONE` build fits, runs, costs no
+> visible CPU, and — the thing that mattered — **flashes from Noise
+> Engineering's own firmware page.** Details below. What follows was written
+> when this was still a proposal; the measurements have been updated in place.
 >
 > **2026-08-20, later the same day: the case is back on, for a better reason.**
 > The reference third-party firmwares are internal-flash builds — WTF! at 91 KB,
@@ -68,6 +67,19 @@ did before v0.2.0. The Makefile says so at the flag.
 Even 96.37% is tight for something to build on. The next lever, if it is
 needed, is the USB serial logger — the Makefile's own notes put that at
 -7.1 KB, which would land around 91%.
+
+### It flashes from Noise Engineering's own uploader
+
+**2026-08-20, confirmed on hardware: NE's firmware page accepted this build,
+flashed it, and the module runs it.** Driven hard afterwards the CPU bar read
+LED 0 alone — under 50%, the same band as every other reading.
+
+That is the entire point of this file, and it is now demonstrated rather than
+hoped for. A `BOOT_NONE` image is the shape their uploader writes: internal
+flash at `0x08000000`, no bootloader, no QSPI — the same shape as WTF! (91 KB)
+and FRGMNTS (85 KB). Installing this firmware no longer requires a terminal,
+`dfu-util`, or even the Daisy web programmer. It requires the page Versio
+owners already use.
 
 ### Flashed, and it runs
 

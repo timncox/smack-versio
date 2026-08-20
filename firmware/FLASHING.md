@@ -48,7 +48,7 @@ unchanged — but nobody has yet flashed *this* firmware with *that* tool. If yo
 do, the check is simple: the module should boot and pass audio. If it comes up
 dead, fall back to the `dfu-util` route below, which is known good.
 
-### Noise Engineering's own uploader — and why this build cannot use it
+### Noise Engineering's own uploader — works, with the right build
 
 NE's firmware page does take a file you choose yourself; there is a real file
 input on it. It is also how you put the module **back to stock**, which is the
@@ -61,10 +61,30 @@ are plain images at `0x08000000` — no bootloader, no QSPI — which is exactly
 what a stock-firmware flasher writes. This build is 158 KB at `0x90040000`, so
 it needs the Daisy bootloader and the tool above.
 
-Making this installable from NE's page therefore means matching their shape: a
-`BOOT_NONE` build small enough for internal flash. That is measured as feasible
-— 114,472 bytes, right in WTF!/FRGMNTS territory — and written up in
-[BOOT_NONE.md](BOOT_NONE.md). It is not what ships today.
+Matching their shape means a `BOOT_NONE` build, small enough for internal
+flash. **That build exists and is confirmed working: 126,312 bytes, flashed
+from NE's page on 2026-08-20, running on a module, under 50% CPU driven hard.**
+See [BOOT_NONE.md](BOOT_NONE.md).
+
+So there are two builds, and which one you want depends on how you would rather
+install it:
+
+| | `BOOT_NONE` | `BOOT_SRAM` |
+|---|---|---|
+| Install | **NE's own firmware page** — no terminal, no bootloader | Daisy web programmer, or `dfu-util` |
+| Size | 126,312 B of 131,072 (96.4%) | 132,492 B, into 480 KB of SRAM |
+| Room to grow | **~4.7 KB** | plenty |
+| `%f` in params | **omitted** — see the Makefile | linked |
+| Boot | quicker — no 2.5 s bootloader wait | 2.5 s grace period first |
+
+Build the portal-flashable one with:
+
+```
+make -C firmware clean && make -C firmware APP_TYPE=BOOT_NONE USE_LTO=1
+```
+
+It needs libDaisy rebuilt at `-Os -flto` first — see BOOT_NONE.md, and back the
+archive up before you do.
 
 ## What you need
 
