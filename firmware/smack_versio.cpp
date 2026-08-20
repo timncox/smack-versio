@@ -41,6 +41,13 @@ static CpuLoadMeter cpu;
 static uint8_t DSY_SDRAM_BSS g_pool[POOL_BYTES];
 
 static smack_t         *S;
+
+/* Engine state, published by update_leds() at ~125 Hz and read by the audio
+ * callback. Plain int: a torn read is impossible on a 32-bit aligned word,
+ * and a one-block-stale value is inaudible. This exists so the callback can
+ * know whether a loop is playing WITHOUT calling smack_get_param(), which is
+ * an snprintf and has no business in an interrupt. 3 == SMACK_LOOPING. */
+static volatile int     G_RUN_STATE = 0;
 static clock_adapter_t  CLK;
 static host_api_v1_t    HOST;
 
@@ -62,6 +69,22 @@ static VersioSettings                   *CFG = NULL;
  */
 #define LED_REFRESH_HZ   1000u
 #define LED_RECALC_MS    8u     /* colours only need ~125 Hz; PWM needs 1 kHz */
+
+/*
+ * How often knob changes are pushed to the engine.
+ *
+ * Not 1 kHz, which is what the main loop runs at. smack_set_param("seed")
+ * calls roll_pattern(), which rewrites the pattern while the audio interrupt
+ * is rendering from it -- a real race, audible as digital artifacts. Sweeping
+ * SEED across its 128 values at loop rate would fire up to 128 rebuilds, each
+ * one colliding with the renderer.
+ *
+ * 20 ms caps that at 50 rebuilds a second, which is still far faster than a
+ * hand can turn a knob and is imperceptible as latency. This narrows the race
+ * rather than closing it; closing it properly means double-buffering the
+ * pattern so the renderer never reads a half-written one.
+ */
+#define KNOB_DISPATCH_MS 20u
 #define READOUT_HOLD_MS  2500u
 
 #define BLOCK_SIZE 128
@@ -378,6 +401,21 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
      */
     int   bl  = P[P_WET].last;
     float wet = (bl < 0) ? 1.0f : (float)bl * 0.01f;
+
+    /*
+     * With no loop captured the engine returns silence (monitor = 0), so
+     * blending toward it would fade the module into nothing. DESIGN.md is
+     * explicit that a Eurorack effect which is silent until you press a
+     * button reads as broken -- so until there is something to blend WITH,
+     * BLEND is bypassed and the input passes through untouched.
+     *
+     * The effects are retro by nature: slicing, reordering and re-pitching
+     * all need a recorded buffer, so there is no live-processed signal to
+     * offer here even in principle.
+     */
+    if (G_RUN_STATE != 3) /* not SMACK_LOOPING */
+        wet = 0.0f;
+
     float dry = 1.0f - wet;
 
     for (size_t i = 0; i < size; i++)
@@ -406,6 +444,7 @@ static void update_leds(void)
     int  run = 0;
     if (smack_get_param(S, "run_state", buf, sizeof(buf)) >= 0)
         run = atoi(buf);
+    G_RUN_STATE = run;
 
     switch (run) {
         case 1:  hw.SetLed(0, 1.0f, 0.5f, 0.0f); break; /* armed     amber */
@@ -666,6 +705,7 @@ int main(void)
 
     uint32_t last_save   = System::GetNow();
     uint32_t last_recalc = 0;
+    uint32_t last_knobs  = 0;
 
     for (;;) {
         /*
@@ -694,9 +734,17 @@ int main(void)
         /* Controls, at ~1 kHz -- faster than the 375 Hz block rate they used
          * to be polled at, and now outside the audio interrupt. */
         hw.ProcessAllControls();
+
+        /* Button at full loop rate: the debounce shift register needs regular
+         * calls, and press latency is felt directly. */
         handle_button();
-        dispatch_switches();
-        dispatch_knobs();
+
+        /* Knobs and switches are rate-limited -- see KNOB_DISPATCH_MS. */
+        if (t_led - last_knobs >= KNOB_DISPATCH_MS) {
+            last_knobs = t_led;
+            dispatch_switches();
+            dispatch_knobs();
+        }
 
         if (t_led - last_recalc >= LED_RECALC_MS) {
             last_recalc = t_led;
