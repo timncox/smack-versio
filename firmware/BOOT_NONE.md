@@ -69,14 +69,25 @@ Even 96.37% is tight for something to build on. The next lever, if it is
 needed, is the USB serial logger — the Makefile's own notes put that at
 -7.1 KB, which would land around 91%.
 
-### What this build has not done
+### Flashed, and it runs
 
-**Run.** These are link-time numbers. Nothing has been flashed, and the whole
-reason for wanting `-Os` on libDaisy is also the reason to be careful with it:
-it changes the driver and interrupt paths. CPU is now measured at a 50-75% peak
-under `-O3` libDaisy (DESIGN.md §8), so there is finally a baseline — flash a
-`BOOT_NONE` build, drive it equally hard, power-cycle and compare the bar. If
-it climbs a band, `-Os` is the cost.
+**2026-08-20: a `BOOT_NONE` build was flashed to internal flash and works** —
+audio, capture and LIVE all confirmed. That answers the LTO worry: `-Os -flto`
+across libDaisy did not expose latent undefined behaviour that `-O3` per-file
+had been tolerating. A build that links turned out to be a build that works.
+
+**CPU: LED 0 alone, i.e. under 50%**, driven hard. The `-O3` libDaisy baseline
+was 50-75% on its hardest run and under 50% on another (DESIGN.md §8), so this
+lands in the same band as the better of the two with no sign of a regression.
+
+Stated carefully, because the runs are not identical: what was tested is that
+`-Os` on libDaisy **did not visibly cost CPU**, not that it is free to four
+significant figures. A four-LED bar cannot support a stronger claim than that.
+The worry that `-Os` would slow the driver and interrupt paths is not supported
+by anything observed.
+
+Boot is also perceptibly quicker, since the bootloader's 2.5-second grace
+period is simply gone.
 
 Two separate levers, and the order matters:
 
