@@ -9,9 +9,8 @@
 # same shape WTF! and FRGMNTS ship (DESIGN.md section 10).
 #
 # This script deliberately stops at a file on disk. It does not tag, push,
-# create a GitHub release, or upload anything: this firmware has never run on
-# hardware, and publishing it is a decision for a human who has heard it. When
-# that changes, the zip is ready to attach.
+# create a GitHub release, or upload anything -- publishing firmware is a
+# decision for a human. The zip is ready to attach when that decision is made.
 #
 # Note on release.json: the Schwung store pattern does NOT apply here. That
 # release.json is read by schwung-manager to install Move module *tarballs*;
@@ -61,9 +60,15 @@ Alternative firmware for the Noise Engineering Versio.
 READ DISCLAIMER.md FIRST. This is third-party firmware, it is not a Noise
 Engineering product, and NE cannot support it.
 
-THIS VERSION HAS NEVER BEEN RUN ON HARDWARE. It compiles and everything
-testable without a module passes, but nobody has heard it. Flashing it makes
-you its first hardware test.
+THIS BUILD STILL NEEDS TESTING. The firmware has been played on a module --
+audio, capture, the knob layout and the effects are all confirmed by ear -- but
+this exact binary carries two fixes that have not yet been run on hardware:
+LIVE mode (which had never fired at all before now) and the loop recorder's
+buffer sizing. Both are covered by native tests. Neither has been heard.
+
+The boot CPU report has also never been read, so the headroom figure the whole
+design rests on is still unconfirmed. Play hard, power cycle, read the LED bar
+-- that is the one measurement worth sending back.
 
   smack_versio.bin   the firmware
   FLASHING.md        how to install it, and how to go back to stock
@@ -91,5 +96,4 @@ ls -l "$ROOT/dist/smack-versio-$VERSION.zip"
 # BSD head has no -n -N, so filter rather than trim from the end.
 unzip -l "$ROOT/dist/smack-versio-$VERSION.zip" | awk 'NR>3 && NF>3 && $1 != "----"'
 echo
-echo "Not published. Tagging and releasing is a human decision -- this build"
-echo "has never run on a module."
+echo "Not published. Tagging and releasing is a human decision."
