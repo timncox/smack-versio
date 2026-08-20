@@ -41,12 +41,42 @@ one has fed this image to that page yet.
 
 ## The measurements
 
+Rebuilt 2026-08-20 against the current source. **It still fits, but the margin
+is much thinner than it was**, because the code has grown since the first
+measurement — the ring-stall fix, LIVE mode and the float-printf link flag all
+landed in between.
+
 | Configuration | bytes | of 128 KB |
 |---|---:|---:|
-| `BOOT_SRAM` (what ships today) | 142,324 | — |
-| `BOOT_NONE`, libDaisy stock `-O3`, no LTO | ~142,000 | ~108% |
-| `BOOT_NONE`, libDaisy `-O3 -flto` | 134,116 | 102.3% |
-| `BOOT_NONE`, libDaisy `-Os -flto` | **114,472** | **87.3%** |
+| `BOOT_SRAM` (what ships today) | 158,468 | — |
+| `BOOT_NONE`, libDaisy `-Os -flto`, **2026-08-19** | 114,472 | 87.3% |
+| `BOOT_NONE`, libDaisy `-Os -flto`, **2026-08-20** | 130,880 | **99.85%** |
+| `BOOT_NONE`, same, **without `-u _printf_float`** | **126,312** | **96.37%** |
+
+99.85% is 192 bytes of headroom, which is not a configuration anyone should
+ship — it is one edit away from failing to link, which is precisely the failure
+this file warned about at the bottom.
+
+Dropping `-u _printf_float` buys back 4,568 bytes and takes it to 96.37%, with
+4,760 spare. The Makefile now omits that flag for `BOOT_NONE` only. That is
+safe **because this firmware reads exactly three engine params and all three
+are integer-formatted** — `run_state` `"%d"`, `loop_frames` `"%u"`,
+`play_frame` `"%d"`. Read any of the engine's six float-formatted params from a
+`BOOT_NONE` build and it will silently come back 0, exactly as `play_frame`
+did before v0.2.0. The Makefile says so at the flag.
+
+Even 96.37% is tight for something to build on. The next lever, if it is
+needed, is the USB serial logger — the Makefile's own notes put that at
+-7.1 KB, which would land around 91%.
+
+### What this build has not done
+
+**Run.** These are link-time numbers. Nothing has been flashed, and the whole
+reason for wanting `-Os` on libDaisy is also the reason to be careful with it:
+it changes the driver and interrupt paths. CPU is now measured at a 50-75% peak
+under `-O3` libDaisy (DESIGN.md §8), so there is finally a baseline — flash a
+`BOOT_NONE` build, drive it equally hard, power-cycle and compare the bar. If
+it climbs a band, `-Os` is the cost.
 
 Two separate levers, and the order matters:
 
@@ -83,6 +113,18 @@ make -C firmware APP_TYPE=BOOT_NONE USE_LTO=1
 **Back up `libDaisy/build/libdaisy.a` first.** That archive is shared with every
 other Daisy project on the machine, and this rebuild replaces it. Restoring it
 is a file copy; forgetting to is a confusing afternoon in some unrelated repo.
+
+The `-O3` archive from before the 2026-08-20 rebuild is kept at
+`~/tim-os/scratch/libdaisy.a.O3-backup`:
+
+```
+cp ~/tim-os/scratch/libdaisy.a.O3-backup ~/tim-os/daisy-sdk/libDaisy/build/libdaisy.a
+```
+
+This is not academic. With libDaisy at `-Os -flto`, the ordinary `BOOT_SRAM`
+build drops from 158,468 to 132,492 bytes — so **a rebuild today does not
+reproduce the published v0.2.0 binary.** Restore the archive before cutting a
+release, or rebuild libDaisy at stock `-O3` first.
 
 ## What is not established
 
