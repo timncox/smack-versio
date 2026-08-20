@@ -224,9 +224,9 @@ footer a:hover{color:var(--cy)}
     <h3>Early firmware — and it works</h3>
     <p>It runs on a module. Audio, capture, the knob layout, the effects and LIVE mode are all
       confirmed by ear, and the clock adapter, settings layer, allocator and DSP engine have
-      passing native test suites. <b>The boot CPU report reads 50–75% at the worst case</b> —
-      driven hard with LIVE running — so the headroom question the whole design rested on is
-      answered. It fits.</p>
+      passing native test suites. <b>The boot CPU report reads 50–75% at the worst of two hard
+      runs</b> — the other read under 50% — so the headroom question the whole design rested on
+      is answered. It fits.</p>
     <p>Expect rough edges, and expect to flash again. Throughout this manual,
       <span style="color:var(--cy)">cyan</span> marks what has been measured or verified and
       <span style="color:var(--am)">amber</span> marks what is assumed. Read the colours.</p>
@@ -578,7 +578,7 @@ footer a:hover{color:var(--cy)}
       <tr><td>Ring recorder</td><td><span class="tag ok">verified</span></td><td>Stall fixed; captures past the old stall point went 0% → 93.7% fresh</td></tr>
       <tr><td>Switch positions</td><td><span class="tag ok">confirmed</span></td><td>Derived by elimination, then checked against the hardware</td></tr>
       <tr><td>Button hole position</td><td><span class="tag ok">observed</span></td><td>Placed from the module by eye, not caliper-measured</td></tr>
-      <tr><td>CPU headroom</td><td><span class="tag ok">measured</span></td><td>Boot report: 50–75% peak driven hard with LIVE. The 80% alarm never fired</td></tr>
+      <tr><td>CPU headroom</td><td><span class="tag ok">measured</span></td><td>Two hard runs: 50–75% and under 50%. The 80% alarm never fired. Block render only</td></tr>
     </tbody>
   </table>
   <p style="margin-top:24px">If you flash this, the boot CPU reading and whether the knob legend

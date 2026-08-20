@@ -277,9 +277,10 @@ Here is what "working" looks like, in order:
    SLICE short, LENGTH long.
 
 All five are confirmed on a module. Step 5 was the one that mattered and it
-passed: driven hard with LIVE running, the boot report came back with STATE and
-PLAY lit and nothing above — **a peak in the 50–75% band**, well clear of the
-80% alarm. The engine fits.
+passed. The boot report is per-session — the peak is cleared the moment it is
+shown — and two hard runs read **50–75%** and **under 50%**. Neither tripped
+the 80% alarm. The engine fits, with the worse of the two still leaving a
+quarter of a block spare.
 
 **The PLAY LED is the one to watch if something seems inert.** It ramps once
 per loop pass, so it is the fastest check that the playhead is actually moving

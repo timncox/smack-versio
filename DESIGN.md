@@ -425,16 +425,30 @@ module needs the Daisy bootloader installed once.
 480 MHz single-core M7 versus the Move's Cortex-A53. The saving grace is that
 only 1–2 effects render at a time (one per lane), not 26.
 
-The reading comes from the boot report (§6): driven hard — FX and Order Density
-up, short Slice Res, long loop, LIVE mode re-capturing every pass — the worst
-block of the session lit LED 0 and LED 1 and nothing above, which the readout
-defines as ≥50% and <75%. The 80% live alarm never fired.
+The reading comes from the boot report (§6), which is per-session — the peak is
+zeroed right after it is displayed, so each power cycle measures the run before
+it. Two runs, both driven hard:
 
-**So it fits, with 25–50% of a block to spare at the worst case.** That is
-headroom, not comfort: the contingencies below stay on the shelf rather than
-being deleted. If a future change pushes into amber, drop to one lane or trim
-the FX pool — and note that Verb, Freeze, PShift and Scatter are the expensive
-ones to profile first.
+| Run | Bar | Peak |
+|---|---|---|
+| played hard | LED 0 + LED 1 | ≥50%, <75% |
+| played hard, continuous re-capture | LED 0 only | <50% |
+
+The 80% live alarm never fired in either. Take 50–75% as the figure: it is the
+worse of the two.
+
+Worth knowing what this number does *not* cover. `CpuLoadMeter` brackets the
+audio callback, so it measures block render only. Pattern rolls, parameter
+reads and LIVE's re-capture all run in the main loop and are invisible to it —
+which is by design (they were moved out of the ISR precisely so they could not
+cost audio) but it does mean "50–75%" is a statement about DSP, not about total
+work.
+
+**So it fits, with at least a quarter of a block to spare at the worst
+observed case.** That is headroom, not comfort: the contingencies below stay on
+the shelf rather than being deleted. If a future change pushes into amber, drop
+to one lane or trim the FX pool — and note that Verb, Freeze, PShift and
+Scatter are the expensive ones to profile first.
 
 ---
 

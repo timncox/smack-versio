@@ -6,9 +6,11 @@ module has been played hard: audio, capture, the knob layout and the effects
 are all confirmed by ear. The steps and addresses below are known good.
 
 The question that mattered from the start — **does the engine fit in the CPU
-budget?** — is answered. Driven hard with LIVE running, the boot report came
-back showing STATE and PLAY lit and nothing above: **a peak of 50–75%**, with
-the 80% alarm never firing. It fits.
+budget?** — is answered. Two hard runs read **50–75%** (STATE and PLAY lit) and
+**under 50%** (STATE only), and the 80% alarm never fired in either. It fits.
+
+The bar is per-session: the stored peak is cleared the moment it is displayed,
+so every power cycle reports the run before it rather than an all-time high.
 
 ## The easy way: flash it from a browser
 
