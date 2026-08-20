@@ -220,8 +220,8 @@ rather than running silent.
 | Knob 5 | Blend — dry input ↔ effected loop |
 | Knob 6 | Seed — the "I don't like this pattern" knob |
 | Knob 7 | Pitch Range |
-| SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |
-| SW_1 | Right CLK, centre AUTO, left DUAL — two independent L/R lanes |
+| SW_0 | Clock ratio: left `/2`, centre `=1`, right `x2` (deduced, unverified by ear) |
+| SW_1 | Left CLK, centre AUTO, **right DUAL** — two independent L/R lanes, 75-90% CPU |
 | **Button, tap** | **Re-roll** — new pattern, same loop |
 | **Button, hold** (>600 ms) | **Capture** — grab the last LENGTH steps |
 | **Button, double-tap** | **LIVE** — re-capture once per loop pass; LED 0 cyan |

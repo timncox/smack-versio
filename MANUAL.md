@@ -110,8 +110,8 @@ thing this version can do that the Move version cannot.
 | **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
-| **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
-| **GATE** switch | Right CLK, centre AUTO, left DUAL (two independent lanes) — see below |
+| **CLK** switch | Clock ratio: left `/2`, centre `=1`, right `×2` — *see the note below* |
+| **GATE** switch | Left CLK, centre AUTO, **right DUAL** (two independent lanes) — see below |
 | **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
@@ -178,9 +178,17 @@ read — and, in one position, does something else entirely.
 
 | Position | What happens |
 |---|---|
-| **CLK** | The jack is a clock. Tempo comes from the pulse intervals |
-| **AUTO** | Worked out from what arrives — a steady train reads as a clock, sporadic hits read as triggers |
-| **DUAL** | Clock stays on AUTO, and **L and R become two independent lanes** — see below |
+| **Left — CLK** | The jack is a clock. Tempo comes from the pulse intervals |
+| **Centre — AUTO** | Worked out from what arrives — a steady train reads as a clock, sporadic hits read as triggers |
+| **Right — DUAL** | Clock stays on AUTO, and **L and R become two independent lanes** — see below |
+
+> **The switch orientations in this manual were backwards until 2026-08-20.**
+> DUAL was documented on the left and is actually on the right, observed on
+> hardware. The CLK switch is driven from the same libDaisy constants, so by
+> the same reasoning its ratios are also mirrored — **left `/2`, right `×2`**,
+> which is what the table above now says. That one is a deduction from
+> observing the *other* switch, not something anyone has checked by ear. Patch
+> a clock, flip it, and listen: whichever side halves the tempo is `/2`.
 
 ### DUAL
 
@@ -192,9 +200,18 @@ It is the widest thing this module does, and it is genuinely hard to get any
 other way from a 10 HP effect: not a stereo effect on one signal, but two
 signals being cut up differently.
 
-**It costs CPU.** The effected path renders twice instead of once, which is
-the one place the module's headroom actually gets spent. If you drive it hard
-in DUAL, that is the setting worth checking the boot CPU report against.
+**It costs most of the module's remaining CPU, and that is measured.** The
+effected path renders twice instead of once. Driven hard:
+
+| | Boot report | Peak |
+|---|---|---|
+| Normal | STATE + PLAY | 50–75% |
+| **DUAL** | STATE + PLAY + **BLEND amber** | **75–90%** |
+
+It fits — the readout never reached red, which is 90% — but DUAL spends nearly
+all of what was left. Treat it as a deliberate setting rather than somewhere to
+leave the switch. If you want it cheaper, **BLEND is the lever**: only the wet
+path doubles, so pulling BLEND back reduces the cost proportionally.
 
 The position used to be TRIG, which forced tempo to be inferred from trigger
 intervals. Very little is lost: AUTO already tells a steady clock from sparse

@@ -248,11 +248,26 @@ static void dispatch_knobs(void)
  * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2.
  *
  * POS_UP and POS_DOWN are libDaisy's names, not the panel's. These switches
- * are mounted horizontally on the Versio: POS_UP is the RIGHT-hand position
- * and POS_DOWN is the LEFT (confirmed on hardware 2026-08-19). So SW_0 is
- * right = /2, centre = =1, left = x2, and SW_1 is right = CLK, centre = AUTO,
- * left = TRIG. The docs say left/centre/right; only this file speaks
- * libDaisy's vocabulary, and it should not leak back out. */
+ * are mounted horizontally on the Versio, so one of them is the left-hand
+ * position and one is the right, and which is which was got wrong here.
+ *
+ * This comment used to assert POS_UP = RIGHT, "confirmed on hardware
+ * 2026-08-19". That is contradicted by a direct observation on 2026-08-20:
+ * DUAL is dispatched on POS_DOWN and appears in the RIGHT-hand position. So
+ * **POS_DOWN = RIGHT and POS_UP = LEFT**, and the earlier confirmation was
+ * either about something else or never actually checked.
+ *
+ * Which makes SW_1: left = CLK, centre = AUTO, right = DUAL.
+ *
+ * SW_0 is dispatched from the same constants, so by the same reasoning it is
+ * left = /2, centre = =1, right = x2 -- the opposite of what the manual has
+ * said all along. That is a deduction from one observation of the other
+ * switch, NOT something anyone has checked by ear, and it is flagged as such
+ * in MANUAL.md rather than quietly corrected. Halve or double a patched clock
+ * and listen; that settles it in ten seconds.
+ *
+ * The docs speak left/centre/right; only this file speaks libDaisy's
+ * vocabulary, and it should not leak back out. */
 static void dispatch_switches(void)
 {
     static int last0 = -1, last1 = -1;
