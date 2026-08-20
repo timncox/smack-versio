@@ -13,10 +13,11 @@ BUILD   = firmware/build
 .PHONY: test clean
 
 test: $(BUILD)/test_clock_adapter $(BUILD)/test_versio_alloc $(BUILD)/test_settings \
-      $(BUILD)/test_param_format $(BUILD)/test_ring_stall
+      $(BUILD)/test_dj_filter $(BUILD)/test_param_format $(BUILD)/test_ring_stall
 	./$(BUILD)/test_clock_adapter
 	./$(BUILD)/test_versio_alloc
 	./$(BUILD)/test_settings
+	./$(BUILD)/test_dj_filter
 	./$(BUILD)/test_param_format
 	./$(BUILD)/test_ring_stall
 
@@ -33,6 +34,12 @@ $(BUILD)/test_versio_alloc: firmware/test/test_versio_alloc.c \
                             firmware/smack_core_versio.c
 	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -I firmware $^ -o $@ -lm
+
+# The DJ filter is header-only so it can be measured here rather than judged by
+# ear on the module -- see the file header for what that buys.
+$(BUILD)/test_dj_filter: firmware/test/test_dj_filter.c firmware/dj_filter.h
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) firmware/test/test_dj_filter.c -o $@ -lm
 
 # Pins the parameter output format. The engine must format every readable
 # param with integer conversions only -- see the file header for why a "%f"

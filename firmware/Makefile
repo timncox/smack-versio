@@ -52,7 +52,30 @@ C_SOURCES = clock_adapter.c versio_alloc.c smack_core_versio.c
 #
 # If a BOOT_NONE build is ever revived (see BOOT_NONE.md), that configuration
 # genuinely is flash-bound and will want -Os back -- set it there, not here.
+# BOOT_NONE is the configuration that comment predicted, and it is now the one
+# that ships. It gets -Os; everything else keeps -O3.
+#
+# The two constraints point opposite ways and only one of them is scarce in
+# each configuration. BOOT_SRAM has 480 KB of SRAM for a 152 KB app, so size
+# buys nothing there and -O3 is free. BOOT_NONE has 128 KB of internal flash,
+# full stop, and at -O3 the image was 127,016 bytes -- 4 KB of headroom, which
+# is less than one feature. Measured on this tree, 2026-08-20:
+#
+#     -O3   127,016     -O2   123,572     -Os   117,260     (limit 131,072)
+#
+# So -Os buys back 9.7 KB, and the thing it spends is throughput on a build
+# that had CPU to spare: the last hardware run reported its peak as a single
+# green LED, under 25%. That is the trade this makes -- flash is the binding
+# constraint on BOOT_NONE and CPU is not.
+#
+# It is also the trade to UNDO first if the boot CPU bar ever comes up amber:
+# -O2 keeps 7.5 KB of headroom, which is most of the win at a fraction of the
+# throughput cost.
+ifeq ($(APP_TYPE), BOOT_NONE)
+OPT = -Os
+else
 OPT = -O3
+endif
 
 SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
 include $(SYSTEM_FILES_DIR)/Makefile
