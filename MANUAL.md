@@ -130,6 +130,39 @@ and exactly one seed for SEED, which needs a much narrower band or turning it
 would skip most of the 128 seeds. Both live in `deadband_for()` in
 `firmware/smack_versio.cpp`.
 
+### LIVE mode
+
+**Double-tap CAPTURE.** LED 0 turns cyan. Double-tap again to leave.
+
+Normally you capture once and that snapshot repeats until you capture again —
+turn the knobs and the *pattern* changes, but the audio underneath is the same
+few seconds forever. In LIVE, the module re-captures itself once per loop pass,
+so the buffer keeps refilling with what you are playing now.
+
+**LENGTH sets how often that happens, and the wait is a full loop pass:**
+
+| LENGTH | At 120 BPM, refreshes every | Feels like |
+|---|---|---|
+| 8 steps | 1 s | near-live, chattery |
+| 32 steps | 4 s | a bar or two behind |
+| 256 steps | **32 s** | slow drift, nearly ambient |
+
+So at 256 steps, LIVE looks completely dead for half a minute. **If you want
+LIVE to feel live, turn LENGTH down** — that is the control, not a setting
+elsewhere. With no clock patched the tempo is the internal free-run one, so the
+interval is set by LENGTH alone.
+
+It stays in time because capture is grid-aligned: it takes the quantum ending
+at the last boundary and chases the current phase, so re-firing never drifts or
+restarts mid-bar.
+
+**LIVE records your dry input, never the effected output.** Each pass is clean
+source, re-sliced from scratch, so effects never compound on themselves and the
+loop cannot degrade into mush over time. What LIVE is *not* is a true insert:
+reverse, tapestop, scratch, retrig and freeze all work on audio that has
+already happened, so there is no zero-latency version of them to build. One
+loop pass is the floor.
+
 ---
 
 ## The clock
