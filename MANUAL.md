@@ -252,26 +252,34 @@ what isn't, and how to correct it.
 
 ## Is it working?
 
-Because nobody has run this on hardware yet, here is what "working" looks like,
-in order:
+Here is what "working" looks like, in order:
 
 1. **Audio passes through on boot.** If not, the flash did not take.
 2. **The boot LED readout appears** for ~2.5 s, then normal operation.
-3. **Tap CAPTURE while audio is playing** — STATE goes green and PLAY starts
-   ramping.
+3. **Hold CAPTURE for about a second** while audio is playing — STATE goes
+   green and PLAY starts ramping. A *tap* re-rolls the pattern instead; it is
+   the hold that grabs a loop.
 4. **Turn FX and ORDER up.** The loop should audibly come apart.
 5. **The CLOCK LED never goes red** under heavy settings — FX and ORDER high,
    SLICE short, LENGTH long.
 
-Step 5 is the one that matters. If the CLOCK LED stays out of the red, the
-project's one genuinely open question is answered.
+Steps 1–4 have been done on a module. Step 5 is the one still open: if the
+CLOCK LED stays out of the red, the project's last genuinely unknown question
+is answered.
+
+**The PLAY LED is the one to watch if something seems inert.** It ramps once
+per loop pass, so it is the fastest check that the playhead is actually moving
+— and a playhead position that never advances is exactly what stopped LIVE
+mode from working on every build before v0.2.0.
 
 ### If something is wrong
 
 | Symptom | Likely cause |
 |---|---|
 | No sound at all | Flash did not take, or the bootloader is missing |
-| Sound, but CAPTURE does nothing | Check the GATE switch; with nothing patched it should still work |
+| Sound, but CAPTURE does nothing | You may be tapping — tap re-rolls, *hold* captures. Otherwise check the GATE switch; with nothing patched it should still work |
+| LIVE goes cyan but never refreshes | Firmware older than v0.2.0. `play_frame` came back empty on hardware, so the wrap that triggers LIVE was never detected |
+| PLAY LED steady instead of ramping | Same cause as above — the ramp is derived from the playhead position |
 | A stepped value flickers at one knob position | Deadband too narrow — widen it in `deadband_for()` (`HYST` for LENGTH/SLICE/PITCH; the one-step band for SEED) |
 | The wrong knob does the wrong thing | Knob-to-ADC order — see [faceplate/MEASURE.md](faceplate/MEASURE.md) §2 |
 | All four LEDs red | Allocation failed — this would be a real bug, please report it |
