@@ -215,10 +215,11 @@ footer a:hover{color:var(--cy)}
 
   <div class="alarm">
     <h3>⚠ Early firmware — played, but not finished</h3>
-    <p>It runs on a module now. Audio passes through, capture works, the effects come apart
-      under FX and ORDER, and the clock adapter, settings layer, allocator and DSP engine all
-      have passing native test suites. <b>What has not been confirmed is the CPU budget under
-      heavy settings</b> — the one number the whole design rests on.</p>
+    <p>It runs on a module. Audio, capture, the knob layout and the effects are all confirmed by
+      ear, it has been played hard without audible trouble, and the clock adapter, settings
+      layer, allocator and DSP engine have passing native test suites. <b>What has not been
+      read yet is the boot CPU report</b> — the actual number the design rests on, as opposed
+      to the absence of complaints from one session.</p>
     <p>Expect rough edges, and expect to flash again. Throughout this manual,
       <span style="color:var(--cy)">cyan</span> marks what has been measured or verified and
       <span style="color:var(--am)">amber</span> marks what is assumed. Read the colours.</p>
@@ -510,12 +511,12 @@ footer a:hover{color:var(--cy)}
       <tr><td>SDRAM allocator</td><td><span class="tag ok">verified</span></td><td>Engine runs on the bump pool, 27.63 MB of 32 MB</td></tr>
       <tr><td>Panel frame</td><td><span class="tag ok">verified</span></td><td>Reproduces the Eurorack mounting standard to 0.01 mm</td></tr>
       <tr><td>Host shim · controls · LEDs</td><td><span class="tag ok">played</span></td><td>Audio, capture and the effects confirmed by ear on a module</td></tr>
-      <tr><td>Knob → ADC order</td><td><span class="tag no">partly confirmed</span></td><td>BLEND observed on hardware; the other six derived from NE's panel drawing</td></tr>
+      <tr><td>Knob → ADC order</td><td><span class="tag ok">confirmed</span></td><td>Derived from NE's panel drawing, then confirmed knob-by-knob on a module</td></tr>
       <tr><td>LIVE mode</td><td><span class="tag no">fixed, unflashed</span></td><td>Never fired before v0.2.0 — play_frame read back empty on hardware</td></tr>
       <tr><td>Ring recorder</td><td><span class="tag ok">verified</span></td><td>Stall fixed; captures past the old stall point went 0% → 93.7% fresh</td></tr>
       <tr><td>Switch positions</td><td><span class="tag ok">confirmed</span></td><td>Derived by elimination, then checked against the hardware</td></tr>
       <tr><td>Button hole position</td><td><span class="tag ok">observed</span></td><td>Placed from the module by eye, not caliper-measured</td></tr>
-      <tr><td>CPU headroom</td><td><span class="tag no">unmeasured</span></td><td>The one thing that needs hardware. See the boot report</td></tr>
+      <tr><td>CPU headroom</td><td><span class="tag no">played, not read</span></td><td>Played hard with no audible trouble. The boot report number is still unread</td></tr>
     </tbody>
   </table>
   <p style="margin-top:24px">If you flash this, the boot CPU reading and whether the knob legend

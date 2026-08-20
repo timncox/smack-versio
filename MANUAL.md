@@ -9,11 +9,15 @@ Alternative firmware for the Noise Engineering Versio platform.
 > record; `docs/index.html` is generated alongside it by hand, so if the two
 > disagree, trust this one.
 
-> **Version 0.1.0 — pre-hardware-validation.**
-> This firmware compiles, its memory budget is measured, and the parts that can
-> be tested without hardware are tested. It has never been run on a module.
-> The first person to flash it is doing the acceptance test. See
-> [Is it working?](#is-it-working) — the module is built to tell you.
+> **Version 0.2.0 — played, not finished.**
+> This has run on a module: audio, capture, the knob layout and the effects are
+> confirmed by ear, and it has been played hard without audible trouble. The
+> boot CPU report has still not been read, so the headroom number the design
+> rests on is unconfirmed. See [Is it working?](#is-it-working).
+>
+> **Do not flash v0.1.0.** It hard-faults on boot — the audio callback treated
+> libDaisy's `size` as frames when it is samples and overran its buffer every
+> block, so the module emitted a steady buzz and nothing else.
 
 ---
 
@@ -263,9 +267,10 @@ Here is what "working" looks like, in order:
 5. **The CLOCK LED never goes red** under heavy settings — FX and ORDER high,
    SLICE short, LENGTH long.
 
-Steps 1–4 have been done on a module. Step 5 is the one still open: if the
-CLOCK LED stays out of the red, the project's last genuinely unknown question
-is answered.
+Steps 1–4 are confirmed on a module, as is the knob layout. Step 5 is the one
+still open — the module has been played hard without audible trouble, but
+nobody has read the boot CPU report yet, and an absence of complaints from one
+session is not the same as a number.
 
 **The PLAY LED is the one to watch if something seems inert.** It ramps once
 per loop pass, so it is the fastest check that the playhead is actually moving
