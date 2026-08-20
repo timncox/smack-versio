@@ -125,7 +125,7 @@ under heavy settings (FX Density and Order Density high, short Slice Res,
 long loop), the CPU question is settled and DESIGN.md §8 can drop its ⚠️.
 
 **All four LEDs solid red** = the engine failed to allocate. That should be
-impossible (12.98 MB of a 16 MB pool, measured natively), but it fails loudly
+impossible (27.63 MB of a 32 MB pool, measured natively), but it fails loudly
 rather than running silent.
 
 ## Controls
@@ -142,7 +142,7 @@ rather than running silent.
 | SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |
 | SW_1 | Gate role: right CLK, centre AUTO, left TRIG |
 | **Button, tap** | **Re-roll** — new pattern, same loop |
-| **Button, hold** (>600 ms) | **Capture** — grab the last N steps |
+| **Button, hold** (>600 ms) | **Capture** — grab the last LENGTH steps |
 | **Button, double-tap** | **LIVE** — re-capture once per loop pass; LED 0 cyan |
 | **Button, hold** (>2 s) | **Clear** — drop the loop, back to passthrough |
 | Gate in | Clock and/or capture trigger, per SW_1 |

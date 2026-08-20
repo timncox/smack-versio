@@ -114,7 +114,7 @@ y += 42
 
 SECTIONS = [
     (CY, "CAPTURE", [
-        ("hold ~1 s", "grab the last N steps as a loop"),
+        ("hold ~1 s", "grab the last LENGTH steps of what you played"),
         ("tap", "re-roll — same loop, brand new pattern"),
         ("double-tap", "LIVE: re-captures itself once per loop pass"),
         ("hold 2 s", "drop the loop, back to dry passthrough"),
@@ -185,6 +185,14 @@ add('</svg>')
 OUT_SVG.write_text("\n".join(out))
 print(f"==> {OUT_SVG.relative_to(HERE.parent)}")
 
+# The manual site embeds this sheet, and GitHub Pages only serves docs/. Copy
+# on every build rather than by hand: the hand copy already went stale once,
+# shipping a sheet whose wording the source had already corrected.
+DOCS = HERE.parent / "docs"
+if DOCS.is_dir():
+    (DOCS / OUT_SVG.name).write_text(OUT_SVG.read_text())
+    print(f"==> docs/{OUT_SVG.name}")
+
 # --- optional PNG ---------------------------------------------------------
 for cmd in (["rsvg-convert", "-w", "2000", "-o", str(OUT_PNG), str(OUT_SVG)],
             ["inkscape", str(OUT_SVG), "--export-type=png", "-w", "2000",
@@ -193,6 +201,9 @@ for cmd in (["rsvg-convert", "-w", "2000", "-o", str(OUT_PNG), str(OUT_SVG)],
     try:
         subprocess.run(cmd, check=True, capture_output=True)
         print(f"==> {OUT_PNG.relative_to(HERE.parent)}")
+        if DOCS.is_dir():
+            (DOCS / OUT_PNG.name).write_bytes(OUT_PNG.read_bytes())
+            print(f"==> docs/{OUT_PNG.name}")
         break
     except (FileNotFoundError, subprocess.CalledProcessError):
         continue
