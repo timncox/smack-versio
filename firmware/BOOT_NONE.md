@@ -1,5 +1,26 @@
 # Fitting in internal flash (and why that matters)
 
+> **2026-08-20: the reason for wanting this has mostly gone away.** The premise
+> below is that `BOOT_SRAM` costs the user a terminal and a button chord. It
+> does not have to: the Daisy Web Programmer flashes both the bootloader and a
+> `BOOT_SRAM` app from a browser, and works out the `0x90040000` app address by
+> itself. See "flash it from a browser" in FLASHING.md.
+>
+> **2026-08-20, later the same day: the case is back on, for a better reason.**
+> The reference third-party firmwares are internal-flash builds — WTF! at 91 KB,
+> FRGMNTS at 85 KB — which is why they install from Noise Engineering's own
+> portal. That portal takes a user-supplied file; what it will not do is write
+> QSPI, so a `BOOT_SRAM` app at `0x90040000` is out of its reach. Matching the
+> shape WTF! and FRGMNTS take is the way onto that path, and `BOOT_NONE` is
+> that shape.
+>
+> The blocker named below is also gone: CPU was measured on hardware at a
+> **50–75% peak** (DESIGN.md §8), so a `-Os -flto` libDaisy rebuild now has a
+> baseline to be compared against rather than being a leap in the dark. Read
+> the bar before and after; if it climbs a band, that is the answer.
+>
+> Sequence still matters — keep a known-good `BOOT_SRAM` build to fall back to.
+
 **Result, measured 2026-08-19: it fits, with 16 KB to spare.** A `BOOT_NONE`
 build lands at **114,472 bytes of 131,072 — 87.3%.** The Makefile's standing
 claim that a plain internal-flash build is impossible is now out of date; it

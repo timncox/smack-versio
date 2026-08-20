@@ -221,12 +221,12 @@ footer a:hover{color:var(--cy)}
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
   <div class="alarm">
-    <h3>⚠ Early firmware — played, but not finished</h3>
-    <p>It runs on a module. Audio, capture, the knob layout and the effects are all confirmed by
-      ear, it has been played hard without audible trouble, and the clock adapter, settings
-      layer, allocator and DSP engine have passing native test suites. <b>What has not been
-      read yet is the boot CPU report</b> — the actual number the design rests on, as opposed
-      to the absence of complaints from one session.</p>
+    <h3>Early firmware — and it works</h3>
+    <p>It runs on a module. Audio, capture, the knob layout, the effects and LIVE mode are all
+      confirmed by ear, and the clock adapter, settings layer, allocator and DSP engine have
+      passing native test suites. <b>The boot CPU report reads 50–75% at the worst of two hard
+      runs</b> — the other read under 50% — so the headroom question the whole design rested on
+      is answered. It fits.</p>
     <p>Expect rough edges, and expect to flash again. Throughout this manual,
       <span style="color:var(--cy)">cyan</span> marks what has been measured or verified and
       <span style="color:var(--am)">amber</span> marks what is assumed. Read the colours.</p>
@@ -441,14 +441,15 @@ footer a:hover{color:var(--cy)}
     </div>
     <div class="alarm" style="margin-top:14px">
       <h3>⚠ Before you flash it</h3>
-      <p>This is <b>early firmware</b>. It has been played on a module — audio, capture, the
-        effects — but it is not finished, and the CPU budget under heavy settings is still
-        unconfirmed. Expect to flash again.</p>
+      <p>This is <b>early firmware</b>, but the parts that mattered are confirmed on a module:
+        audio, capture, the knob layout, the effects, LIVE mode, and a CPU peak of 50–75%
+        driven hard. Expect rough edges and expect to flash again.</p>
       <p>It is third-party firmware. Noise Engineering did not write it and cannot support
         it, so <b>please do not contact them about it</b>. Installing is fully reversible:
         flashing any official NE firmware returns the module to stock.</p>
-      <p>If you run it, the boot CPU reading is the one thing worth
-        <a href="https://github.com/timncox/smack-versio/issues">reporting back</a>.</p>
+      <p>If you run it, <a href="https://github.com/timncox/smack-versio/issues">tell us how it
+        went</a> — especially the boot CPU reading on your module, which is the one number that
+        varies with what you patch into it.</p>
     </div>
   </div>
 </div></section>
@@ -457,13 +458,45 @@ footer a:hover{color:var(--cy)}
   <h2 class="sh">Installing</h2>
   <div class="sub">06 — And getting back to stock</div>
   <p class="lede">The micro-USB port is on the <b>back of the Daisy Seed</b>, so the module comes
-    out of the case. Expect that in the edit loop.</p>
+    out of the case either way. Expect that in the edit loop.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:34px 0 6px;letter-spacing:.02em">From a browser</h3>
+  <p><b>No terminal needed.</b> Electro-Smith's <a href="https://flash.daisy.audio/">Daisy Web
+    Programmer</a> talks to the module over WebUSB from Chrome or Edge, and does both steps:</p>
+  <pre><i># once, ever — hold BOOT, tap RESET, release BOOT, then:</i>
+<b>bootloader tab → a v6.4 image</b>
+
+<i># every time — power-cycle, then while the bootloader's LED pulses:</i>
+<b>file upload tab → smack_versio.bin</b></pre>
+  <p style="margin-top:22px"><span class="tag ok">from its source</span> You never type an
+    address. The app has to land at <code>0x90040000</code> rather than the start of QSPI, and
+    the programmer derives that from the device — when the writable region begins at
+    <code>0x90000000</code> it adds <code>0x40000</code> itself. That is
+    <a href="https://github.com/electro-smith/Programmer">app/dfu-util.js</a>, not an
+    assumption.</p>
+  <p><span class="tag no">untested here</span> That source is the previous version of the tool;
+    <code>flash.daisy.audio</code> is a rewrite whose logic ships as WebAssembly. Same vendor,
+    same bootloader, same memory map — but nobody has yet flashed <em>this</em> firmware with
+    <em>that</em> tool. If it comes up dead, the command-line route below is known good.</p>
+  <p><b>Noise Engineering's own uploader, and why this build cannot use it.</b>
+    <a href="https://portal.noiseengineering.us/">Their firmware page</a> does take a file you
+    choose yourself, and it is also how you go back to stock — which is why none of this is
+    permanent. What it will not do is write QSPI, and that is where this firmware lives.</p>
+  <p>The reference third-party firmwares tell the story: <b>WTF! is 91&nbsp;KB and FRGMNTS
+    85&nbsp;KB</b>, both inside the STM32H750's 128&nbsp;KB of internal flash — plain images at
+    <code>0x08000000</code>, no bootloader, no QSPI. This build is 158&nbsp;KB at
+    <code>0x90040000</code>. Matching their shape means a <code>BOOT_NONE</code> build, which
+    is measured as feasible at 114,472&nbsp;bytes but is not what ships today.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From a terminal</h3>
+  <p>What these instructions were built and tested against, and the fallback if the browser
+    tool gives you trouble.</p>
   <pre><i># once — the Daisy bootloader (hold BOOT, tap RESET, release BOOT)</i>
 <b>make -C firmware program-boot</b>
 
 <i># every time — power-cycle first, then while the bootloader waits</i>
 <b>make -C firmware program-dfu</b></pre>
-  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~142&nbsp;KB and
+  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~158&nbsp;KB and
     the STM32H750 has only <b>128&nbsp;KB of internal flash</b>, so it runs from SRAM via the
     bootloader. Only 26&nbsp;KB of that is this project — the rest is libDaisy and the ST HAL.
     It is also why the two reference firmwares are 85–91&nbsp;KB: they were built to fit
@@ -546,11 +579,11 @@ footer a:hover{color:var(--cy)}
       <tr><td>Panel frame</td><td><span class="tag ok">verified</span></td><td>Reproduces the Eurorack mounting standard to 0.01 mm</td></tr>
       <tr><td>Host shim · controls · LEDs</td><td><span class="tag ok">played</span></td><td>Audio, capture and the effects confirmed by ear on a module</td></tr>
       <tr><td>Knob → ADC order</td><td><span class="tag ok">confirmed</span></td><td>Derived from NE's panel drawing, then confirmed knob-by-knob on a module</td></tr>
-      <tr><td>LIVE mode</td><td><span class="tag no">fixed, unflashed</span></td><td>Never fired before v0.2.0 — play_frame read back empty on hardware</td></tr>
+      <tr><td>LIVE mode</td><td><span class="tag ok">working</span></td><td>Never fired before v0.2.0 — play_frame read back empty on hardware. Fixed and confirmed</td></tr>
       <tr><td>Ring recorder</td><td><span class="tag ok">verified</span></td><td>Stall fixed; captures past the old stall point went 0% → 93.7% fresh</td></tr>
       <tr><td>Switch positions</td><td><span class="tag ok">confirmed</span></td><td>Derived by elimination, then checked against the hardware</td></tr>
       <tr><td>Button hole position</td><td><span class="tag ok">observed</span></td><td>Placed from the module by eye, not caliper-measured</td></tr>
-      <tr><td>CPU headroom</td><td><span class="tag no">played, not read</span></td><td>Played hard with no audible trouble. The boot report number is still unread</td></tr>
+      <tr><td>CPU headroom</td><td><span class="tag ok">measured</span></td><td>Two hard runs: 50–75% and under 50%. The 80% alarm never fired. Block render only</td></tr>
     </tbody>
   </table>
   <p style="margin-top:24px">If you flash this, the boot CPU reading and whether the knob legend

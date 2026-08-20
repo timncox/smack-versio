@@ -9,11 +9,11 @@ Alternative firmware for the Noise Engineering Versio platform.
 > record; `docs/index.html` is generated alongside it by hand, so if the two
 > disagree, trust this one.
 
-> **Version 0.2.0 — played, not finished.**
-> This has run on a module: audio, capture, the knob layout and the effects are
-> confirmed by ear, and it has been played hard without audible trouble. The
-> boot CPU report has still not been read, so the headroom number the design
-> rests on is unconfirmed. See [Is it working?](#is-it-working).
+> **Version 0.2.0 — it works.**
+> Confirmed on a module: audio, capture, the knob layout, the effects and LIVE
+> mode. The boot CPU report reads **50–75% at the worst case**, so the headroom
+> question the whole design rested on is answered. See
+> [Is it working?](#is-it-working).
 >
 > **Do not flash v0.1.0.** It hard-faults on boot — the audio callback treated
 > libDaisy's `size` as frames when it is samples and overran its buffer every
@@ -236,6 +236,17 @@ module comes out of the case. This build needs the Daisy bootloader installed
 once, because the app is larger than the STM32H750's 128 KB of internal flash
 and runs from SRAM instead.
 
+**You do not need a terminal for either step.** Electro-Smith's [Daisy Web
+Programmer](https://flash.daisy.audio/) flashes the bootloader and then the
+firmware from Chrome or Edge, and works out the app's `0x90040000` address
+itself — you never type one.
+
+Noise Engineering's own firmware page does accept a file you choose yourself,
+and it is how you put the module back to stock — but it writes internal flash,
+and this build lives in QSPI behind the Daisy bootloader, so it cannot install
+this one. See [FLASHING.md](firmware/FLASHING.md) for why, and what would have
+to change.
+
 ---
 
 ## The faceplate
@@ -267,10 +278,11 @@ Here is what "working" looks like, in order:
 5. **The CLOCK LED never goes red** under heavy settings — FX and ORDER high,
    SLICE short, LENGTH long.
 
-Steps 1–4 are confirmed on a module, as is the knob layout. Step 5 is the one
-still open — the module has been played hard without audible trouble, but
-nobody has read the boot CPU report yet, and an absence of complaints from one
-session is not the same as a number.
+All five are confirmed on a module. Step 5 was the one that mattered and it
+passed. The boot report is per-session — the peak is cleared the moment it is
+shown — and two hard runs read **50–75%** and **under 50%**. Neither tripped
+the 80% alarm. The engine fits, with the worse of the two still leaving a
+quarter of a block spare.
 
 **The PLAY LED is the one to watch if something seems inert.** It ramps once
 per loop pass, so it is the fastest check that the playhead is actually moving
