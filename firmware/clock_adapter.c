@@ -23,6 +23,31 @@ static double bpm_from_fpt(int sr, double fpt)
     return (double)sr * 60.0 / (fpt * 24.0);
 }
 
+/*
+ * Free-running tick length, with the ratio switch applied.
+ *
+ * The ratio used to be a pulse-interpretation setting and nothing else: it
+ * says how many ticks one incoming pulse is worth, and it was consulted only
+ * where a pulse arrives or where c->locked is already true. With nothing
+ * patched to the gate there are no pulses, so the switch did nothing at all --
+ * you could not use it to change the speed of a loop you had already captured,
+ * which is the obvious thing to reach for on a module with no tempo knob.
+ *
+ * Free-run now scales the same way a patched clock does. Locked, the tick
+ * length is interval / ticks_per_pulse, i.e. inversely proportional to the
+ * ratio; unlocked it is the free-run tick length scaled by the same factor
+ * against CLK_TICKS_1X. So the switch moves playback speed by the same amount
+ * and in the same direction whether or not a clock is patched, which is the
+ * only property worth guaranteeing here.
+ */
+static double free_fpt(const clock_adapter_t *c)
+{
+    double base = fpt_from_bpm(c->sample_rate,
+                               c->free_bpm > 0.0f ? c->free_bpm : 120.0f);
+    int    tpp  = c->ticks_per_pulse > 0 ? c->ticks_per_pulse : CLK_TICKS_1X;
+    return base * ((double)CLK_TICKS_1X / (double)tpp);
+}
+
 void clk_init(clock_adapter_t *c, int sample_rate, float free_bpm)
 {
     int i;
@@ -50,6 +75,11 @@ void clk_set_ratio(clock_adapter_t *c, int ticks_per_pulse)
     if (ticks_per_pulse == CLK_TICKS_DIV2 || ticks_per_pulse == CLK_TICKS_1X
         || ticks_per_pulse == CLK_TICKS_2X)
         c->ticks_per_pulse = ticks_per_pulse;
+
+    /* Take effect immediately when free-running. Locked, the next pulse
+     * recomputes the tick length anyway and stepping on it here would only
+     * make the switch audible one pulse early. */
+    if (!c->locked) c->frames_per_tick = free_fpt(c);
 }
 
 void clk_set_free_bpm(clock_adapter_t *c, float bpm)
@@ -57,7 +87,7 @@ void clk_set_free_bpm(clock_adapter_t *c, float bpm)
     if (bpm < 20.0f)  bpm = 20.0f;
     if (bpm > 300.0f) bpm = 300.0f;
     c->free_bpm = bpm;
-    if (!c->locked) c->frames_per_tick = fpt_from_bpm(c->sample_rate, bpm);
+    if (!c->locked) c->frames_per_tick = free_fpt(c);
 }
 
 /* Are the last few intervals close enough to be a real clock? Used by AUTO to
@@ -152,14 +182,14 @@ void clk_advance(clock_adapter_t *c, int frames, clk_emit_fn emit, void *ctx)
     if (frames <= 0) return;
 
     if (c->frames_per_tick <= 0.0)
-        c->frames_per_tick = fpt_from_bpm(c->sample_rate, c->free_bpm);
+        c->frames_per_tick = free_fpt(c);
 
     /* Fall back to free-run if the clock source goes away. */
     if (c->locked && c->have_edge) {
         double since = (double)(c->frame - c->last_edge);
         if (since > CLK_IDLE_SECONDS * (double)c->sample_rate) {
             c->locked = 0;
-            c->frames_per_tick = fpt_from_bpm(c->sample_rate, c->free_bpm);
+            c->frames_per_tick = free_fpt(c);
         }
     }
 
