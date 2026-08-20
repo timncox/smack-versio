@@ -198,24 +198,9 @@ static void dispatch_switches(void)
 
 /* ---- button: short = capture, long = re-roll ---------------------------- */
 
-#define LONG_PRESS_MS  600.0f
-/*
- * Keep holding past this and the loop is discarded, returning the module to
- * live passthrough.
- *
- * There was no way back at all before this: capture and reroll were the only
- * two bindings, the engine's "clear" command was never sent by anything, and
- * the only exit from a captured loop was a power cycle. BLEND fully clean is
- * not the same thing -- that is the un-glitched loop, not your live input.
- *
- * A third press tier rather than a switch position because both switches are
- * already spoken for (clock ratio, gate role), and clearing is a deliberate
- * act that should be hard to do by accident.
- */
-#define CLEAR_PRESS_MS 2000.0f
+#define LONG_PRESS_MS 600.0f
 
-static bool  btn_down       = false;
-static bool  btn_clear_done = false;
+static bool  btn_down      = false;
 static bool  btn_long_done = false;
 
 static void handle_button(void)
@@ -223,24 +208,14 @@ static void handle_button(void)
     hw.tap.Debounce(); /* ProcessAllControls() only does the ANALOG controls */
 
     if (hw.tap.RisingEdge()) {
-        btn_down       = true;
-        btn_long_done  = false;
-        btn_clear_done = false;
+        btn_down      = true;
+        btn_long_done = false;
     }
 
     if (btn_down && !btn_long_done && hw.tap.Pressed()
         && hw.tap.TimeHeldMs() > LONG_PRESS_MS) {
         smack_set_param(S, "reroll", "1"); /* new pattern, same loop */
         btn_long_done = true;
-    }
-
-    /* Keep holding: drop the loop and go back to passthrough. Fires while
-     * held, like reroll, so the module responds when you feel it rather than
-     * when you let go. */
-    if (btn_down && !btn_clear_done && hw.tap.Pressed()
-        && hw.tap.TimeHeldMs() > CLEAR_PRESS_MS) {
-        smack_set_param(S, "clear", "1");
-        btn_clear_done = true;
     }
 
     if (btn_down && !hw.tap.Pressed()) {
