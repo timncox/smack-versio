@@ -13,10 +13,11 @@ BUILD   = firmware/build
 .PHONY: test clean
 
 test: $(BUILD)/test_clock_adapter $(BUILD)/test_versio_alloc $(BUILD)/test_settings \
-      $(BUILD)/test_ring_stall
+      $(BUILD)/test_param_format $(BUILD)/test_ring_stall
 	./$(BUILD)/test_clock_adapter
 	./$(BUILD)/test_versio_alloc
 	./$(BUILD)/test_settings
+	./$(BUILD)/test_param_format
 	./$(BUILD)/test_ring_stall
 
 $(BUILD)/test_clock_adapter: firmware/test/test_clock_adapter.c \
@@ -32,6 +33,14 @@ $(BUILD)/test_versio_alloc: firmware/test/test_versio_alloc.c \
                             firmware/smack_core_versio.c
 	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) -I firmware $^ -o $@ -lm
+
+# Pins the parameter output format. The engine must format every readable
+# param with integer conversions only -- see the file header for why a "%f"
+# silently returns nothing on the hardware this ships to.
+$(BUILD)/test_param_format: firmware/test/test_param_format.c \
+                            firmware/vendor/smack_core.c
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 # Drives the vendored engine for minutes of simulated audio to catch the ring
 # recorder stalling behind a long loop. Slow by nature -- it is playing ~5

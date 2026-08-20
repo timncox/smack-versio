@@ -26,6 +26,7 @@ extern "C" {
 }
 
 #include <stdio.h>
+#include <stdlib.h>   /* atof, for the detected-BPM readback */
 #include <string.h>
 
 using namespace daisy;
@@ -409,6 +410,17 @@ static void handle_button(void)
             return;
         if (held > LONG_PRESS_MS) {
             smack_set_param(S, "capture", "1");
+            /*
+             * With nothing patched to the gate we free-run at whatever tempo
+             * was last locked, which is a guess that survives across power
+             * cycles and is often wrong. The engine can do better: it
+             * autocorrelates an onset envelope over the last 8 s of ring
+             * audio, which at capture time is exactly the audio you just
+             * played. So ask it, and only when there is no real clock to
+             * defer to. The scan is incremental on the audio thread and its
+             * result is picked up in the main loop; nothing blocks here.
+             */
+            if (!clk_locked(&CLK)) smack_set_param(S, "detect_bpm", "1");
             return;
         }
 
@@ -981,6 +993,26 @@ int main(void)
         if (clk_locked(&CLK)) {
             float b = clk_bpm(&CLK);
             if (b > 20.0f && b < 300.0f) CFG->free_run_bpm = b;
+        } else {
+            /*
+             * No clock patched: pick up a finished BPM scan, started by the
+             * last capture. "-1" means still scanning and "0" means it found
+             * nothing usable -- neither is a tempo, and both must be ignored
+             * rather than clamped into one.
+             *
+             * Read here rather than in the audio callback because
+             * smack_get_param is an snprintf. Polling it every loop is fine:
+             * det_active gates the work, so this is a string compare and a
+             * couple of integer divides until a scan actually completes.
+             */
+            char db[32];
+            if (smack_get_param(S, "detected_bpm", db, sizeof(db)) >= 0) {
+                float d = (float)atof(db);
+                if (d >= 50.0f && d <= 200.0f) {
+                    clk_set_free_bpm(&CLK, d);
+                    CFG->free_run_bpm = d;
+                }
+            }
         }
 
         /*
