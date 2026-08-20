@@ -99,7 +99,7 @@ thing this version can do that the Move version cannot.
 |---|---|
 | **FX** | How many slices get an effect, from none to all |
 | **ORDER** | How much the slice order is scrambled |
-| **LENGTH** | Loop length: 8 / 16 / 32 / 64 steps |
+| **LENGTH** | Loop length: 8 / 16 / 32 / 64 / 128 / 256 steps (256 = 16 bars) |
 | **SLICE** | How finely the loop is cut up |
 | **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |

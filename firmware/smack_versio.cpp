@@ -119,15 +119,25 @@ struct Param {
 };
 
 /* Knob order matches the panel left-to-right, top-to-bottom.
- * loop_len indices 3..6 = 8/16/32/64 steps (loop_len_hs_table in the engine
- * is in half-steps: {2,4,8,16,32,64,128,256,512}), which covers the 16-64
- * step range this module is for. */
+ *
+ * loop_len indices 3..8 = 8/16/32/64/128/256 steps. The engine's
+ * loop_len_hs_table is in half-steps -- {2,4,8,16,32,64,128,256,512} -- and
+ * loop_clock_ticks is hs*3 against a 24 ppqn clock, so index 8 is 1536 ticks
+ * = 64 quarter notes = 16 bars.
+ *
+ * That is exactly what the ring was dimensioned for: SMACK_MAX_SECONDS is 70,
+ * commented "16 bars at 55 BPM". Slower than that and capture_retro truncates
+ * to whatever was actually recorded, which is already its behaviour when you
+ * capture before the buffer has filled.
+ *
+ * Originally capped at index 6 on the assumption this module was for short
+ * glitch loops. It is not -- opened up after playing it. */
 enum { P_FXD = 0, P_ORD, P_LEN, P_RES, P_WET, P_SEED, P_PITCH, P_COUNT };
 
 static Param P[P_COUNT] = {
     { "fx_density",    0, 100, -32768, 0.0f },
     { "order_density", 0, 100, -32768, 0.0f },
-    { "loop_len",      3,   6, -32768, 0.0f },
+    { "loop_len",      3,   8, -32768, 0.0f },
     { "slice_res",     0,   3, -32768, 0.0f },
     /* BLEND is handled in the callback, not sent to the engine -- see the
      * crossfade in AudioCallback. The entry stays so the knob is still read

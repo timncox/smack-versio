@@ -108,7 +108,7 @@ rather than running silent.
 |---|---|
 | Knob 1 | FX Density — how many slices get an effect |
 | Knob 2 | Order Density — how much slice reordering |
-| Knob 3 | Loop Length — 8 / 16 / 32 / 64 steps |
+| Knob 3 | Loop Length — 8 / 16 / 32 / 64 / 128 / 256 steps |
 | Knob 4 | Slice Res |
 | Knob 5 | Blend — dry input ↔ effected loop |
 | Knob 6 | Seed — the "I don't like this pattern" knob |
