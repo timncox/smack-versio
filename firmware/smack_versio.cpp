@@ -230,31 +230,52 @@ static uint32_t btn_t0      = 0;
 
 static void handle_button(void)
 {
-    hw.tap.Debounce(); /* ProcessAllControls() only does the ANALOG controls */
+    hw.tap.Debounce();
 
-    if (hw.tap.RisingEdge()) {
+    /*
+     * Edges are derived from Pressed(), NOT from RisingEdge().
+     *
+     * Switch::Debounce() clears `updated_` at the top of every call and only
+     * sets it again once System::GetNow() has advanced a whole millisecond:
+     *
+     *     updated_ = false;
+     *     if(now - last_update_ >= 1) { updated_ = true; state_ = ...; }
+     *
+     * and RisingEdge() is `updated_ ? state_ == 0x7f : false`. state_ holds
+     * 0x7f for exactly one call, so if that call lands in the same
+     * millisecond as the previous one, the edge is gone for good -- the next
+     * call sees 0xff.
+     *
+     * In the audio callback at 375 Hz every call was ~2.7 ms apart, so
+     * `updated_` was always true and the edge was never missed. This loop
+     * runs at ~1 kHz, exactly where that comparison becomes a coin flip, and
+     * the button stopped registering the moment it moved here.
+     *
+     * Pressed() reads the debounced state directly (state_ == 0xff) and does
+     * not consult `updated_`, so tracking the transition ourselves is correct
+     * at any call rate -- including one that changes later.
+     */
+    const bool pressed = hw.tap.Pressed();
+
+    if (pressed && !btn_down) {
         btn_down    = true;
         btn_cleared = false;
         btn_t0      = System::GetNow();
     }
 
-    /* Timed here rather than with Switch::TimeHeldMs() because the release
-     * branch below needs the duration *after* the button is already up, and
-     * the held-time counter does not survive that. */
-    uint32_t held = System::GetNow() - btn_t0;
+    const uint32_t held = System::GetNow() - btn_t0;
 
-    /* Clear fires while held, so it happens when you feel it rather than when
-     * you let go -- and so passing 2 s cancels the capture that a release
-     * would otherwise have triggered. */
-    if (btn_down && !btn_cleared && hw.tap.Pressed() && held > CLEAR_PRESS_MS) {
+    /* Clear fires while held, so passing 2 s cancels the capture that the
+     * release would otherwise trigger. */
+    if (btn_down && !btn_cleared && pressed && held > CLEAR_PRESS_MS) {
         smack_set_param(S, "clear", "1");
         btn_cleared = true;
     }
 
-    if (btn_down && !hw.tap.Pressed()) {
+    if (btn_down && !pressed) {
         btn_down = false;
         if (btn_cleared)
-            return; /* already handled on the way past 2 s */
+            return;
         if (held > LONG_PRESS_MS)
             smack_set_param(S, "capture", "1");
         else
