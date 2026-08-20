@@ -67,6 +67,24 @@ override CPPFLAGS += -flto
 override LDFLAGS  += -flto -Os
 endif
 
+# Float support in printf. libDaisy links --specs=nano.specs, and newlib-nano
+# leaves _printf_float as a weak reference that nothing defines unless the link
+# line forces it in. With it null, nano's vfprintf emits NOTHING for a "%f"
+# conversion -- no error, no truncation, an empty string. smack_get_param()
+# formats six values that way, so reading any of them returned "" and atoi()
+# turned that into 0.
+#
+# That is not hypothetical: play_frame is "%.0f" upstream, so LIVE mode's
+# "has the playhead wrapped" test compared 0 against 0 and never fired, on
+# every build, while passing every laptop test because glibc formats floats.
+# play_frame is now integer-formatted, but this flag stops the next float
+# param from failing the same silent way.
+#
+# Verify after linking with:
+#   arm-none-eabi-nm build/smack_versio.elf | grep _printf_float
+# An empty result means float conversions are silently producing nothing.
+override LDFLAGS  += -u _printf_float
+
 # Diagnostic builds. Not for release -- DIAG takes LED 3 away from the status
 # display and the CPU alarm.
 #

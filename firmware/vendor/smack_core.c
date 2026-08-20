@@ -2396,7 +2396,26 @@ int smack_get_param(smack_t *s, const char *key, char *buf, int buf_len) {
         return snprintf(buf, (size_t)buf_len, "%d", ps);
     }
     if (!strcmp(key, "play_frame")) /* read-only timing diagnostic */
-        return snprintf(buf, (size_t)buf_len, "%.0f", floor(s->play_pos));
+        /*
+         * "%d", not "%.0f". The value is integral and every caller parses it
+         * with atoi(), but the format mattered for a different reason: on the
+         * Versio this is read by firmware linked against newlib-nano, where
+         * _printf_float is a WEAK reference that nothing defines unless the
+         * link line says -u _printf_float. When it is null, nano's vfprintf
+         * silently emits nothing for a float conversion -- no error, no
+         * warning, just an empty string that atoi() turns into 0.
+         *
+         * play_frame was therefore always 0 on hardware, which made LIVE
+         * mode's wrap test (pf < last_pf) permanently false: it never
+         * re-captured once, on any firmware build, while working perfectly on
+         * a laptop where glibc formats floats. It also pinned the playhead LED
+         * at full brightness, since its ramp is 1 - pf/loop_frames.
+         *
+         * The link flag is set too, so the engine's other float params cannot
+         * fail this way. This stays integer-formatted regardless: it is an
+         * integer, and it should not depend on the flag.
+         */
+        return snprintf(buf, (size_t)buf_len, "%d", (int)floor(s->play_pos));
     if (!strcmp(key, "pattern") || !strcmp(key, "pattern_r")) {
         /* fx codes per slice for the step-LED UIs: e.g. "0300102..." */
         const smack_lane_t *ln = &s->lane[key[7] ? 1 : 0];
