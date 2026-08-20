@@ -113,8 +113,8 @@ rather than running silent.
 | Knob 5 | Blend — clean loop ↔ glitch pattern |
 | Knob 6 | Seed — the "I don't like this pattern" knob |
 | Knob 7 | Pitch Range |
-| SW_0 | Clock ratio: up `/2`, centre `=1`, down `x2` |
-| SW_1 | Gate role: up CLK, centre AUTO, down TRIG |
+| SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |
+| SW_1 | Gate role: right CLK, centre AUTO, left TRIG |
 | **Button, short** | **Capture** — grab the last N steps |
 | **Button, long** (>600 ms) | **Re-roll** — new pattern, same loop |
 | Gate in | Clock and/or capture trigger, per SW_1 |

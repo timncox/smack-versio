@@ -99,7 +99,7 @@ thing this version can do that the Move version cannot.
 | **BLEND** | Clean loop ←→ glitched pattern |
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
-| **CLK** switch | Clock ratio: `/2`, `=1`, `×2` |
+| **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
 | **GATE** switch | What the gate jack means — see below |
 | **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll the pattern |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |

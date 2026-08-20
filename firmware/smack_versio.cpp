@@ -174,7 +174,14 @@ static void dispatch_knobs(void)
 /* ---- switches ----------------------------------------------------------- */
 
 /* SW_0 = clock ratio, SW_1 = gate role. Switch3::Read() returns
- * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2. */
+ * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2.
+ *
+ * POS_UP and POS_DOWN are libDaisy's names, not the panel's. These switches
+ * are mounted horizontally on the Versio: POS_UP is the RIGHT-hand position
+ * and POS_DOWN is the LEFT (confirmed on hardware 2026-08-19). So SW_0 is
+ * right = /2, centre = =1, left = x2, and SW_1 is right = CLK, centre = AUTO,
+ * left = TRIG. The docs say left/centre/right; only this file speaks
+ * libDaisy's vocabulary, and it should not leak back out. */
 static void dispatch_switches(void)
 {
     static int last0 = -1, last1 = -1;
