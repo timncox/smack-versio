@@ -29,13 +29,36 @@ echo "==> Smack Versio $VERSION"
 echo "==> native tests"
 make -f firmware/Makefile.test
 
-echo "==> firmware"
-make -C firmware
+# Two builds ship. BOOT_NONE is the headline one: it installs from Noise
+# Engineering's own firmware page, which is the path almost everyone will want.
+# BOOT_SRAM stays for anyone who would rather use the Daisy tooling, and
+# because it has room to grow that BOOT_NONE does not.
+echo "==> firmware: BOOT_NONE (internal flash, NE-uploader compatible)"
+make -C firmware clean >/dev/null
+make -C firmware APP_TYPE=BOOT_NONE USE_LTO=1
 
 if [ ! -f "$BIN" ]; then
     echo "error: $BIN was not produced" >&2
     exit 1
 fi
+
+# A BOOT_NONE image that overflows internal flash fails at link, so reaching
+# here means it fits. Guard the other direction: if libDaisy has not been
+# rebuilt at -Os -flto the link would have failed, but a stale build/ could
+# leave a BOOT_SRAM binary sitting here under the wrong name. 128 KB is the
+# hard ceiling; anything larger is not the build we think it is.
+BOOT_NONE_BYTES=$(wc -c < "$BIN" | tr -d ' ')
+if [ "$BOOT_NONE_BYTES" -gt 131072 ]; then
+    echo "error: BOOT_NONE image is $BOOT_NONE_BYTES bytes, over the 131072 limit." >&2
+    echo "       libDaisy probably needs rebuilding at -Os -flto; see firmware/BOOT_NONE.md" >&2
+    exit 1
+fi
+cp "$BIN" "$ROOT/dist/.boot_none.bin"
+
+echo "==> firmware: BOOT_SRAM (QSPI, needs the Daisy bootloader)"
+make -C firmware clean >/dev/null
+make -C firmware
+cp "$BIN" "$ROOT/dist/.boot_sram.bin"
 
 echo "==> faceplate"
 python3 faceplate/make_faceplate.py >/dev/null
@@ -43,7 +66,9 @@ python3 faceplate/make_faceplate.py >/dev/null
 rm -rf "$STAGE"
 mkdir -p "$STAGE/faceplate"
 
-cp "$BIN"                                   "$STAGE/smack_versio.bin"
+cp "$ROOT/dist/.boot_none.bin"              "$STAGE/smack_versio.bin"
+cp "$ROOT/dist/.boot_sram.bin"              "$STAGE/smack_versio-bootsram.bin"
+rm -f "$ROOT/dist/.boot_none.bin" "$ROOT/dist/.boot_sram.bin"
 cp MANUAL.md DISCLAIMER.md                  "$STAGE/"
 cp firmware/FLASHING.md                     "$STAGE/"
 cp faceplate/smack-versio-printsheet.svg    "$STAGE/faceplate/"
@@ -51,7 +76,7 @@ cp faceplate/smack-versio-faceplate.svg     "$STAGE/faceplate/"
 cp faceplate/MEASURE.md                     "$STAGE/faceplate/"
 
 # The bin is the only file whose integrity matters after transit.
-( cd "$STAGE" && shasum -a 256 smack_versio.bin > SHA256SUMS )
+( cd "$STAGE" && shasum -a 256 smack_versio.bin smack_versio-bootsram.bin > SHA256SUMS )
 
 cat > "$STAGE/README.txt" <<EOF
 Smack Versio $VERSION
@@ -70,18 +95,25 @@ The boot CPU report has also never been read, so the headroom figure the whole
 design rests on is still unconfirmed. Play hard, power cycle, read the LED bar
 -- that is the one measurement worth sending back.
 
-  smack_versio.bin   the firmware
-  FLASHING.md        how to install it, and how to go back to stock
+  smack_versio.bin              the firmware -- flash this one
+  smack_versio-bootsram.bin     alternative build, see FLASHING.md
+  FLASHING.md                   how to install it, and how to go back to stock
   MANUAL.md          what the controls do
   DISCLAIMER.md      what you are agreeing to
   faceplate/         printable panel overlay -- print at 100%, check the ruler
   SHA256SUMS         checksum for the binary
 
-NOT YET STANDALONE: FLASHING.md drives \`make\` targets from the source repo
-and the bootloader binary ships with libDaisy, neither of which is in this
-zip. Flash from a clone for now. Before this is ever published, either bundle
-dfu-util command lines and the bootloader .bin, or point FLASHING.md at the
-repo -- see the publish checklist in DESIGN.md section 13.
+TO INSTALL: put the module in DFU (hold BOOT, tap RESET, release BOOT) and
+give smack_versio.bin to Noise Engineering's firmware page. That is the whole
+procedure -- no terminal, no bootloader, no extra tools. Confirmed working
+2026-08-20.
+
+  https://portal.noiseengineering.us/
+
+smack_versio-bootsram.bin is the same firmware built to run from QSPI via the
+Daisy bootloader instead. It has more room to grow but needs the bootloader
+installed once and a tool to flash it. FLASHING.md covers that route, and it
+drives \`make\` targets from the source repo -- flash it from a clone.
 
 Installing is reversible: flashing any official Noise Engineering firmware
 restores the module to stock.
