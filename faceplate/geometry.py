@@ -148,14 +148,17 @@ JACK_LABELS = [
     "IN L", "IN R", "OUT L", "OUT R",
 ]
 
-# The GATE switch no longer selects a clock source -- it selects what the
-# BUTTON does, which is the only way a panel with one button can offer three
-# things that all want it. The centre is the module's normal behaviour, so it
-# is labelled for what it is rather than left blank: a blank position on a
-# faceplate reads as "off".
+# The lower switch was called GATE while it selected how the gate jack was
+# read. It does not any more -- it selects what the MODULE does, and mostly
+# what the BUTTON does, which is the only way a panel with one button can offer
+# three things that all want it. Keeping the old name would have left the panel
+# pointing at the wrong jack: the gate input is legended CLK.
+#
+# The centre is normal behaviour and is labelled for it rather than left blank,
+# because a blank position on a faceplate reads as "off".
 SWITCH_LABELS = [
     ("CLK", ["/2", "=1", "x2"]),
-    ("GATE", ["PUNCH", "NORM", "DUAL"]),
+    ("MODE", ["PUNCH", "NORM", "DUAL"]),
 ]
 
 # Tap re-rolls, hold captures -- reversed from the original after playing it,

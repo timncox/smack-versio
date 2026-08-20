@@ -217,7 +217,7 @@ footer a:hover{color:var(--cy)}
 </div></nav>
 
 <header id="top"><div class="wrap">
-  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.4.0</div>
+  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.4.1</div>
   <h1 class="title">Smack<br><em>Versio</em></h1>
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
@@ -349,10 +349,10 @@ footer a:hover{color:var(--cy)}
   <h2 class="sh">Three more things</h2>
   <div class="sub">04 — A switch position, a knob, and a third tap</div>
   <p class="lede">The panel ran out of room before the module ran out of things worth
-    having. These three are what the GATE switch and a triple-tap buy back.</p>
+    having. These three are what the MODE switch and a triple-tap buy back.</p>
 
   <div class="alarm" style="margin-top:26px">
-    <h3>PUNCH — GATE switch left</h3>
+    <h3>PUNCH — MODE switch left</h3>
     <p>The button becomes a momentary effect punch. <b>Hold it and every slice is forced
       through one chosen effect; release and the pattern snaps back.</b></p>
     <p>Nothing else is on the button here — no re-roll, no capture, no clear, no LIVE. That
@@ -423,11 +423,14 @@ footer a:hover{color:var(--cy)}
       <p>Every setting still clocks <i>and</i> still captures from the jack. The switch has
         never chosen whether the module listens.</p></div>
   </div>
-  <p style="margin-top:26px"><b>The GATE switch no longer selects the clock source.</b> It used
-    to, and almost nothing is lost: auto already picks correctly, so the position was really
-    offering a manual override for a case that rarely comes up — a set-once decision, and
-    set-once decisions belong in the config layer. A performance switch position is worth more
-    than that, and it is now <a href="#deeper">PUNCH</a>.</p>
+  <p style="margin-top:26px"><b>The lower switch no longer selects the clock source, and is
+    no longer called GATE.</b> It used to be both. Almost nothing is lost by the change: auto
+    already picks correctly, so the position was really offering a manual override for a case
+    that rarely comes up — a set-once decision, and set-once decisions belong in the config
+    layer. A performance switch position is worth more than that, and it is now
+    <a href="#deeper">PUNCH</a>. The name went with the job: a switch legended GATE that has
+    nothing to do with the gate jack — which is itself legended CLK — is a panel arguing with
+    itself. It reads <b>MODE</b> now.</p>
   <p style="margin-top:26px">Internally the module turns gate edges into 24&nbsp;ppqn MIDI clock,
     because that is what the engine already speaks — so the timing model that runs on the Move
     runs here untouched. This is the piece with the most design risk in the whole port, and it
@@ -485,17 +488,17 @@ footer a:hover{color:var(--cy)}
 
 <section id="download"><div class="wrap reveal">
   <h2 class="sh">Download</h2>
-  <div class="sub">v0.4.0 — installs from Noise Engineering's own firmware page</div>
+  <div class="sub">v0.4.1 — installs from Noise Engineering's own firmware page</div>
   <div class="dlbox">
     <div>
-      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.4.0/smack-versio-0.4.0.zip">
-        <div class="n">Get v0.4.0 ↓</div>
-        <div class="f">smack-versio-0.4.0.zip · 197 KB</div>
+      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.4.1/smack-versio-0.4.1.zip">
+        <div class="n">Get v0.4.1 ↓</div>
+        <div class="f">smack-versio-0.4.1.zip · 197 KB</div>
         <div class="w">Firmware, manual, flashing guide, disclaimer, printable faceplate
           and checksums. <b>Installs from NE's firmware page — no terminal.</b></div>
       </a>
       <div class="dlalt">
-        <a href="https://github.com/timncox/smack-versio/releases/download/v0.4.0/smack_versio-0.4.0.bin">just the .bin ↓</a>
+        <a href="https://github.com/timncox/smack-versio/releases/download/v0.4.1/smack_versio-0.4.1.bin">just the .bin ↓</a>
         <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
         <a href="https://github.com/timncox/smack-versio">source</a>
       </div>
@@ -509,7 +512,7 @@ footer a:hover{color:var(--cy)}
         callback overran its buffer on every block, so it emitted noise rather than
         anything you patched into it. The download above is left in place only so the
         checksums on the release stay honest.</p>
-      <p><b>The download above is v0.4.0</b>, which is what this manual describes. v0.1.0 is
+      <p><b>The download above is v0.4.1</b>, which is what this manual describes. v0.1.0 is
         kept only so its checksums stay honest, and is marked as such on the releases page.</p>
     </div>
     <div class="alarm" style="margin-top:14px">
@@ -644,7 +647,7 @@ footer a:hover{color:var(--cy)}
     cannot drift away from the thing you would actually cut. Rebuild it with
     <code>python3 faceplate/make_promo.py</code>.</p>
   <p><span class="tag ok">worth knowing</span> Drawing the panel at poster size is what caught
-    two defects invisible at 50&nbsp;mm wide: the GATE switch legend printed over the CAPTURE
+    two defects invisible at 50&nbsp;mm wide: the lower switch legend printed over the CAPTURE
     button hole, and the button caption printed in the warning colour long after its position
     had been confirmed. Both are fixed. Scale is a debugging tool.</p>
 </div></section>
@@ -865,7 +868,7 @@ const PANEL = {
       "x": 8.35,
       "y": 67.34,
       "d": 5.1,
-      "name": "GATE",
+      "name": "MODE",
       "pos": [
         "PUNCH",
         "NORM",
@@ -1009,7 +1012,7 @@ function drawPanel() {
     s: "3.5 mm jack · ⌀" + j.d + " mm",
     d: i < 8
       ? (j.name === "CLK"
-         ? "The gate input. Clock, capture trigger, or both — the GATE switch decides. One jack doing two jobs is the central design problem of this port."
+         ? "The gate input. Clock and capture trigger at once — the module works out which from what arrives. One jack doing two jobs is the central design problem of this port."
          : "Sums with the " + j.name + " knob in analogue hardware, so a knob at noon with CV at the jack behaves like a knob being turned.")
       : "Fixed Versio hardware. Audio passes through here from the moment the module boots.",
     m: ["x <b>" + j.x + " mm</b>", "y <b>" + j.y + " mm</b>",

@@ -45,7 +45,7 @@
 <text x="12.95" y="60.12" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">=1</text>
 <text x="12.95" y="61.82" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">x2</text>
 <circle cx="8.35" cy="67.34" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
-<text x="12.95" y="65.44" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
+<text x="12.95" y="65.44" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">MODE</text>
 <text x="12.95" y="67.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">PUNCH</text>
 <text x="12.95" y="69.64" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">NORM</text>
 <text x="12.95" y="71.34" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">DUAL</text>
@@ -119,7 +119,7 @@
 <text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock in. Nothing patched? It free-runs, and that is fine</text>
 <text x="730.9279999999999" y="1008" font-size="25" font-weight="700" fill="#ffb454">CLK switch</text>
 <text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">clock ratio: right /2, centre =1, left x2</text>
-<text x="730.9279999999999" y="1040" font-size="25" font-weight="700" fill="#ffb454">GATE switch</text>
+<text x="730.9279999999999" y="1040" font-size="25" font-weight="700" fill="#ffb454">MODE switch</text>
 <text x="950.9279999999999" y="1040" font-size="25" fill="#f4f7f9">what the button does: left PUNCH, right DUAL lanes</text>
 <text x="718.9279999999999" y="1094" font-size="27" font-weight="700" fill="#c08cff" letter-spacing="1.2">THE LIGHTS</text>
 <text x="730.9279999999999" y="1130" font-size="25" font-weight="700" fill="#c08cff">STATE</text>
