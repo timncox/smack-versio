@@ -101,7 +101,7 @@ thing this version can do that the Move version cannot.
 | **ORDER** | How much the slice order is scrambled |
 | **LENGTH** | Loop length: 8 / 16 / 32 / 64 steps |
 | **SLICE** | How finely the loop is cut up |
-| **BLEND** | Clean loop ←→ glitched pattern |
+| **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |

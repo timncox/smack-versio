@@ -110,7 +110,7 @@ rather than running silent.
 | Knob 2 | Order Density — how much slice reordering |
 | Knob 3 | Loop Length — 8 / 16 / 32 / 64 steps |
 | Knob 4 | Slice Res |
-| Knob 5 | Blend — clean loop ↔ glitch pattern |
+| Knob 5 | Blend — dry input ↔ effected loop |
 | Knob 6 | Seed — the "I don't like this pattern" knob |
 | Knob 7 | Pitch Range |
 | SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |

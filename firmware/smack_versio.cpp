@@ -106,7 +106,10 @@ static Param P[P_COUNT] = {
     { "order_density", 0, 100, -32768, 0.0f },
     { "loop_len",      3,   6, -32768, 0.0f },
     { "slice_res",     0,   3, -32768, 0.0f },
-    { "wet",           0, 100, -32768, 0.0f },
+    /* BLEND is handled in the callback, not sent to the engine -- see the
+     * crossfade in AudioCallback. The entry stays so the knob is still read
+     * and its position still drives LED 2. */
+    { NULL,            0, 100, -32768, 0.0f },
     { "seed",          0, 127, -32768, 0.0f },
     { "pitch_range",   1,  24, -32768, 0.0f },
 };
@@ -153,6 +156,7 @@ static void dispatch_knobs(void)
 
         int v = quantize(P[i], norm);
         if (v == P[i].last) continue;
+        if (!P[i].key) { P[i].last = v; P[i].last_norm = norm; continue; }
 
         /* Deadband, so summed CV noise can't oscillate a knob across a step
          * boundary. See deadband_for() for why SEED needs one despite its
@@ -342,8 +346,21 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
 
     smack_process(S, bufi, bufi, (int)frames);
 
+    /*
+     * BLEND: dry input against the effected loop. Done here because this is
+     * the only point where both signals still exist separately -- once the
+     * engine mixes its own monitor path in, they cannot be pulled apart.
+     *
+     * P[P_WET].last is written by the main loop and read here. A torn read
+     * costs one block at a slightly stale blend, which is inaudible; a lock
+     * would not be.
+     */
+    int   bl  = P[P_WET].last;
+    float wet = (bl < 0) ? 1.0f : (float)bl * 0.01f;
+    float dry = 1.0f - wet;
+
     for (size_t i = 0; i < size; i++)
-        out[i] = (float)bufi[i] * (1.0f / 32768.0f);
+        out[i] = in[i] * dry + (float)bufi[i] * (1.0f / 32768.0f) * wet;
 
     cpu.OnBlockEnd();
 }
@@ -601,9 +618,21 @@ int main(void)
 
     /* Pre-capture behaviour: pass audio through. A Eurorack effect that is
      * silent until you press a button reads as broken. */
-    smack_set_param(S, "monitor", "1");
+    /*
+     * monitor = 0 so the engine returns the LOOP ONLY. With monitor = 1 and
+     * hw_input = 1 the engine adds the live input at full level no matter
+     * what `wet` is (see the mixer: `out = ll + inl * dry`, dry == 1), and
+     * `wet` only crossfades the loop's clean tap against its glitched render.
+     * That is the Move build's behaviour and it is wrong for a Eurorack
+     * insert, where BLEND has to mean dry-versus-effected.
+     *
+     * wet = 100 keeps the loop fully effected; the dry/wet crossfade is done
+     * in the audio callback against the actual input, which is the only place
+     * the two signals still exist separately.
+     */
+    smack_set_param(S, "monitor",  "0");
     smack_set_param(S, "hw_input", "1");
-    smack_set_param(S, "wet", "100");
+    smack_set_param(S, "wet",      "100");
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
