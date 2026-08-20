@@ -249,21 +249,52 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
      * intervals between triggers supply the tempo (DESIGN.md §5). */
     if (hw.gate.Trig())
         clk_gate_edge(&CLK);
-    clk_advance(&CLK, (int)size, emit_to_engine, S);
+    /* frames, not samples -- passing `size` here ran the clock at double
+     * tempo on top of everything else. See the note below. */
+    clk_advance(&CLK, (int)(size / 2), emit_to_engine, S);
+
+    /*
+     * `size` is SAMPLES, not frames.
+     *
+     * libDaisy's interleaving callback hands over the whole interleaved
+     * buffer and counts every sample in it -- audio.cpp strides `i += 2` and
+     * touches both `fin[i]` and `fin[i+1]`. So a 128-frame stereo block
+     * arrives as size == 256, and `frames` is size / 2.
+     *
+     * This was read as frames, which was wrong twice over and cost an entire
+     * bench session. The loop ran to size * 2 == 512 and wrote 512 int16 into
+     * a 256-entry bufi -- a 512-byte overrun on every callback, starting with
+     * the first -- and smack_process() was told the block was 256 frames when
+     * it was 128, breaking the block-size contract DESIGN.md calls
+     * load-bearing. The module hard-faulted immediately after StartAudio(),
+     * leaving the LEDs latched and the SAI DMA recycling a stale buffer,
+     * which is the steady buzz.
+     */
+    const size_t frames = size / 2;
+
+    /* Refuse to run rather than corrupt memory if the block size is ever not
+     * what SetAudioBlockSize() asked for. bufi is fixed at BLOCK_SIZE * 2
+     * samples; silently overrunning it is what made the original bug present
+     * as an unexplained hard fault instead of an obvious wrong number. */
+    if (size > (size_t)(BLOCK_SIZE * 2)) {
+        for (size_t i = 0; i < size; i++) out[i] = in[i];
+        cpu.OnBlockEnd();
+        return;
+    }
 
     /* float -1..1  ->  interleaved int16, which is what the engine takes.
      * Converting at the boundary keeps the engine bit-identical to the Move
      * build, so any difference in sound is a shim bug, not a rewrite bug. */
-    for (size_t i = 0; i < size * 2; i++) {
+    for (size_t i = 0; i < size; i++) {
         float v = in[i];
         if (v > 0.999969f)  v = 0.999969f;
         if (v < -1.0f)      v = -1.0f;
         bufi[i] = (int16_t)(v * 32767.0f);
     }
 
-    smack_process(S, bufi, bufi, (int)size);
+    smack_process(S, bufi, bufi, (int)frames);
 
-    for (size_t i = 0; i < size * 2; i++)
+    for (size_t i = 0; i < size; i++)
         out[i] = (float)bufi[i] * (1.0f / 32768.0f);
 
     cpu.OnBlockEnd();
@@ -310,6 +341,9 @@ static void update_leds(void)
     if (P[P_WET].last < 0) wet = 0.0f;
     hw.SetLed(2, wet, 0.35f * (1.0f - wet), 1.0f - wet);
 
+#ifndef DIAG_HEARTBEAT
+    /* LED 3 belongs to the heartbeat in a diagnostic build; writing it here
+     * too would overwrite the blink with a steady colour and prove nothing. */
     float load = cpu.GetAvgCpuLoad();
     if (load > 0.80f)
         hw.SetLed(3, 1.0f, 0.0f, 0.0f);              /* CPU alarm      red */
@@ -319,6 +353,7 @@ static void update_leds(void)
         hw.SetLed(3, 0.5f, 0.0f, 0.8f);             /* inferred    purple */
     else
         hw.SetLed(3, 0.0f, 0.3f, 1.0f);             /* external      blue */
+#endif
 
     /* Deliberately no UpdateLeds() here -- see refresh_leds(). This function
      * only decides colours; pushing them runs on a much faster clock. */
@@ -354,6 +389,62 @@ static void refresh_leds(void)
 {
     hw.UpdateLeds();
 }
+
+#ifdef DIAG_BOOTSTAGE
+/*
+ * Boot-stage indicator. DIAGNOSE.md.
+ *
+ * Two rounds of guessing have now failed to move the symptom, which means the
+ * real unknown is not "which line is wrong" but "how far does it even get".
+ * This counts the boot out on the panel: n green LEDs, held long enough to
+ * read, at each milestone in main(). Whatever number it stops on is the step
+ * that killed it.
+ *
+ * Full brightness on purpose. Led::Set() cubes its argument, so 1.0 stays 1.0
+ * and the LED is on for every PWM comparison regardless of how fast Update()
+ * is being called. That makes this readable even if the refresh-rate fix is
+ * itself wrong -- a diagnostic that depends on the thing being diagnosed is
+ * worth nothing.
+ */
+static void boot_stage(int n)
+{
+    for(int i = 0; i < 4; i++)
+        hw.SetLed(i, 0.0f, 0.0f, 0.0f);
+    for(int i = 0; i < n && i < 4; i++)
+        hw.SetLed(i, 0.0f, 1.0f, 0.0f);
+    for(uint32_t t = 0; t < 700u; t++) {
+        hw.UpdateLeds();
+        hw.DelayMs(1);
+    }
+    /* Dark gap so two consecutive stages cannot be read as one. */
+    for(int i = 0; i < 4; i++)
+        hw.SetLed(i, 0.0f, 0.0f, 0.0f);
+    for(uint32_t t = 0; t < 250u; t++) {
+        hw.UpdateLeds();
+        hw.DelayMs(1);
+    }
+}
+/* Stage 5 in blue rather than a fifth green LED, because there is no fifth
+ * LED and "four green again" would be indistinguishable from stage 4. */
+static void boot_mark_audio(void)
+{
+    for(int i = 0; i < 4; i++)
+        hw.SetLed(i, 0.0f, 0.0f, 1.0f);
+    for(uint32_t t = 0; t < 700u; t++) {
+        hw.UpdateLeds();
+        hw.DelayMs(1);
+    }
+    for(int i = 0; i < 4; i++)
+        hw.SetLed(i, 0.0f, 0.0f, 0.0f);
+    for(uint32_t t = 0; t < 250u; t++) {
+        hw.UpdateLeds();
+        hw.DelayMs(1);
+    }
+}
+#else
+#define boot_stage(n)     ((void)0)
+#define boot_mark_audio() ((void)0)
+#endif
 
 /* ---- boot-time CPU report ----------------------------------------------- */
 
@@ -414,7 +505,9 @@ int main(void)
     hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_48KHZ);
     cpu.Init(hw.AudioSampleRate(), hw.AudioBlockSize());
 
+    boot_stage(1); /* hw.Init + cpu.Init survived */
     versio_alloc_init(g_pool, POOL_BYTES);
+    boot_stage(2); /* SDRAM pool initialised */
 
     /* Settings, before anything that wants a tempo. A struct written by some
      * other firmware -- or by an older layout of this one -- must never be
@@ -422,6 +515,7 @@ int main(void)
      * magic/version guard is the only thing that catches it. */
     VersioSettings defaults = settings_defaults();
     STORE.Init(defaults, SETTINGS_QSPI_OFFSET);
+    boot_stage(3); /* QSPI settings read back */
     CFG = &STORE.GetSettings();
     if(!settings_valid(*CFG))
         STORE.RestoreDefaults();
@@ -441,6 +535,7 @@ int main(void)
     clk_init(&CLK, SMACK_SR, CFG->free_run_bpm);
 
     S = smack_create(&HOST);
+    boot_stage(4); /* engine allocated and constructed */
 
     /* No USB serial logger: StartLog()/PrintLine() drag in the CDC stack and
      * full printf, and the STM32H750 has only 128 KB of internal flash. The
@@ -464,6 +559,7 @@ int main(void)
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);
+    boot_mark_audio(); /* stage 5, in blue so it cannot be miscounted as green */
 
     /* Report last session, then start recording this one. */
     show_cpu_peak_readout(boot_peak);
@@ -488,6 +584,15 @@ int main(void)
          * see a colour change.
          */
         uint32_t t_led = System::GetNow();
+#ifdef DIAG_HEARTBEAT
+        /* Diagnostic: prove the loop is alive before anything else can fail.
+         * Written first and at full brightness, so it survives both a broken
+         * engine read and a wrong PWM rate. */
+        {
+            float on = ((t_led / 250u) & 1u) ? 1.0f : 0.0f;
+            hw.SetLed(3, on, on, on);
+        }
+#endif
         if (t_led - last_recalc >= LED_RECALC_MS) {
             last_recalc = t_led;
             update_leds();

@@ -66,3 +66,28 @@ override CFLAGS   += -flto
 override CPPFLAGS += -flto
 override LDFLAGS  += -flto -Os
 endif
+
+# Diagnostic builds. Not for release -- DIAG takes LED 3 away from the status
+# display and the CPU alarm.
+#
+# Always clean first. The sources are identical between a diagnostic and a
+# release build, so make will not rebuild on the flag change alone and you will
+# flash the wrong image without noticing. Judge by size, not by intent.
+#
+#   make -C firmware clean && make -C firmware DIAG=3 && make -C firmware program-dfu
+#
+#   DIAG=1  heartbeat only: blink LED 3 from the top of the main loop, before
+#           touching the engine. Blinking means the loop is alive.
+#   DIAG=3  boot-stage counter: n green LEDs at each milestone in main(), all
+#           blue once the audio ISR is live, then the heartbeat. Whatever it
+#           stops on is the step that killed it. Reach for this when a fix
+#           fails to move the symptom -- that means the unknown is "how far
+#           does it get", not "which line is wrong".
+ifeq ($(DIAG), 1)
+override CFLAGS   += -DDIAG_HEARTBEAT
+override CPPFLAGS += -DDIAG_HEARTBEAT
+endif
+ifeq ($(DIAG), 3)
+override CFLAGS   += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
+override CPPFLAGS += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
+endif
