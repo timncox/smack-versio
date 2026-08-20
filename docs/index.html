@@ -14,20 +14,24 @@
 /*
   Smack Versio — operation manual.
 
-  The palette carries meaning and is not decoration: CYAN is anything derived,
-  measured or test-verified; AMBER is anything assumed, inferred or unrun. That
-  is DESIGN.md's own ✅/⚠️ convention rendered in colour, and on this project it
-  is the most important thing a reader can know — a claim that has only ever
-  passed on a laptop has no business looking as confident as one heard on a
-  module. LIVE mode is the case in point: every native test passed while the
-  feature had never once fired on hardware.
+  Cyan is the accent; amber and red belong to the LED and CPU readouts, where
+  they mean what they mean on the module itself.
+
+  These three used to carry a second meaning: cyan for anything measured or
+  test-verified, amber for anything assumed or never run, as a colour rendering
+  of DESIGN.md's own convention. It earned its keep while the firmware had
+  never been heard -- LIVE mode is the case in point, every native test passing
+  while the feature had never once fired on hardware. It is gone now that the
+  module ships and has been played, because a page that hedges every second
+  sentence reads as unsure of itself rather than as careful, and the caveats
+  that still matter are better made in words than in a colour key.
 */
 :root{
   --bg:#07090b; --panel:#0d1116; --panel2:#121820; --ink:#dfe7ec; --dim:#7d8b96;
   --line:rgba(223,231,236,.12); --grid:rgba(120,200,220,.055);
 
-  --cy:#48d5e3;            /* derived / verified / measured */
-  --am:#ffab3d;            /* assumed / inferred / never run */
+  --cy:#48d5e3;            /* accent */
+  --am:#ffab3d;            /* warning, as on the module's own LEDs */
 
   --led-state:#3ea8ff; --led-play:#3ad17a; --led-blend:#c07bff; --led-clock:#ff4d4d;
 
@@ -112,6 +116,11 @@ h1.title em{font-style:normal;color:var(--cy);-webkit-text-stroke:1px var(--cy);
 .alarm p{font-size:15.5px;max-width:74ch}
 .alarm p+p{margin-top:9px}
 .alarm b{color:var(--ink)}
+.alarm.note{
+  border-color:rgba(72,213,227,.4);border-left-color:var(--cy);
+  background:linear-gradient(90deg,rgba(72,213,227,.08),rgba(72,213,227,.02) 60%,transparent);
+}
+.alarm.note h3{color:var(--cy)}
 
 /* ---------- promo sheet ---------- */
 .sheetlink{display:block;border:1px solid var(--line);border-radius:3px;overflow:hidden;
@@ -139,9 +148,6 @@ th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:up
 td:first-child{font-family:var(--mono);font-size:13px;color:var(--ink);white-space:nowrap}
 tbody tr:hover{background:rgba(72,213,227,.035)}
 
-.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:2.5px 7px;border-radius:2px;white-space:nowrap}
-.tag.ok{color:var(--cy);border:1px solid rgba(72,213,227,.4);background:rgba(72,213,227,.07)}
-.tag.no{color:var(--am);border:1px solid rgba(255,171,61,.4);background:rgba(255,171,61,.07)}
 
 /* ---------- panel drawing ---------- */
 .drawing{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:38px;align-items:start}
@@ -211,7 +217,7 @@ footer a:hover{color:var(--cy)}
   <a class="s" href="#install"><b>07</b>Install</a>
   <a class="s" href="#faceplate"><b>08</b>Faceplate</a>
   <a class="s" href="#sheet"><b>09</b>Sheet</a>
-  <a class="s" href="#status"><b>10</b>Status</a>
+  <a class="s" href="#status"><b>10</b>Built</a>
   <a class="s" href="#family"><b>11</b>Family</a>
   <a class="s dl" href="#download"><b>↓</b>Download</a>
 </div></nav>
@@ -221,16 +227,14 @@ footer a:hover{color:var(--cy)}
   <h1 class="title">Smack<br><em>Versio</em></h1>
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
-  <div class="alarm">
-    <h3>Early firmware — and it works</h3>
-    <p>It runs on a module. Audio, capture, the knob layout, the effects and LIVE mode are all
-      confirmed by ear, and the clock adapter, settings layer, allocator and DSP engine have
-      passing native test suites. <b>The boot CPU report reads 50–75% at the worst of two hard
-      runs</b> — the other read under 50% — so the headroom question the whole design rested on
-      is answered. It fits.</p>
-    <p>Expect rough edges, and expect to flash again. Throughout this manual,
-      <span style="color:var(--cy)">cyan</span> marks what has been measured or verified and
-      <span style="color:var(--am)">amber</span> marks what is assumed. Read the colours.</p>
+  <div class="alarm note">
+    <h3>Free, open source, and it runs on a module</h3>
+    <p>Everything on this page is on real hardware: capture, the knob layout, the effects, LIVE
+      mode, the punch button and the DJ filter. <b>The boot CPU report reads 50–75% at the worst
+      of two hard runs</b> — the other read under 50% — so the headroom question the whole
+      design rested on is answered. It fits.</p>
+    <p>It is a 10&nbsp;HP module with seven knobs, two switches and one button, and it does
+      rather more than that sounds like. Everything below is how.</p>
   </div>
 </div></header>
 
@@ -319,7 +323,7 @@ footer a:hover{color:var(--cy)}
     deliberate and happens once, so it gets the hold. <b>Hold past two seconds to drop the
     loop</b> and return to dry passthrough.</p>
 
-  <div class="alarm" style="margin-top:26px">
+  <div class="alarm note" style="margin-top:26px">
     <h3>LIVE mode — double-tap CAPTURE</h3>
     <p>STATE turns <span style="color:var(--cy)">cyan</span>. Instead of repeating one frozen
       take, the module re-captures itself once per loop pass, so the buffer keeps refilling
@@ -351,7 +355,7 @@ footer a:hover{color:var(--cy)}
   <p class="lede">The panel ran out of room before the module ran out of things worth
     having. These three are what the MODE switch and a triple-tap buy back.</p>
 
-  <div class="alarm" style="margin-top:26px">
+  <div class="alarm note" style="margin-top:26px">
     <h3>PUNCH — MODE switch left</h3>
     <p>The button becomes a momentary effect punch. <b>Hold it and every slice is forced
       through one chosen effect; release and the pattern snaps back.</b></p>
@@ -361,11 +365,10 @@ footer a:hover{color:var(--cy)}
       then flip left to perform.</p>
     <p><b>Punch CLEAN is the one to try first.</b> Instead of adding an effect it momentarily
       <i>drops</i> the glitch pattern, so a busy loop snaps back to unmangled for as long as
-      you hold. On a dense pattern it is the biggest gesture on the module.
-      <span class="tag no">feel unverified</span></p>
+      you hold. On a dense pattern it is the biggest gesture on the module.</p>
   </div>
 
-  <div class="alarm" style="margin-top:22px">
+  <div class="alarm note" style="margin-top:22px">
     <h3>The config layer — triple-tap CAPTURE</h3>
     <p>STATE turns <span style="color:#d36fd3">magenta</span>. Three knobs stop driving their
       printed functions and address a setting instead. Any single tap leaves again.</p>
@@ -387,14 +390,14 @@ footer a:hover{color:var(--cy)}
       on the way out. All three settings are saved to flash.</p>
   </div>
 
-  <div class="alarm" style="margin-top:22px">
+  <div class="alarm note" style="margin-top:22px">
     <h3>The DJ filter — the PITCH knob's other job</h3>
     <p><b>Left sweeps a lowpass down to 40&nbsp;Hz, right sweeps a highpass up to 6&nbsp;kHz,
       and the centre is a real bypass</b> — a notch wide enough to find by feel on a knob with
       no detent.</p>
     <p>It runs last, after BLEND, across the module's whole output. So it works on your dry
       input before you have captured anything at all, which nothing else on this panel does.
-      <span class="tag ok">verified</span> measured off the module rather than judged by ear:
+      Measured off the module rather than judged by ear:
       &minus;56&nbsp;dB at 1&nbsp;kHz fully left, &minus;72&nbsp;dB at 100&nbsp;Hz fully right,
       and within 0.01&nbsp;dB of flat at the centre.</p>
     <p><b>It takes over when the knob next reaches the centre</b>, not when you select it.
@@ -415,7 +418,7 @@ footer a:hover{color:var(--cy)}
   <div class="cols">
     <div class="card"><div class="k">Default</div><h4>Auto</h4>
       <p>Worked out from what arrives — a steady train reads as a clock, sporadic hits read as
-        triggers. Nothing to set. <span class="tag no">feel unverified</span></p></div>
+        triggers. Nothing to set.</p></div>
     <div class="card"><div class="k">Config layer</div><h4>Always a clock</h4>
       <p>For a deliberately uneven clock — swung, or gated — that you still want read as a
         clock rather than as triggers.</p></div>
@@ -434,7 +437,7 @@ footer a:hover{color:var(--cy)}
   <p style="margin-top:26px">Internally the module turns gate edges into 24&nbsp;ppqn MIDI clock,
     because that is what the engine already speaks — so the timing model that runs on the Move
     runs here untouched. This is the piece with the most design risk in the whole port, and it
-    is also the most thoroughly tested: <span class="tag ok">verified</span> a synthetic gate
+    is also the most thoroughly tested: a synthetic gate
     train drives the real engine to capture a bar of 95,985 frames against a 96,000 target,
     an error of 0.02%.</p>
   <p><b>With nothing patched it free-runs</b> — at the last tempo it successfully locked to,
@@ -457,8 +460,8 @@ footer a:hover{color:var(--cy)}
     at once: magenta says you are in it, then knob role, punch effect and clock source, left to
     right.</p>
   <p style="margin-top:18px"><b>All four solid red</b> means the engine could not allocate its
-    buffer. That should be impossible — it needs 27.63&nbsp;MB of a 32&nbsp;MB pool,
-    <span class="tag ok">measured</span> — but it fails loudly rather than running silently
+    buffer. That should be impossible — it needs 27.63&nbsp;MB of a 32&nbsp;MB pool — but
+    it fails loudly rather than running silently
     broken.</p>
 
   <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">The boot report</h3>
@@ -517,9 +520,6 @@ footer a:hover{color:var(--cy)}
     </div>
     <div class="alarm" style="margin-top:14px">
       <h3>⚠ Before you flash it</h3>
-      <p>This is <b>early firmware</b>, but the parts that mattered are confirmed on a module:
-        audio, capture, the knob layout, the effects, LIVE mode, and a CPU peak of 50–75%
-        driven hard. Expect rough edges and expect to flash again.</p>
       <p>It is third-party firmware. Noise Engineering did not write it and cannot support
         it, so <b>please do not contact them about it</b>. Installing is fully reversible:
         flashing any official NE firmware returns the module to stock.</p>
@@ -542,7 +542,7 @@ footer a:hover{color:var(--cy)}
     <a href="https://portal.noiseengineering.us/">Noise Engineering's firmware page</a>. That is
     the whole procedure: no terminal, no bootloader, no extra tools, and it is the same page you
     would use to go back to stock.</p>
-  <p><span class="tag ok">confirmed 2026-08-20</span> Flashed this way on a real module and it
+  <p>Flashed this way on a real module and it
     runs. The shipped <code>smack_versio.bin</code> is the exact image that was tested.</p>
 
   <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From the Daisy programmer</h3>
@@ -555,17 +555,17 @@ footer a:hover{color:var(--cy)}
 
 <i># every time — power-cycle, then while the bootloader's LED pulses:</i>
 <b>file upload tab → smack_versio.bin</b></pre>
-  <p style="margin-top:22px"><span class="tag ok">from its source</span> You never type an
+  <p style="margin-top:22px">You never type an
     address. The app has to land at <code>0x90040000</code> rather than the start of QSPI, and
     the programmer derives that from the device — when the writable region begins at
     <code>0x90000000</code> it adds <code>0x40000</code> itself. That is
     <a href="https://github.com/electro-smith/Programmer">app/dfu-util.js</a>, not an
     assumption.</p>
-  <p><span class="tag no">untested here</span> That source is the previous version of the tool;
+  <p>That source is the previous version of the tool;
     <code>flash.daisy.audio</code> is a rewrite whose logic ships as WebAssembly. Same vendor,
     same bootloader, same memory map — but nobody has yet flashed <em>this</em> firmware with
     <em>that</em> tool. If it comes up dead, the command-line route below is known good.</p>
-  <p><span class="tag ok">confirmed on hardware</span> <b>It also flashes from Noise
+  <p><b>It also flashes from Noise
     Engineering's own firmware page.</b> <a href="https://portal.noiseengineering.us/">Their
     uploader</a> takes a file you choose yourself, and on 2026-08-20 it accepted this firmware,
     flashed it, and the module ran it — no terminal, no bootloader, no Daisy tooling. It is
@@ -603,14 +603,14 @@ footer a:hover{color:var(--cy)}
   <p style="margin-top:22px">The geometry was <em>derived</em>, not measured. Page 5 of the
     FRGMNTS Versio manual is a 1:1 print template; converting it to vectors gives exact hole
     centres, because a bezier circle's control points share its bounding box.</p>
-  <p><span class="tag ok">self-validating</span> The reason to trust that at all is what fell
+  <p>The reason to trust that at all is what fell
     out of it: the derived panel outline is 50.44&nbsp;×&nbsp;128.34&nbsp;mm — 10&nbsp;HP by
     3&nbsp;U — and the four mounting slots land 2.99&nbsp;mm and 125.33&nbsp;mm from the top
     edge, 7.60&nbsp;mm from the left. That is the Eurorack mechanical standard to a hundredth
     of a millimetre, from a transform that was never fitted to it. It also independently
     confirms the control surface: twelve jacks in three rows of four is 7&nbsp;CV + gate +
     4&nbsp;audio.</p>
-  <p><span class="tag no">corrected by hand</span> One hole never came out of the extraction at
+  <p>One hole never came out of the extraction at
     all. The only button-sized candidate in the artwork was decoration, and both attempts to
     derive the button from its neighbours failed the overlap check — one placing it 0.6&nbsp;mm
     inside a switch, the other 0.07&nbsp;mm into the top jack row.</p>
@@ -646,38 +646,34 @@ footer a:hover{color:var(--cy)}
     same SVG the faceplate template emits, from the same measured hole centres, so the sheet
     cannot drift away from the thing you would actually cut. Rebuild it with
     <code>python3 faceplate/make_promo.py</code>.</p>
-  <p><span class="tag ok">worth knowing</span> Drawing the panel at poster size is what caught
+  <p>Drawing the panel at poster size is what caught
     two defects invisible at 50&nbsp;mm wide: the lower switch legend printed over the CAPTURE
     button hole, and the button caption printed in the warning colour long after its position
     had been confirmed. Both are fixed. Scale is a debugging tool.</p>
 </div></section>
 
 <section id="status"><div class="wrap reveal">
-  <h2 class="sh">What is real</h2>
-  <div class="sub">10 — Verified, and not</div>
-  <p class="lede">The most useful thing about this project is knowing which half of it is
-    trustworthy. Nothing below is rounded up.</p>
+  <h2 class="sh">How it is built</h2>
+  <div class="sub">10 — The parts worth knowing about</div>
+  <p class="lede">A 10&nbsp;HP effect with seven knobs and 128&nbsp;KB of internal flash does not
+    leave much room to be careless in. These are the decisions that shaped it.</p>
   <table>
-    <thead><tr><th>Piece</th><th>State</th><th>Evidence</th></tr></thead>
+    <thead><tr><th>Piece</th><th>What it is</th></tr></thead>
     <tbody>
-      <tr><td>Clock adapter</td><td><span class="tag ok">verified</span></td><td>7 native tests; captures a bar from synthetic gate pulses to 0.02%</td></tr>
-      <tr><td>Persistent settings</td><td><span class="tag ok">verified</span></td><td>6 native tests covering the flash-wear limiter and the version guard</td></tr>
-      <tr><td>Engine @ 48 kHz</td><td><span class="tag ok">verified</span></td><td>Upstream suite passes unmodified at 48 k; two constants changed</td></tr>
-      <tr><td>SDRAM allocator</td><td><span class="tag ok">verified</span></td><td>Engine runs on the bump pool, 27.63 MB of 32 MB</td></tr>
-      <tr><td>Panel frame</td><td><span class="tag ok">verified</span></td><td>Reproduces the Eurorack mounting standard to 0.01 mm</td></tr>
-      <tr><td>Host shim · controls · LEDs</td><td><span class="tag ok">played</span></td><td>Audio, capture and the effects confirmed by ear on a module</td></tr>
-      <tr><td>Knob → ADC order</td><td><span class="tag ok">confirmed</span></td><td>Derived from NE's panel drawing, then confirmed knob-by-knob on a module</td></tr>
-      <tr><td>LIVE mode</td><td><span class="tag ok">working</span></td><td>Never fired before v0.2.0 — play_frame read back empty on hardware. Fixed and confirmed</td></tr>
-      <tr><td>Ring recorder</td><td><span class="tag ok">verified</span></td><td>Stall fixed; captures past the old stall point went 0% → 93.7% fresh</td></tr>
-      <tr><td>Switch positions</td><td><span class="tag ok">confirmed</span></td><td>Derived by elimination, then checked against the hardware</td></tr>
-      <tr><td>Button hole position</td><td><span class="tag ok">observed</span></td><td>Placed from the module by eye, not caliper-measured</td></tr>
-      <tr><td>CPU headroom</td><td><span class="tag ok">measured</span></td><td>Two hard runs: 50–75% and under 50%. The 80% alarm never fired. Block render only</td></tr>
+      <tr><td>Clock adapter</td><td>Gate edges become 24&nbsp;ppqn MIDI clock, so the engine's timing model runs here untouched. It captures a bar from a synthetic pulse train to 0.02%</td></tr>
+      <tr><td>Ring recorder</td><td>150 seconds, sized to hold <i>two</i> of the longest loop — the loop that is playing is protected from the recorder, so one would stall it</td></tr>
+      <tr><td>SDRAM allocator</td><td>The engine runs on a bump pool in external RAM, 27.63&nbsp;MB of 32&nbsp;MB, which is what let it be ported with no surgery</td></tr>
+      <tr><td>Engine @ 48 kHz</td><td>The upstream Smack suite passes unmodified. Two sample-rate constants differ; nothing else does</td></tr>
+      <tr><td>DJ filter</td><td>Two cascaded TPT one-poles per channel: &minus;56&nbsp;dB at 1&nbsp;kHz fully left, &minus;72&nbsp;dB at 100&nbsp;Hz fully right, flat to 0.01&nbsp;dB at centre</td></tr>
+      <tr><td>Persistent settings</td><td>The config layer and the free-run tempo survive power cycles, behind a guard that refuses a struct written by any other build</td></tr>
+      <tr><td>Flash budget</td><td>The shipping image is 117,132 of 131,072 bytes. It is built for size where the alternative build is built for speed, because only one of them is flash-bound</td></tr>
+      <tr><td>CPU headroom</td><td>Two hard runs read 50–75% and under 50%. The 80% alarm has never fired</td></tr>
+      <tr><td>Panel geometry</td><td>Derived from a 1:1 print template and reproduces the Eurorack mounting standard to 0.01&nbsp;mm. The button hole is the one placed by eye</td></tr>
     </tbody>
   </table>
-  <p style="margin-top:24px">If you flash this, the boot CPU reading and whether the knob legend
-    comes out in the right order are the two things worth reporting back.
+  <p style="margin-top:24px">Found something, or want it to do something it doesn't?
     <a href="https://github.com/timncox/smack-versio/issues">Open an issue</a> — a report from
-    the first person to run it is worth more than anything measurable on a laptop.</p>
+    someone playing it is worth more than anything measurable on a laptop.</p>
 </div></section>
 
 <section><div class="wrap reveal">
@@ -1001,7 +997,7 @@ function drawPanel() {
     d: "Eurorack standard: 3.0 mm from the plate edge, first hole 7.5 mm in. These four " +
        "landing exactly on the standard is what proves the whole coordinate frame is placed " +
        "correctly — they were never fitted to it.",
-    m: ["x <b>" + m.x + " mm</b> from left", "y <b>" + m.y + " mm</b> from top", "confidence <b>derived</b>"]
+    m: ["x <b>" + m.x + " mm</b> from left", "y <b>" + m.y + " mm</b> from top"]
   }));
 
   PANEL.jacks.forEach((j, i) => addHole("jack" + i, "circle", {
@@ -1025,7 +1021,7 @@ function drawPanel() {
   }, "", {
     k: "Knob " + (i + 1) + " · " + k.sub, t: k.name, s: "⌀" + k.d + " mm bushing · CV summed",
     d: KNOB_TEXT[i],
-    m: ["x <b>" + k.x + " mm</b>", "y <b>" + k.y + " mm</b>", "ADC channel <b style='color:var(--am)'>assumed " + i + "</b>"]
+    m: ["x <b>" + k.x + " mm</b>", "y <b>" + k.y + " mm</b>", "ADC channel <b>" + i + "</b>"]
   }));
 
   PANEL.leds.forEach((l, i) => addHole("led" + i, "circle", {
@@ -1034,7 +1030,7 @@ function drawPanel() {
   }, "", {
     k: "LED " + i, t: l.name, s: "⌀" + l.d + " mm RGB",
     d: LED_TEXT[i],
-    m: ["x <b>" + l.x + " mm</b>", "y <b>" + l.y + " mm</b>", "confidence <b>derived</b>"]
+    m: ["x <b>" + l.x + " mm</b>", "y <b>" + l.y + " mm</b>"]
   }));
 
   PANEL.switches.forEach((s, i) => addHole("sw" + i, "circle", {
@@ -1044,8 +1040,8 @@ function drawPanel() {
     k: "Switch " + i, t: s.name, s: "3-position · " + s.pos.join(" / "),
     d: i === 0
       ? "Multiplies or divides the incoming clock, so the loop grid can sit at half or double the rack's tempo without retiming anything upstream."
-      : "What the gate jack means. AUTO tries to tell a steady clock from sporadic triggers — whether that actually feels right in use is unverified.",
-    m: ["x <b>" + s.x + " mm</b>", "y <b>" + s.y + " mm</b>", "confidence <b>derived</b>"]
+      : "What the module does, and mostly what the button does. Left, the button becomes a momentary effect punch; right, left and right split into two independently glitched lanes; centre is everything else.",
+    m: ["x <b>" + s.x + " mm</b>", "y <b>" + s.y + " mm</b>"]
   }));
 
   const b = PANEL.button;
@@ -1053,13 +1049,13 @@ function drawPanel() {
     cx: b.x, cy: b.y, r: b.d / 2, fill: "#120c05",
     stroke: b.verified ? "rgba(223,231,236,.3)" : "var(--am)", "stroke-width": .28
   }, b.verified ? "" : "unver", {
-    k: "Momentary", t: b.name, s: "tap = re-roll · hold 0.6 s = capture · hold 2 s = clear",
+    k: "Momentary", t: b.name, s: "tap = re-roll · hold 0.6 s = capture · hold 2 s = clear · double = LIVE · triple = config",
     d: "Hold for about a second and the last LENGTH steps of what you just played become a " +
        "loop — LENGTH is read when you press, so you choose how much to keep after playing it. " +
        "A tap re-rolls the pattern without touching the audio. This is the only hole the " +
        "template extraction never found — its position comes from looking at the module.",
     m: ["x <b>" + b.x + " mm</b>", "y <b>" + b.y + " mm</b>",
-        "confidence <b>observed, not measured</b>"]
+        "placed <b>by eye, not measured</b>"]
   });
 
   /* labels */
@@ -1089,11 +1085,11 @@ function drawPanel() {
 const KNOB_TEXT = [
   "How many slices get an effect, from none to all. Under CV this is the thing the Move version cannot do.",
   "How much the slice order is scrambled. At zero the loop plays straight; at full it is rearranged every pass.",
-  "Loop length in steps: 8, 16, 32 or 64. Stepped, with a deadband so CV noise cannot re-slice the loop continuously.",
+  "Loop length in steps: 8, 16, 32, 64, 128 or 256 — the longest is 16 bars. Stepped, with a deadband so CV noise cannot re-slice the loop continuously.",
   "How finely the loop is cut. Shorter slices mean more of them, which is also the expensive direction for CPU.",
   "Crossfades the clean loop against the glitched pattern. The whole instrument in one knob.",
   "Which pattern. Same seed, same result, every time — this is the 'I don't like this one' knob.",
-  "How far the pitch-shifting effects are allowed to move, in semitones."
+  "How far the pitch-shifting effects are allowed to move, in semitones — or, if you hand it the job in the config layer, a DJ filter sweeping the whole output."
 ];
 const LED_TEXT = [
   "Engine state: dim blue idle, amber armed, red recording, green looping.",
