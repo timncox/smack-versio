@@ -6,11 +6,20 @@
 > `BOOT_SRAM` app from a browser, and works out the `0x90040000` app address by
 > itself. See "flash it from a browser" in FLASHING.md.
 >
-> So a `BOOT_NONE` port would buy one less click, in exchange for rebuilding
-> libDaisy at `-Os -flto` — which is exactly the change most likely to move CPU
-> load, the one number this project still has not measured. Not worth it on
-> those terms. The measurements below stay because they are real and because
-> the trade may look different once the CPU bar has been read.
+> **2026-08-20, later the same day: the case is back on, for a better reason.**
+> The reference third-party firmwares are internal-flash builds — WTF! at 91 KB,
+> FRGMNTS at 85 KB — which is why they install from Noise Engineering's own
+> portal. That portal takes a user-supplied file; what it will not do is write
+> QSPI, so a `BOOT_SRAM` app at `0x90040000` is out of its reach. Matching the
+> shape WTF! and FRGMNTS take is the way onto that path, and `BOOT_NONE` is
+> that shape.
+>
+> The blocker named below is also gone: CPU was measured on hardware at a
+> **50–75% peak** (DESIGN.md §8), so a `-Os -flto` libDaisy rebuild now has a
+> baseline to be compared against rather than being a leap in the dark. Read
+> the bar before and after; if it climbs a band, that is the answer.
+>
+> Sequence still matters — keep a known-good `BOOT_SRAM` build to fall back to.
 
 **Result, measured 2026-08-19: it fits, with 16 KB to spare.** A `BOOT_NONE`
 build lands at **114,472 bytes of 131,072 — 87.3%.** The Makefile's standing

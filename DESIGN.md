@@ -24,7 +24,8 @@ already ship the hard parts (§3).
 
 **Confirmed 2026-08-08:** the engine runs green at 48 kHz natively — the
 whole sample-rate question costs two constants and no logic (§6). The port's
-remaining risk is CPU headroom and the clock adapter, not the DSP.
+remaining risk was CPU headroom and the clock adapter, not the DSP. Both
+are now measured: the clock adapter natively, CPU on hardware (§8).
 
 ---
 
@@ -420,11 +421,20 @@ That is also why the reference firmwares are 85–91 KB — they were built to f
 internal flash. Resolved with `APP_TYPE = BOOT_SRAM` (§6), which is why the
 module needs the Daisy bootloader installed once.
 
-**CPU ⚠️ — unprofiled, the one genuine unknown.** 480 MHz single-core M7
-versus the Move's Cortex-A53. The saving grace is that only 1–2 effects render
-at a time (one per lane), not 26. Profile Verb, Freeze, PShift and Scatter
-first — they're the expensive ones. If it doesn't fit: drop to one lane, or
-trim the FX pool.
+**CPU ✅ — measured on hardware 2026-08-20: peak lands in the 50–75% band.**
+480 MHz single-core M7 versus the Move's Cortex-A53. The saving grace is that
+only 1–2 effects render at a time (one per lane), not 26.
+
+The reading comes from the boot report (§6): driven hard — FX and Order Density
+up, short Slice Res, long loop, LIVE mode re-capturing every pass — the worst
+block of the session lit LED 0 and LED 1 and nothing above, which the readout
+defines as ≥50% and <75%. The 80% live alarm never fired.
+
+**So it fits, with 25–50% of a block to spare at the worst case.** That is
+headroom, not comfort: the contingencies below stay on the shelf rather than
+being deleted. If a future change pushes into amber, drop to one lane or trim
+the FX pool — and note that Verb, Freeze, PShift and Scatter are the expensive
+ones to profile first.
 
 ---
 
@@ -474,7 +484,7 @@ custom firmware.
 
 ## 11. Open questions
 
-1. **CPU headroom** — the only thing that could kill the project. Measure
+1. ~~**CPU headroom**~~ — *measured 2026-08-20: 50–75% peak, it fits (§8).* Measure
    before buying anything beyond one module.
 2. **Gate edge resolution at block rate** — is ~1 ms jitter audible on a
    16th grid? ⚠️ Assumed fine.

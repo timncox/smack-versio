@@ -5,11 +5,10 @@ to end on a real Versio — bootloader to internal flash, app to QSPI — and th
 module has been played hard: audio, capture, the knob layout and the effects
 are all confirmed by ear. The steps and addresses below are known good.
 
-One thing is still open, and it is the one that mattered from the start:
-**does the engine fit in the CPU budget?** Playing hard produced no audible
-trouble, which is encouraging and is not a measurement. The boot report is the
-measurement — play hard, power cycle, read the LED bar (see below). Nobody has
-done that yet.
+The question that mattered from the start — **does the engine fit in the CPU
+budget?** — is answered. Driven hard with LIVE running, the boot report came
+back showing STATE and PLAY lit and nothing above: **a peak of 50–75%**, with
+the 80% alarm never firing. It fits.
 
 ## The easy way: flash it from a browser
 
