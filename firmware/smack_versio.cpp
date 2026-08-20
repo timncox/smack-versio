@@ -132,19 +132,48 @@ struct Param {
  *
  * Originally capped at index 6 on the assumption this module was for short
  * glitch loops. It is not -- opened up after playing it. */
-enum { P_FXD = 0, P_ORD, P_LEN, P_RES, P_WET, P_SEED, P_PITCH, P_COUNT };
+/* Names for the table above. These are ADC channel numbers. */
+enum { P_FXD = 0, P_RES, P_LEN, P_SEED, P_ORD, P_WET, P_PITCH, P_COUNT };
 
 static Param P[P_COUNT] = {
-    { "fx_density",    0, 100, -32768, 0.0f },
-    { "order_density", 0, 100, -32768, 0.0f },
-    { "loop_len",      3,   8, -32768, 0.0f },
-    { "slice_res",     0,   3, -32768, 0.0f },
-    /* BLEND is handled in the callback, not sent to the engine -- see the
-     * crossfade in AudioCallback. The entry stays so the knob is still read
-     * and its position still drives LED 2. */
-    { NULL,            0, 100, -32768, 0.0f },
-    { "seed",          0, 127, -32768, 0.0f },
-    { "pitch_range",   1,  24, -32768, 0.0f },
+    /*
+     * The array index IS the ADC channel. The order below is therefore the
+     * panel-position -> ADC-channel mapping, not the reading order of the
+     * legend.
+     *
+     * Derived, not assumed. Noise Engineering's Desmodus Versio manual shows
+     * the panel as:
+     *
+     *      Blend  ......  Regen        (top)
+     *             Tone
+     *      Speed  ......  Size
+     *             Index
+     *                     Dense
+     *
+     * and the ADC channels run down the columns -- left top-to-bottom, then
+     * centre, then right:
+     *
+     *      ADC 0 Blend(top-left)   ADC 1 Speed(mid-left)
+     *      ADC 2 Tone(centre)      ADC 3 Index(centre-lower)
+     *      ADC 4 Regen(top-right)  ADC 5 Size(mid-right)
+     *      ADC 6 Dense(lower-right)
+     *
+     * The anchor is ADC 4 = top-right, observed on hardware: with the old
+     * table BLEND sat at index 4 and turned up at the top-right knob.
+     *
+     * Our functions keep their positions on the printed diagram, so the
+     * entries below are ordered by which ADC drives which position.
+     */
+    { "fx_density",    0, 100, -32768, 0.0f },   /* ADC 0 - top-left    */
+    { "slice_res",     0,   3, -32768, 0.0f },   /* ADC 1 - mid-left    */
+    { "loop_len",      3,   8, -32768, 0.0f },   /* ADC 2 - centre      */
+    { "seed",          0, 127, -32768, 0.0f },   /* ADC 3 - centre low  */
+    { "order_density", 0, 100, -32768, 0.0f },   /* ADC 4 - top-right   */
+    /* BLEND is handled in the audio callback, not sent to the engine -- see
+     * the crossfade in AudioCallback. The entry stays so the knob is read and
+     * still drives LED 2. */
+    { NULL,            0, 100, -32768, 0.0f },   /* ADC 5 - mid-right   */
+    { "pitch_range",   1,  24, -32768, 0.0f },   /* ADC 6 - lower-right */
 };
 
 /*
@@ -599,42 +628,56 @@ static void refresh_leds(void)
  */
 static void knobmap_service(void)
 {
-    static float    seen[P_COUNT] = {0};
-    static int      last   = -1;
-    static uint32_t last_t = 0;
-    static bool     primed = false;
+    /*
+     * Shows the RAW ADC value, read straight from the peripheral, bypassing
+     * libDaisy's AnalogControl layer entirely.
+     *
+     * On the bench every channel read frozen through GetKnobValue(), and the
+     * value looked pinned at full scale. DaisyVersio initialises these knobs
+     * with flip = true, so a raw reading of ZERO becomes 1.0 after flipping --
+     * which is precisely what a non-converting ADC would look like through
+     * that layer.
+     *
+     * seed.adc.GetFloat() is the peripheral's own output: no flip, no
+     * smoothing, no AnalogControl state. That splits the two possibilities
+     * cleanly:
+     *
+     *   raw moves, GetKnobValue() did not  -> AnalogControl is the problem
+     *                                         (slew coefficient, or Process()
+     *                                          not being reached)
+     *   raw does not move either           -> the ADC is not converting, and
+     *                                         no knob mapping was ever going
+     *                                         to be readable
+     *
+     *   Bank A (green): LED0..3 = raw ADC 0..3
+     *   Bank B (red):   LED0..2 = raw ADC 4..6, LED3 dark
+     *
+     * Button switches bank.
+     */
+    static bool bank_b   = false;
+    static bool was_down = false;
 
-    if (!primed) {
-        for (int i = 0; i < P_COUNT; i++) seen[i] = hw.GetKnobValue(i);
-        primed = true;
+    bool down = hw.tap.Pressed();
+    if (down && !was_down) bank_b = !bank_b;
+    was_down = down;
+
+    for (int i = 0; i < 4; i++) {
+        int idx = bank_b ? (4 + i) : i;
+        if (idx >= P_COUNT) { hw.SetLed(i, 0.0f, 0.0f, 0.0f); continue; }
+
+        float v = hw.seed.adc.GetFloat((size_t)idx);
+        if (v < 0.0f) v = 0.0f;
+        if (v > 1.0f) v = 1.0f;
+
+        /* Square-rooted so mid positions are clearly visible: Led::Set()
+         * cubes for gamma, which buries everything below about 0.7. */
+        float b = v * v; /* pre-compensate a little, then let Set() cube it */
+        b = v;           /* keep it linear-in-value; brightness is relative */
+
+        if (bank_b) hw.SetLed(i, b, 0.0f, 0.0f);
+        else        hw.SetLed(i, 0.0f, b, 0.0f);
     }
 
-    /* Biggest mover since the previous pass, so a knob being turned wins over
-     * ADC noise on the six that are not. */
-    int   best = -1;
-    float bestd = 0.02f; /* ignore anything smaller than obvious jitter */
-    for (int i = 0; i < P_COUNT; i++) {
-        float v = hw.GetKnobValue(i);
-        float d = v - seen[i];
-        if (d < 0.0f) d = -d;
-        if (d > bestd) { bestd = d; best = i; }
-        seen[i] = v;
-    }
-
-    uint32_t now = System::GetNow();
-    if (best >= 0) { last = best; last_t = now; }
-
-    for (int i = 0; i < 4; i++) hw.SetLed(i, 0.0f, 0.0f, 0.0f);
-    if (last >= 0) {
-        /* binary, LED0 = bit0 */
-        if (last & 1) hw.SetLed(0, 0.0f, 1.0f, 0.0f);
-        if (last & 2) hw.SetLed(1, 0.0f, 1.0f, 0.0f);
-        if (last & 4) hw.SetLed(2, 0.0f, 1.0f, 0.0f);
-        /* index 0 lights nothing in binary, so mark "a knob was identified"
-         * separately -- otherwise ADC 0 is indistinguishable from idle. */
-        if (last == 0) hw.SetLed(0, 0.6f, 0.0f, 0.6f); /* magenta = index 0 */
-    }
-    if (now - last_t < 300u) hw.SetLed(3, 0.6f, 0.6f, 0.6f); /* turning now */
     hw.UpdateLeds();
 }
 #endif
