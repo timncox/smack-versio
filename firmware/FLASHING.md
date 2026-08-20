@@ -1,13 +1,15 @@
 # Flashing Smack Versio
 
-**Flashes cleanly; not yet heard.** As of 2026-08-19 the procedure below has
-been run end to end on a real Versio — bootloader to internal flash, app to
-QSPI, both verified by `dfu-util` — so the steps and the addresses are known
-good. What is still unconfirmed is everything downstream of that: no one has
-reported audio out of it, so the engine, the panel mapping and the CPU budget
-remain untested. The first person to listen is still performing the
-acceptance test for M1, and its real job is answering one question: **does the
-engine fit in the CPU budget?** LED 3 answers that (see below).
+**Flashed, and played.** As of 2026-08-19 the procedure below has been run end
+to end on a real Versio — bootloader to internal flash, app to QSPI — and the
+module has been played hard: audio, capture, the knob layout and the effects
+are all confirmed by ear. The steps and addresses below are known good.
+
+One thing is still open, and it is the one that mattered from the start:
+**does the engine fit in the CPU budget?** Playing hard produced no audible
+trouble, which is encouraging and is not a measurement. The boot report is the
+measurement — play hard, power cycle, read the LED bar (see below). Nobody has
+done that yet.
 
 ## What you need
 
