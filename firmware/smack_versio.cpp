@@ -35,9 +35,13 @@ using namespace daisy;
 static DaisyVersio hw;
 static CpuLoadMeter cpu;
 
-/* Ring is SMACK_RING_FRAMES * 2ch * 2 bytes = 13.4 MB at 48 k; the lanes add
- * ~160 KB; smack_t itself is small. 16 MB of the Versio's 64 MB is ample. */
-#define POOL_BYTES (16u * 1024u * 1024u)
+/* Sized in versio_alloc.h so this and test_versio_alloc.c cannot drift apart.
+ *
+ * The ring grew from 70 s to 150 s to hold two maximum loops rather than one
+ * -- see the comment on SMACK_MAX_SECONDS. Cost is boot time: versio_calloc
+ * zeroes the block, and 28.8 MB of SDRAM memset lands inside the 2.5 s boot
+ * readout rather than delaying audio. */
+#define POOL_BYTES VERSIO_POOL_BYTES
 static uint8_t DSY_SDRAM_BSS g_pool[POOL_BYTES];
 
 static smack_t         *S;

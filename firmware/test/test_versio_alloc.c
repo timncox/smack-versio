@@ -16,7 +16,19 @@
 #include "../vendor/smack_core.h"
 
 #define BLK 128
-#define POOL_BYTES (16u * 1024u * 1024u)
+/* The firmware's pool, not a copy of it — versio_alloc.h owns the number so
+ * a ring-size change cannot pass here and fail on hardware. */
+#define POOL_BYTES VERSIO_POOL_BYTES
+
+/*
+ * versio_alloc.h cannot derive the pool from the ring itself (it would bind
+ * the engine with C++ linkage in the firmware — see the note there), so the
+ * relationship is checked here, at compile time, where both headers are C.
+ * The ring is SMACK_RING_FRAMES * 2 channels * 2 bytes; the rest of the
+ * engine is under 1 MB, so a megabyte of slack is a fair margin.
+ */
+typedef char pool_holds_the_ring[
+    (VERSIO_POOL_BYTES >= (size_t)SMACK_RING_FRAMES * 4 + (1u << 20)) ? 1 : -1];
 
 static float fake_bpm(void) { return 120.0f; }
 

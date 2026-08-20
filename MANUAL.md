@@ -109,6 +109,13 @@ thing this version can do that the Move version cannot.
 | **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last N steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
+**Very slow clocks shorten the longest LENGTH.** A loop may take at most half
+the module's 150-second buffer, because the recorder has to keep writing a
+fresh loop alongside the one that is playing. Below about 51 BPM, 256 steps no
+longer fits, so LENGTH drops one notch — to 128 steps, then 64 — rather than
+being trimmed to a partial loop, which would leave it off the grid and drifting
+against your clock. At any normal tempo you will never see this.
+
 **LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on
 a boundary would otherwise chatter between two values as CV noise nudges it
 back and forth — re-slicing the loop, or re-rolling the pattern, continuously.
