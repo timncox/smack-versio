@@ -257,9 +257,32 @@ static void dispatch_switches(void)
 #define LONG_PRESS_MS   600u
 #define CLEAR_PRESS_MS 2000u
 
-static bool     btn_down    = false;
-static bool     btn_cleared = false;
-static uint32_t btn_t0      = 0;
+/* Two taps closer together than this toggle LIVE mode. The first tap still
+ * re-rolls -- re-roll is the most-used gesture and must not wait to find out
+ * whether a second tap is coming. Only the second tap is swallowed. */
+#define DOUBLE_TAP_MS   400u
+
+/*
+ * LIVE mode: re-capture once per loop pass, so the window keeps sliding onto
+ * fresh audio and the slice effects land on what you are playing now rather
+ * than on one frozen take.
+ *
+ * This works because capture is grid-aligned: capture_retro() takes the
+ * quantum ending at the last boundary and then chases the current phase, so
+ * firing it repeatedly stays in time instead of drifting or restarting.
+ * Latency is one loop pass, so short LENGTH settings feel live and long ones
+ * feel like a slow refresh.
+ *
+ * What this cannot be is a true insert. Half the palette -- REVERSE,
+ * TAPESTOP, SCRATCH, RETRIG, REVAFTER, FREEZE -- operates on audio that has
+ * already happened, so there is no zero-latency version of it to build.
+ */
+static volatile bool G_LIVE = false;
+
+static bool     btn_down     = false;
+static bool     btn_cleared  = false;
+static uint32_t btn_t0       = 0;
+static uint32_t btn_last_tap = 0;
 
 static void handle_button(void)
 {
@@ -309,10 +332,23 @@ static void handle_button(void)
         btn_down = false;
         if (btn_cleared)
             return;
-        if (held > LONG_PRESS_MS)
+        if (held > LONG_PRESS_MS) {
             smack_set_param(S, "capture", "1");
-        else
-            smack_set_param(S, "reroll", "1");
+            return;
+        }
+
+        /* Tap. A second tap inside the double-tap window toggles LIVE and is
+         * swallowed; the first one has already re-rolled, which is fine --
+         * re-roll is cheap and waiting to disambiguate would put latency on
+         * the gesture used most. */
+        uint32_t now = System::GetNow();
+        if (now - btn_last_tap < DOUBLE_TAP_MS) {
+            G_LIVE       = !G_LIVE;
+            btn_last_tap = 0;
+            return;
+        }
+        btn_last_tap = now;
+        smack_set_param(S, "reroll", "1");
     }
 }
 
@@ -459,7 +495,9 @@ static void update_leds(void)
     switch (run) {
         case 1:  hw.SetLed(0, 1.0f, 0.5f, 0.0f); break; /* armed     amber */
         case 2:  hw.SetLed(0, 1.0f, 0.0f, 0.0f); break; /* recording red   */
-        case 3:  hw.SetLed(0, 0.0f, 1.0f, 0.0f); break; /* looping   green */
+        case 3:  G_LIVE ? hw.SetLed(0, 0.0f, 0.8f, 0.8f)   /* live     cyan  */
+                        : hw.SetLed(0, 0.0f, 1.0f, 0.0f);  /* looping  green */
+                 break;
         default: hw.SetLed(0, 0.0f, 0.0f, 0.15f);       /* idle      dim   */
     }
 
@@ -469,6 +507,23 @@ static void update_leds(void)
         char b2[32];
         if (smack_get_param(S, "loop_frames", b2, sizeof(b2)) >= 0) lf = atoi(b2);
         if (lf > 0) pos = 1.0f - ((float)pf / (float)lf); /* ramp per pass */
+
+        /*
+         * LIVE: re-capture each time the playhead wraps, so the window slides
+         * onto fresh audio every pass instead of repeating one take.
+         *
+         * Detected as the play frame going backwards, which is the wrap. Done
+         * here because this is already where play_frame is read -- doing it
+         * anywhere else would mean a second smack_get_param, and that is an
+         * snprintf we do not need twice.
+         *
+         * Safe to fire repeatedly: capture is grid-aligned and chases phase,
+         * so successive captures stay in time rather than restarting.
+         */
+        static int last_pf = 0;
+        if (G_LIVE && run == 3 && lf > 0 && pf < last_pf)
+            smack_set_param(S, "capture", "1");
+        last_pf = pf;
     }
     hw.SetLed(1, pos * 0.2f, pos * 0.6f, pos);
 
