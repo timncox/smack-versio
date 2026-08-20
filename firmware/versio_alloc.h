@@ -19,6 +19,28 @@
 
 #include <stddef.h>
 
+/*
+ * Pool size, defined here rather than in smack_versio.cpp so the firmware and
+ * test_versio_alloc.c cannot disagree about it. They used to declare it
+ * separately, and when the ring grew from 70 s to 150 s the firmware was
+ * updated and the test was not -- it kept allocating 16 MB and failed with a
+ * bare `assert(s)`.
+ *
+ * The ring dominates: SMACK_RING_FRAMES * 2 channels * 2 bytes, which is
+ * 28.8 MB at 150 s. The lanes add ~160 KB and smack_t itself is small, so
+ * rounding up to the next power of two covers everything with room to spare
+ * and stays well inside the Versio's 64 MB of SDRAM.
+ *
+ * Deliberately NOT derived from SMACK_RING_FRAMES here: smack_core.h declares
+ * no linkage of its own, and the firmware includes it inside an extern "C"
+ * block. Pulling it in from this header -- which is included first -- would
+ * bind the engine's symbols with C++ linkage and the include guard would then
+ * skip the wrapped copy, so every smack_* call fails to link. The relationship
+ * to the ring size is asserted in test_versio_alloc.c instead, where both
+ * headers are C and can be compared safely.
+ */
+#define VERSIO_POOL_BYTES (32u * 1024u * 1024u)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

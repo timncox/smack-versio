@@ -29,7 +29,26 @@
 /* 48000, not 44100: libDaisy offers 8/16/32/48/96 kHz only (sai.h). Verified
  * 2026-08-08 — `make test` green at 48 k with no engine logic change. */
 #define SMACK_SR          48000
-#define SMACK_MAX_SECONDS 70               /* 16 bars at 55 BPM */
+/*
+ * The ring holds TWO maximum loops, not one.
+ *
+ * It was 70 s -- exactly 16 bars at 55 BPM, i.e. one longest-possible loop.
+ * That is half of what is needed. While a loop plays, the recorder must not
+ * overwrite it (record_ring_frame's guard), so the space left for incoming
+ * audio is RING minus the protected loop. Size the ring for one loop and that
+ * remainder runs out mid-pass: recording stops, ring_last_global freezes, and
+ * every later Capture returns audio from before the stall. The module keeps
+ * looping and keeps accepting Capture, so it looks like it is working.
+ *
+ * Measured at 70 s: at 120 BPM with a 32 s loop the recorder stalled 38 s
+ * after capture and never resumed; a Capture pressed after that returned
+ * pre-stall audio. See firmware/test/test_ring_stall.c.
+ *
+ * 150 s keeps the longest loop (256 steps) usable down to ~51 BPM. Below
+ * that, capture steps the length down one musical notch at a time rather
+ * than clipping frames -- see fit_loop_len_idx() in smack_core.c.
+ */
+#define SMACK_MAX_SECONDS 150              /* 2 x 16 bars at 55 BPM */
 #define SMACK_RING_FRAMES (SMACK_SR * SMACK_MAX_SECONDS)
 #define SMACK_MAX_SLICES  512              /* 16 bars x 16 steps x 2 (half-step res) */
 /* 105 not 96: keeps the fade at ~2.18 ms of wall time at 48 k. */

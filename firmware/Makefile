@@ -38,7 +38,21 @@ C_SOURCES = clock_adapter.c versio_alloc.c smack_core_versio.c
 
 # The engine ships lo-fi varispeed on purpose; -ffast-math would also let the
 # compiler reorder the float paths the seeded FX depend on. Leave it off.
-OPT = -Os
+#
+# -O3, not -Os. The first hardware run reported a stored CPU peak over 90% and
+# the audio callback was overrunning its 2.67 ms block, which is what a buzz
+# and a starved main loop look like. The engine was being compiled for SIZE --
+# every DSP inner loop in smack_core included.
+#
+# That -Os was inherited from the attempt to squeeze a BOOT_NONE image into
+# 128 KB of internal flash. This is a BOOT_SRAM build: the app lives in SRAM,
+# where it occupies 151,740 of 480 KB. Size was never the constraint here, so
+# -Os was buying nothing and costing throughput on the one axis that can kill
+# the project.
+#
+# If a BOOT_NONE build is ever revived (see BOOT_NONE.md), that configuration
+# genuinely is flash-bound and will want -Os back -- set it there, not here.
+OPT = -O3
 
 SYSTEM_FILES_DIR = $(LIBDAISY_DIR)/core
 include $(SYSTEM_FILES_DIR)/Makefile
@@ -51,4 +65,55 @@ ifeq ($(USE_LTO), 1)
 override CFLAGS   += -flto
 override CPPFLAGS += -flto
 override LDFLAGS  += -flto -Os
+endif
+
+# Float support in printf. libDaisy links --specs=nano.specs, and newlib-nano
+# leaves _printf_float as a weak reference that nothing defines unless the link
+# line forces it in. With it null, nano's vfprintf emits NOTHING for a "%f"
+# conversion -- no error, no truncation, an empty string. smack_get_param()
+# formats six values that way, so reading any of them returned "" and atoi()
+# turned that into 0.
+#
+# That is not hypothetical: play_frame is "%.0f" upstream, so LIVE mode's
+# "has the playhead wrapped" test compared 0 against 0 and never fired, on
+# every build, while passing every laptop test because glibc formats floats.
+# play_frame is now integer-formatted, but this flag stops the next float
+# param from failing the same silent way.
+#
+# Verify after linking with:
+#   arm-none-eabi-nm build/smack_versio.elf | grep _printf_float
+# An empty result means float conversions are silently producing nothing.
+override LDFLAGS  += -u _printf_float
+
+# Diagnostic builds. Not for release -- DIAG takes LED 3 away from the status
+# display and the CPU alarm.
+#
+# Always clean first. The sources are identical between a diagnostic and a
+# release build, so make will not rebuild on the flag change alone and you will
+# flash the wrong image without noticing. Judge by size, not by intent.
+#
+#   make -C firmware clean && make -C firmware DIAG=3 && make -C firmware program-dfu
+#
+#   DIAG=1  heartbeat only: blink LED 3 from the top of the main loop, before
+#           touching the engine. Blinking means the loop is alive.
+#   DIAG=3  boot-stage counter: n green LEDs at each milestone in main(), all
+#           blue once the audio ISR is live, then the heartbeat. Whatever it
+#           stops on is the step that killed it. Reach for this when a fix
+#           fails to move the symptom -- that means the unknown is "how far
+#           does it get", not "which line is wrong".
+ifeq ($(DIAG), 1)
+override CFLAGS   += -DDIAG_HEARTBEAT
+override CPPFLAGS += -DDIAG_HEARTBEAT
+endif
+# DIAG=4 identifies knobs. Turn one; the panel reports which ADC index moved,
+# in binary on LEDs 0-2 (magenta on LED 0 means index 0). Use it to measure the
+# panel-position -> ADC-index mapping instead of assuming it.
+ifeq ($(DIAG), 4)
+override CFLAGS   += -DDIAG_KNOBMAP
+override CPPFLAGS += -DDIAG_KNOBMAP
+endif
+
+ifeq ($(DIAG), 3)
+override CFLAGS   += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
+override CPPFLAGS += -DDIAG_HEARTBEAT -DDIAG_BOOTSTAGE
 endif

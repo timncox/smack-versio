@@ -1,10 +1,15 @@
 # Flashing Smack Versio
 
-**Built and unvalidated.** Nobody has run this on hardware yet. It compiles,
-the native tests pass, and the memory budget fits — but no one has heard it.
-The first flash is the acceptance test for M1, and its real job is answering
-one question: **does the engine fit in the CPU budget?** LED 3 answers that
-(see below).
+**Flashed, and played.** As of 2026-08-19 the procedure below has been run end
+to end on a real Versio — bootloader to internal flash, app to QSPI — and the
+module has been played hard: audio, capture, the knob layout and the effects
+are all confirmed by ear. The steps and addresses below are known good.
+
+One thing is still open, and it is the one that mattered from the start:
+**does the engine fit in the CPU budget?** Playing hard produced no audible
+trouble, which is encouraging and is not a measurement. The boot report is the
+measurement — play hard, power cycle, read the LED bar (see below). Nobody has
+done that yet.
 
 ## What you need
 
@@ -33,6 +38,23 @@ stock. You are not modifying anything you can't undo.
    ```
    make -C firmware program-boot
    ```
+   **This step ends in an error even when it works.** Expect exactly this:
+   ```
+   Download done.
+   File downloaded successfully
+   dfu-util: Error during download get_status
+   make: *** [program-boot] Error 74
+   ```
+   That is benign. `program-boot` passes `:leave`, so the chip exits DFU and
+   jumps to the new bootloader before dfu-util can read a final status — the
+   write already completed on the line above. Judge it by
+   `File downloaded successfully`, not by the exit code. Confirm by running
+   `dfu-util -l` again: the name should now be the QSPI map rather than
+   `@Internal Flash`.
+
+   Two other harmless warnings on every flash: `Invalid DFU suffix signature`
+   (a raw `.bin` carries no DFU trailer) and the note about future dfu-util
+   releases requiring one.
 
 ## Every time: flash the app
 
@@ -51,7 +73,11 @@ stock. You are not modifying anything you can't undo.
 
 **On boot, with nothing patched:** audio passes through. A Eurorack effect
 that is silent until you press a button reads as broken, so the module starts
-in passthrough (`monitor=1`).
+in passthrough. The engine's own monitor path is off (`monitor=0`) and the
+dry/wet crossfade happens in the host callback instead, which is the only
+point where the live input and the effected loop still exist separately.
+With nothing captured, BLEND is bypassed entirely and the input passes
+through untouched.
 
 **For the first ~2.5 seconds, the LEDs are not showing normal status** — they
 are replaying the worst CPU load from your *previous* session, as a bar. On the
@@ -108,15 +134,17 @@ rather than running silent.
 |---|---|
 | Knob 1 | FX Density — how many slices get an effect |
 | Knob 2 | Order Density — how much slice reordering |
-| Knob 3 | Loop Length — 8 / 16 / 32 / 64 steps |
+| Knob 3 | Loop Length — 8 / 16 / 32 / 64 / 128 / 256 steps |
 | Knob 4 | Slice Res |
-| Knob 5 | Blend — clean loop ↔ glitch pattern |
+| Knob 5 | Blend — dry input ↔ effected loop |
 | Knob 6 | Seed — the "I don't like this pattern" knob |
 | Knob 7 | Pitch Range |
-| SW_0 | Clock ratio: up `/2`, centre `=1`, down `x2` |
-| SW_1 | Gate role: up CLK, centre AUTO, down TRIG |
-| **Button, short** | **Capture** — grab the last N steps |
-| **Button, long** (>600 ms) | **Re-roll** — new pattern, same loop |
+| SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |
+| SW_1 | Gate role: right CLK, centre AUTO, left TRIG |
+| **Button, tap** | **Re-roll** — new pattern, same loop |
+| **Button, hold** (>600 ms) | **Capture** — grab the last N steps |
+| **Button, double-tap** | **LIVE** — re-capture once per loop pass; LED 0 cyan |
+| **Button, hold** (>2 s) | **Clear** — drop the loop, back to passthrough |
 | Gate in | Clock and/or capture trigger, per SW_1 |
 | CV in ×7 | Sums with its knob (analog, always active) |
 
@@ -137,10 +165,35 @@ under CV is the thing this module gains over the Move version.
     holding BOOT — stays enumerated indefinitely. A device that vanishes
     ~2 s after power-up is the bootloader doing its job.
   - **The alt-setting `name=` string** in `dfu-util -l`, which names the
-    memory region the mode exposes: internal flash at `0x08000000` for ST's
-    DFU, the QSPI region at `0x90000000` for the bootloader. Read the strings
-    off your own `dfu-util -l`; they are deliberately not quoted here because
-    nobody has run this on hardware yet.
+    memory region the mode exposes. Observed on hardware 2026-08-19:
+
+    ST's built-in ROM DFU (BOOT held at reset) — internal flash, and a second
+    alt setting for the option bytes:
+    ```
+    alt=0, name="@Internal Flash   /0x08000000/16*128Kg", serial="200364500000"
+    alt=1, name="@Option Bytes   /0x5200201C/01*128 e"
+    ```
+    The Daisy bootloader — the QSPI map, one alt setting, different serial:
+    ```
+    alt=0, name="@Flash /0x90000000/64*4Kg/0x90040000/60*64Kg/0x90400000/60*64Kg"
+    serial="3986335E3330"
+    ```
+    Easiest tell of all: `ioreg -p IOUSB -w0 -l | grep '"USB Product Name"'`
+    reports **`Daisy Bootloader`** by name once it is installed.
+
+- **The module does not appear on the USB bus while it is running.** Neither
+  the stock firmware nor this one initializes the USB device peripheral, so an
+  empty `dfu-util -l` with the module plugged in and playing is normal and
+  says nothing about your cable. Only the DFU modes above enumerate. Don't
+  read a dead bus as a dead cable — check it *after* a BOOT/RESET, which is
+  the case that must enumerate.
+
+- **A charge-only USB cable powers the Seed but never enumerates.** VBUS is
+  present, the module lights up and runs, and the two data lines go nowhere —
+  so the module looks perfectly alive while being invisible to `dfu-util`.
+  This cost the first flash about twenty minutes. If a correct BOOT/RESET
+  produces nothing, change the cable before you change anything else, and
+  prefer a port directly on the machine over a hub.
 - **Sound but no capture**: check SW_1 and whether anything is patched to the
   gate. With nothing patched it free-runs at 120 BPM, which is fine — Capture
   should still work.

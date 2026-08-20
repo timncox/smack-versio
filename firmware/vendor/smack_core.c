@@ -572,10 +572,46 @@ static int8_t punch_map(int f, int pressure) {
 /*  Capture                                                            */
 /* ------------------------------------------------------------------ */
 
+/*
+ * A loop may occupy at most half the ring, because the recorder needs room to
+ * write a whole fresh one alongside it while it plays. Exceed that and
+ * record_ring_frame() runs into its own guard, recording stops, and captures
+ * silently go stale.
+ *
+ * The margin is larger than the 2048 frames the recorder guards with so the
+ * two limits cannot meet exactly.
+ */
+#define RING_WRITE_MARGIN 4096u
+
+static uint32_t max_loop_frames(void) {
+    return (uint32_t)((SMACK_RING_FRAMES - RING_WRITE_MARGIN) / 2);
+}
+
+/*
+ * Step LENGTH down to the longest setting that still fits in half the ring.
+ *
+ * Done by lowering the index rather than clipping the frame count, because a
+ * clipped loop is no longer a whole number of steps: loop_frames_per_tick
+ * would be rescaled to span the same tick count in fewer frames, which plays
+ * the loop back at the wrong rate and drifts against the clock. Dropping one
+ * musical notch (256 -> 128 steps) stays on the grid and stays in time.
+ *
+ * Only reachable at slow tempos: at 51 BPM and above, 256 steps fits.
+ */
+static void fit_loop_len_idx(smack_t *s) {
+    double   fph = frames_per_halfstep(s);
+    uint32_t cap = max_loop_frames();
+
+    if (fph <= 0.0) return;
+    while (s->loop_len_idx > 0
+           && fph * (double)loop_len_hs_table[s->loop_len_idx] > (double)cap)
+        s->loop_len_idx--;
+}
+
 static uint32_t quantum_frames(smack_t *s) {
     double f = frames_per_halfstep(s) * (double)loop_len_hs_table[s->loop_len_idx];
     if (f < 256.0) f = 256.0;
-    if (f > (double)SMACK_RING_FRAMES) f = (double)SMACK_RING_FRAMES;
+    if (f > (double)max_loop_frames()) f = (double)max_loop_frames();
     return (uint32_t)f;
 }
 
@@ -595,6 +631,19 @@ static void retain_loop_history(smack_t *s, uint32_t loop_end, uint64_t availabl
     if (max_wanted > (double)SMACK_RING_FRAMES) max_wanted = SMACK_RING_FRAMES;
     uint64_t max_resize = (uint64_t)(max_wanted + 0.5);
     if (available > max_resize) available = max_resize;
+    /*
+     * Retained history is protected from the recorder, so it comes straight
+     * out of the space the next capture needs. Keep back at least a whole
+     * loop's worth of writable ring; without this the history alone can pin
+     * the write head and stall recording even when the loop itself is short.
+     */
+    {
+        uint64_t writable_cap =
+            (uint64_t)SMACK_RING_FRAMES > (uint64_t)s->loop_len + RING_WRITE_MARGIN
+                ? (uint64_t)SMACK_RING_FRAMES - s->loop_len - RING_WRITE_MARGIN
+                : 0;
+        if (available > writable_cap) available = writable_cap;
+    }
     if (available < s->loop_len) available = s->loop_len;
     s->loop_available = (uint32_t)available;
     s->loop_history_start = (loop_end + SMACK_RING_FRAMES - s->loop_available)
@@ -604,7 +653,9 @@ static void retain_loop_history(smack_t *s, uint32_t loop_end, uint64_t availabl
 /* Retroactive grab: the last loop-length of audio ending at the most recent
  * half-step boundary becomes the loop. Uses the written-frame timeline. */
 static void capture_retro(smack_t *s) {
-    uint32_t want = quantum_frames(s);
+    uint32_t want;
+    fit_loop_len_idx(s); /* before quantum_frames: it reads loop_len_idx */
+    want = quantum_frames(s);
     uint64_t grid_boundary = last_boundary_global(s);
     uint64_t boundary = grid_boundary;
     if (boundary > s->ring_last_global) boundary = s->ring_last_global;
@@ -638,6 +689,7 @@ static void capture_retro(smack_t *s) {
 }
 
 static void begin_record(smack_t *s) {
+    fit_loop_len_idx(s); /* before quantum_frames: it reads loop_len_idx */
     s->rec_start = s->ring_w;
     s->rec_length = quantum_frames(s);
     s->rec_clock_ticks = (uint32_t)(loop_len_hs_table[s->loop_len_idx] * 3);
@@ -1798,10 +1850,15 @@ static int clampi(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v
  * Playback stays at the same distance from that endpoint (modulo the new
  * length), preserving the current sample whenever it remains in the window. */
 static void resize_live_loop(smack_t *s) {
+    uint32_t old_len, new_ticks;
     if (!s || s->state != SMACK_LOOPING || s->loop_len == 0) return;
 
-    uint32_t old_len = s->loop_len;
-    uint32_t new_ticks = (uint32_t)(loop_len_hs_table[s->loop_len_idx] * 3);
+    /* Lengthening is bounded by the same half-ring rule as capture, so a big
+     * LENGTH turn cannot grow the loop into the recorder's space. */
+    fit_loop_len_idx(s);
+
+    old_len   = s->loop_len;
+    new_ticks = (uint32_t)(loop_len_hs_table[s->loop_len_idx] * 3);
     double source_frames_per_tick = s->loop_frames_per_tick;
     if (source_frames_per_tick <= 0.0 && s->loop_clock_ticks > 0)
         source_frames_per_tick = (double)old_len / (double)s->loop_clock_ticks;
@@ -1809,7 +1866,7 @@ static void resize_live_loop(smack_t *s) {
 
     double wanted = source_frames_per_tick * (double)new_ticks;
     if (wanted < 256.0) wanted = 256.0;
-    if (wanted > (double)SMACK_RING_FRAMES) wanted = (double)SMACK_RING_FRAMES;
+    if (wanted > (double)max_loop_frames()) wanted = (double)max_loop_frames();
     uint32_t new_len = (uint32_t)(wanted + 0.5);
     uint32_t available = s->loop_available > 0 ? s->loop_available : old_len;
     if (new_len > available) new_len = available;
@@ -2339,7 +2396,26 @@ int smack_get_param(smack_t *s, const char *key, char *buf, int buf_len) {
         return snprintf(buf, (size_t)buf_len, "%d", ps);
     }
     if (!strcmp(key, "play_frame")) /* read-only timing diagnostic */
-        return snprintf(buf, (size_t)buf_len, "%.0f", floor(s->play_pos));
+        /*
+         * "%d", not "%.0f". The value is integral and every caller parses it
+         * with atoi(), but the format mattered for a different reason: on the
+         * Versio this is read by firmware linked against newlib-nano, where
+         * _printf_float is a WEAK reference that nothing defines unless the
+         * link line says -u _printf_float. When it is null, nano's vfprintf
+         * silently emits nothing for a float conversion -- no error, no
+         * warning, just an empty string that atoi() turns into 0.
+         *
+         * play_frame was therefore always 0 on hardware, which made LIVE
+         * mode's wrap test (pf < last_pf) permanently false: it never
+         * re-captured once, on any firmware build, while working perfectly on
+         * a laptop where glibc formats floats. It also pinned the playhead LED
+         * at full brightness, since its ramp is 1 - pf/loop_frames.
+         *
+         * The link flag is set too, so the engine's other float params cannot
+         * fail this way. This stays integer-formatted regardless: it is an
+         * integer, and it should not depend on the flag.
+         */
+        return snprintf(buf, (size_t)buf_len, "%d", (int)floor(s->play_pos));
     if (!strcmp(key, "pattern") || !strcmp(key, "pattern_r")) {
         /* fx codes per slice for the step-LED UIs: e.g. "0300102..." */
         const smack_lane_t *ln = &s->lane[key[7] ? 1 : 0];

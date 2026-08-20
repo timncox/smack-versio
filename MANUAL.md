@@ -9,11 +9,15 @@ Alternative firmware for the Noise Engineering Versio platform.
 > record; `docs/index.html` is generated alongside it by hand, so if the two
 > disagree, trust this one.
 
-> **Version 0.1.0 — pre-hardware-validation.**
-> This firmware compiles, its memory budget is measured, and the parts that can
-> be tested without hardware are tested. It has never been run on a module.
-> The first person to flash it is doing the acceptance test. See
-> [Is it working?](#is-it-working) — the module is built to tell you.
+> **Version 0.2.0 — played, not finished.**
+> This has run on a module: audio, capture, the knob layout and the effects are
+> confirmed by ear, and it has been played hard without audible trouble. The
+> boot CPU report has still not been read, so the headroom number the design
+> rests on is unconfirmed. See [Is it working?](#is-it-working).
+>
+> **Do not flash v0.1.0.** It hard-faults on boot — the audio callback treated
+> libDaisy's `size` as frames when it is samples and overran its buffer every
+> block, so the module emitted a steady buzz and nothing else.
 
 ---
 
@@ -74,12 +78,17 @@ than editing individual slices.
    module is not silent before you do anything.
 2. Patch a clock into **CLK** if you have one. If you don't, it free-runs.
 3. Play something.
-4. Tap **CAPTURE**. The last few bars become a loop and start playing.
+4. Hold **CAPTURE** for half a second. The last few bars become a loop and
+   start playing.
 5. Turn **FX** and **ORDER** up. Turn **SEED** until you like the pattern.
 6. **BLEND** decides how much of the mangling you hear.
 
-Hold **CAPTURE** for more than half a second to re-roll: same loop, new
-pattern.
+Now **tap CAPTURE** to re-roll: same loop, new pattern. Keep tapping until you
+get one you like — that is the gesture you will use most, which is why it is
+the cheapest one.
+
+To throw the loop away and go back to passing your input straight through,
+hold **CAPTURE** for two seconds.
 
 ---
 
@@ -94,15 +103,28 @@ thing this version can do that the Move version cannot.
 |---|---|
 | **FX** | How many slices get an effect, from none to all |
 | **ORDER** | How much the slice order is scrambled |
-| **LENGTH** | Loop length: 8 / 16 / 32 / 64 steps |
+| **LENGTH** | Loop length: 8 / 16 / 32 / 64 / 128 / 256 steps (256 = 16 bars) |
 | **SLICE** | How finely the loop is cut up |
-| **BLEND** | Clean loop ←→ glitched pattern |
+| **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
-| **CLK** switch | Clock ratio: `/2`, `=1`, `×2` |
+| **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
 | **GATE** switch | What the gate jack means — see below |
-| **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll the pattern |
+| **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last N steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
+
+**Very slow clocks shorten the longest LENGTH.** A loop may take at most half
+the module's 150-second buffer, because the recorder has to keep writing a
+fresh loop alongside the one that is playing. Below about 51 BPM, 256 steps no
+longer fits, so LENGTH drops one notch — to 128 steps, then 64 — rather than
+being trimmed to a partial loop, which would leave it off the grid and drifting
+against your clock. At any normal tempo you will never see this.
+
+Note that 51 BPM is the tempo the *engine* sees, not the one on your clock
+source: with **CLK** set to `×2`, a 100 BPM clock lands there. The drop sticks
+until the knob moves — if the tempo comes back up, LENGTH stays at the shorter
+setting, because a parked knob sends nothing. Sweep LENGTH off its position and
+back to restore it.
 
 **LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on
 a boundary would otherwise chatter between two values as CV noise nudges it
@@ -111,6 +133,39 @@ Each stepped knob has a deadband to stop that: 2% of travel for the coarse ones,
 and exactly one seed for SEED, which needs a much narrower band or turning it
 would skip most of the 128 seeds. Both live in `deadband_for()` in
 `firmware/smack_versio.cpp`.
+
+### LIVE mode
+
+**Double-tap CAPTURE.** LED 0 turns cyan. Double-tap again to leave.
+
+Normally you capture once and that snapshot repeats until you capture again —
+turn the knobs and the *pattern* changes, but the audio underneath is the same
+few seconds forever. In LIVE, the module re-captures itself once per loop pass,
+so the buffer keeps refilling with what you are playing now.
+
+**LENGTH sets how often that happens, and the wait is a full loop pass:**
+
+| LENGTH | At 120 BPM, refreshes every | Feels like |
+|---|---|---|
+| 8 steps | 1 s | near-live, chattery |
+| 32 steps | 4 s | a bar or two behind |
+| 256 steps | **32 s** | slow drift, nearly ambient |
+
+So at 256 steps, LIVE looks completely dead for half a minute. **If you want
+LIVE to feel live, turn LENGTH down** — that is the control, not a setting
+elsewhere. With no clock patched the tempo is the internal free-run one, so the
+interval is set by LENGTH alone.
+
+It stays in time because capture is grid-aligned: it takes the quantum ending
+at the last boundary and chases the current phase, so re-firing never drifts or
+restarts mid-bar.
+
+**LIVE records your dry input, never the effected output.** Each pass is clean
+source, re-sliced from scratch, so effects never compound on themselves and the
+loop cannot degrade into mush over time. What LIVE is *not* is a true insert:
+reverse, tapestop, scratch, retrig and freeze all work on audio that has
+already happened, so there is no zero-latency version of them to build. One
+loop pass is the floor.
 
 ---
 
@@ -201,26 +256,35 @@ what isn't, and how to correct it.
 
 ## Is it working?
 
-Because nobody has run this on hardware yet, here is what "working" looks like,
-in order:
+Here is what "working" looks like, in order:
 
 1. **Audio passes through on boot.** If not, the flash did not take.
 2. **The boot LED readout appears** for ~2.5 s, then normal operation.
-3. **Tap CAPTURE while audio is playing** — STATE goes green and PLAY starts
-   ramping.
+3. **Hold CAPTURE for about a second** while audio is playing — STATE goes
+   green and PLAY starts ramping. A *tap* re-rolls the pattern instead; it is
+   the hold that grabs a loop.
 4. **Turn FX and ORDER up.** The loop should audibly come apart.
 5. **The CLOCK LED never goes red** under heavy settings — FX and ORDER high,
    SLICE short, LENGTH long.
 
-Step 5 is the one that matters. If the CLOCK LED stays out of the red, the
-project's one genuinely open question is answered.
+Steps 1–4 are confirmed on a module, as is the knob layout. Step 5 is the one
+still open — the module has been played hard without audible trouble, but
+nobody has read the boot CPU report yet, and an absence of complaints from one
+session is not the same as a number.
+
+**The PLAY LED is the one to watch if something seems inert.** It ramps once
+per loop pass, so it is the fastest check that the playhead is actually moving
+— and a playhead position that never advances is exactly what stopped LIVE
+mode from working on every build before v0.2.0.
 
 ### If something is wrong
 
 | Symptom | Likely cause |
 |---|---|
 | No sound at all | Flash did not take, or the bootloader is missing |
-| Sound, but CAPTURE does nothing | Check the GATE switch; with nothing patched it should still work |
+| Sound, but CAPTURE does nothing | You may be tapping — tap re-rolls, *hold* captures. Otherwise check the GATE switch; with nothing patched it should still work |
+| LIVE goes cyan but never refreshes | Firmware older than v0.2.0. `play_frame` came back empty on hardware, so the wrap that triggers LIVE was never detected |
+| PLAY LED steady instead of ramping | Same cause as above — the ramp is derived from the playhead position |
 | A stepped value flickers at one knob position | Deadband too narrow — widen it in `deadband_for()` (`HYST` for LENGTH/SLICE/PITCH; the one-step band for SEED) |
 | The wrong knob does the wrong thing | Knob-to-ADC order — see [faceplate/MEASURE.md](faceplate/MEASURE.md) §2 |
 | All four LEDs red | Allocation failed — this would be a real bug, please report it |
