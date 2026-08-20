@@ -115,8 +115,9 @@ rather than running silent.
 | Knob 7 | Pitch Range |
 | SW_0 | Clock ratio: right `/2`, centre `=1`, left `x2` |
 | SW_1 | Gate role: right CLK, centre AUTO, left TRIG |
-| **Button, short** | **Capture** — grab the last N steps |
-| **Button, long** (>600 ms) | **Re-roll** — new pattern, same loop |
+| **Button, tap** | **Re-roll** — new pattern, same loop |
+| **Button, hold** (>600 ms) | **Capture** — grab the last N steps |
+| **Button, hold** (>2 s) | **Clear** — drop the loop, back to passthrough |
 | Gate in | Clock and/or capture trigger, per SW_1 |
 | CV in ×7 | Sums with its knob (analog, always active) |
 

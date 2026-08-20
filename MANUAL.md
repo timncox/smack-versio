@@ -74,12 +74,17 @@ than editing individual slices.
    module is not silent before you do anything.
 2. Patch a clock into **CLK** if you have one. If you don't, it free-runs.
 3. Play something.
-4. Tap **CAPTURE**. The last few bars become a loop and start playing.
+4. Hold **CAPTURE** for half a second. The last few bars become a loop and
+   start playing.
 5. Turn **FX** and **ORDER** up. Turn **SEED** until you like the pattern.
 6. **BLEND** decides how much of the mangling you hear.
 
-Hold **CAPTURE** for more than half a second to re-roll: same loop, new
-pattern.
+Now **tap CAPTURE** to re-roll: same loop, new pattern. Keep tapping until you
+get one you like — that is the gesture you will use most, which is why it is
+the cheapest one.
+
+To throw the loop away and go back to passing your input straight through,
+hold **CAPTURE** for two seconds.
 
 ---
 
@@ -101,7 +106,7 @@ thing this version can do that the Move version cannot.
 | **PITCH** | How far pitch-shifting effects are allowed to move |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
 | **GATE** switch | What the gate jack means — see below |
-| **CAPTURE** | Tap: grab the last N steps. Hold >0.6 s: re-roll the pattern |
+| **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last N steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
 **LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on

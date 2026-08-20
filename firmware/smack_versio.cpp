@@ -205,30 +205,56 @@ static void dispatch_switches(void)
 
 /* ---- button: short = capture, long = re-roll ---------------------------- */
 
-#define LONG_PRESS_MS 600.0f
+/*
+ * Three tiers, ordered by how often you reach for them.
+ *
+ *   tap                 re-roll   -- new pattern, same loop
+ *   hold  > 600 ms      capture   -- retro-grab the last N steps
+ *   hold  > 2000 ms     clear     -- drop the loop, back to passthrough
+ *
+ * Re-roll is on the tap because it is the gesture you use constantly while
+ * playing: you keep pressing until a pattern you like comes up. Capture is
+ * deliberate and happens once, and discarding a take should be harder still.
+ * This is the reverse of the original mapping, changed after playing it.
+ */
+#define LONG_PRESS_MS   600u
+#define CLEAR_PRESS_MS 2000u
 
-static bool  btn_down      = false;
-static bool  btn_long_done = false;
+static bool     btn_down    = false;
+static bool     btn_cleared = false;
+static uint32_t btn_t0      = 0;
 
 static void handle_button(void)
 {
     hw.tap.Debounce(); /* ProcessAllControls() only does the ANALOG controls */
 
     if (hw.tap.RisingEdge()) {
-        btn_down      = true;
-        btn_long_done = false;
+        btn_down    = true;
+        btn_cleared = false;
+        btn_t0      = System::GetNow();
     }
 
-    if (btn_down && !btn_long_done && hw.tap.Pressed()
-        && hw.tap.TimeHeldMs() > LONG_PRESS_MS) {
-        smack_set_param(S, "reroll", "1"); /* new pattern, same loop */
-        btn_long_done = true;
+    /* Timed here rather than with Switch::TimeHeldMs() because the release
+     * branch below needs the duration *after* the button is already up, and
+     * the held-time counter does not survive that. */
+    uint32_t held = System::GetNow() - btn_t0;
+
+    /* Clear fires while held, so it happens when you feel it rather than when
+     * you let go -- and so passing 2 s cancels the capture that a release
+     * would otherwise have triggered. */
+    if (btn_down && !btn_cleared && hw.tap.Pressed() && held > CLEAR_PRESS_MS) {
+        smack_set_param(S, "clear", "1");
+        btn_cleared = true;
     }
 
     if (btn_down && !hw.tap.Pressed()) {
         btn_down = false;
-        if (!btn_long_done)
-            smack_set_param(S, "capture", "1"); /* retro-grab the last N steps */
+        if (btn_cleared)
+            return; /* already handled on the way past 2 s */
+        if (held > LONG_PRESS_MS)
+            smack_set_param(S, "capture", "1");
+        else
+            smack_set_param(S, "reroll", "1");
     }
 }
 
