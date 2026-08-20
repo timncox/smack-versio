@@ -248,23 +248,28 @@ static void dispatch_knobs(void)
  * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2.
  *
  * POS_UP and POS_DOWN are libDaisy's names, not the panel's. These switches
- * are mounted horizontally on the Versio, so one of them is the left-hand
- * position and one is the right, and which is which was got wrong here.
+ * are mounted horizontally on the Versio, so one position is left and one is
+ * right -- and here is the trap:
  *
- * This comment used to assert POS_UP = RIGHT, "confirmed on hardware
- * 2026-08-19". That is contradicted by a direct observation on 2026-08-20:
- * DUAL is dispatched on POS_DOWN and appears in the RIGHT-hand position. So
- * **POS_DOWN = RIGHT and POS_UP = LEFT**, and the earlier confirmation was
- * either about something else or never actually checked.
+ *   **THE TWO SWITCHES READ INVERTED FROM EACH OTHER.**
  *
- * Which makes SW_1: left = CLK, centre = AUTO, right = DUAL.
+ *     SW_0:  POS_UP = RIGHT,  POS_DOWN = LEFT
+ *     SW_1:  POS_UP = LEFT,   POS_DOWN = RIGHT
  *
- * SW_0 is dispatched from the same constants, so by the same reasoning it is
- * left = /2, centre = =1, right = x2 -- the opposite of what the manual has
- * said all along. That is a deduction from one observation of the other
- * switch, NOT something anyone has checked by ear, and it is flagged as such
- * in MANUAL.md rather than quietly corrected. Halve or double a patched clock
- * and listen; that settles it in ten seconds.
+ * Both halves are observed, not inferred. SW_0 dispatches POS_UP to /2 and /2
+ * is heard on the right; SW_1 dispatches POS_DOWN to DUAL and DUAL appears on
+ * the right (both 2026-08-20, by ear and by eye on a module).
+ *
+ * So the panel reads:
+ *     SW_0  right = /2,   centre = =1,   left = x2
+ *     SW_1  left  = CLK,  centre = AUTO, right = DUAL
+ *
+ * Do not "fix" one of these to match the other. That is exactly the mistake
+ * made here on 2026-08-20: SW_1's orientation was observed, assumed to apply
+ * to SW_0 as well, and SW_0's correct documentation was helpfully corrected
+ * into being wrong. It took a ten-second listening test to undo. If a third
+ * switch behaviour is ever added, measure that switch rather than reasoning
+ * from this one.
  *
  * The docs speak left/centre/right; only this file speaks libDaisy's
  * vocabulary, and it should not leak back out. */

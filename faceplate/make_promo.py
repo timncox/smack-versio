@@ -130,7 +130,7 @@ SECTIONS = [
     (AM, "BLEND & CLOCK", [
         ("BLEND", "your live input vs the effected loop. Fully left is dry"),
         ("CLK jack", "clock in. Nothing patched? It free-runs, and that is fine"),
-        ("CLK switch", "clock ratio: left /2, centre =1, right x2"),
+        ("CLK switch", "clock ratio: right /2, centre =1, left x2"),
         ("GATE switch", "left clock, centre auto, right DUAL (two L/R lanes)"),
     ]),
     (VI, "THE LIGHTS", [

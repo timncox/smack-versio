@@ -116,7 +116,7 @@
 <text x="730.9279999999999" y="944" font-size="25" font-weight="700" fill="#ffb454">CLK jack</text>
 <text x="950.9279999999999" y="944" font-size="25" fill="#f4f7f9">clock in. Nothing patched? It free-runs, and that is fine</text>
 <text x="730.9279999999999" y="976" font-size="25" font-weight="700" fill="#ffb454">CLK switch</text>
-<text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock ratio: left /2, centre =1, right x2</text>
+<text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock ratio: right /2, centre =1, left x2</text>
 <text x="730.9279999999999" y="1008" font-size="25" font-weight="700" fill="#ffb454">GATE switch</text>
 <text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">left clock, centre auto, right DUAL (two L/R lanes)</text>
 <text x="718.9279999999999" y="1062" font-size="27" font-weight="700" fill="#c08cff" letter-spacing="1.2">THE LIGHTS</text>

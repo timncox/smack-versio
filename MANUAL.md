@@ -110,7 +110,7 @@ thing this version can do that the Move version cannot.
 | **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
-| **CLK** switch | Clock ratio: left `/2`, centre `=1`, right `×2` — *see the note below* |
+| **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
 | **GATE** switch | Left CLK, centre AUTO, **right DUAL** (two independent lanes) — see below |
 | **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
@@ -182,13 +182,12 @@ read — and, in one position, does something else entirely.
 | **Centre — AUTO** | Worked out from what arrives — a steady train reads as a clock, sporadic hits read as triggers |
 | **Right — DUAL** | Clock stays on AUTO, and **L and R become two independent lanes** — see below |
 
-> **The switch orientations in this manual were backwards until 2026-08-20.**
-> DUAL was documented on the left and is actually on the right, observed on
-> hardware. The CLK switch is driven from the same libDaisy constants, so by
-> the same reasoning its ratios are also mirrored — **left `/2`, right `×2`**,
-> which is what the table above now says. That one is a deduction from
-> observing the *other* switch, not something anyone has checked by ear. Patch
-> a clock, flip it, and listen: whichever side halves the tempo is `/2`.
+> **The two switches are mirror images of each other**, which is worth knowing
+> if you are reading the source. CLK runs `/2` on the right; GATE runs its
+> third position, DUAL, on the right as well — but internally those are
+> *opposite* switch positions. Both were checked on hardware. Nothing in the
+> table above is inferred from the other switch, because doing exactly that
+> produced a wrong manual once already.
 
 ### DUAL
 
