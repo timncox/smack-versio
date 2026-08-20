@@ -133,9 +133,9 @@ def jacks():
 KNOB_LABELS = [
     ("FX", "density"),
     ("ORDER", "density"),
-    ("LENGTH", "8/16/32/64"),
+    ("LENGTH", "8-256 steps"),
     ("SLICE", "resolution"),
-    ("BLEND", "clean/glitch"),
+    ("BLEND", "dry/wet"),
     ("SEED", "pattern"),
     ("PITCH", "range"),
 ]
@@ -153,6 +153,8 @@ SWITCH_LABELS = [
     ("GATE", ["CLK", "AUTO", "TRIG"]),
 ]
 
-BUTTON_LABEL = ("CAPTURE", "hold = re-roll")
+# Tap re-rolls, hold captures -- reversed from the original after playing it,
+# because re-roll is the gesture used constantly and capture happens once.
+BUTTON_LABEL = ("CAPTURE", "tap = re-roll")
 
 LED_LABELS = ["STATE", "PLAY", "BLEND", "CLOCK"]

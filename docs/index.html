@@ -113,6 +113,12 @@ h1.title em{font-style:normal;color:var(--cy);-webkit-text-stroke:1px var(--cy);
 .alarm p+p{margin-top:9px}
 .alarm b{color:var(--ink)}
 
+/* ---------- promo sheet ---------- */
+.sheetlink{display:block;border:1px solid var(--line);border-radius:3px;overflow:hidden;
+           background:var(--panel);transition:.18s}
+.sheetlink:hover{border-color:rgba(72,213,227,.45)}
+.sheetlink img{display:block;width:100%;height:auto}
+
 /* ---------- sections ---------- */
 section{padding:74px 0;border-bottom:1px solid var(--line)}
 h2.sh{font-family:var(--disp);font-weight:900;font-size:clamp(30px,5vw,50px);text-transform:uppercase;letter-spacing:.015em;line-height:1;margin-bottom:8px}
@@ -203,13 +209,14 @@ footer a:hover{color:var(--cy)}
   <a class="s" href="#leds"><b>05</b>LEDs</a>
   <a class="s" href="#install"><b>06</b>Install</a>
   <a class="s" href="#faceplate"><b>07</b>Faceplate</a>
-  <a class="s" href="#status"><b>08</b>Status</a>
-  <a class="s" href="#family"><b>09</b>Family</a>
+  <a class="s" href="#sheet"><b>08</b>Sheet</a>
+  <a class="s" href="#status"><b>09</b>Status</a>
+  <a class="s" href="#family"><b>10</b>Family</a>
   <a class="s dl" href="#download"><b>↓</b>Download</a>
 </div></nav>
 
 <header id="top"><div class="wrap">
-  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.2.0 pending</div>
+  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.2.0</div>
   <h1 class="title">Smack<br><em>Versio</em></h1>
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
@@ -230,7 +237,7 @@ footer a:hover{color:var(--cy)}
   <h2 class="sh">What it does</h2>
   <div class="sub">01 — The idea</div>
   <p class="lede">Audio runs through the module continuously and is <em>always</em> being
-    recorded. Press CAPTURE and the last N steps of what you just played become a loop — no
+    recorded. Hold CAPTURE and the last LENGTH steps of what you just played become a loop — no
     arming, no deciding in advance that you wanted it.</p>
   <div class="cols">
     <div class="card">
@@ -405,22 +412,22 @@ footer a:hover{color:var(--cy)}
 
 <section id="download"><div class="wrap reveal">
   <h2 class="sh">Download</h2>
-  <div class="sub">v0.1.0 — superseded; do not flash it</div>
+  <div class="sub">v0.2.0 — played on hardware; parts of it still need testing</div>
   <div class="dlbox">
     <div>
-      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.1.0/smack-versio-0.1.0.zip">
-        <div class="n">Get v0.1.0 ↓</div>
-        <div class="f">smack-versio-0.1.0.zip · 110 KB</div>
+      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.2.0/smack-versio-0.2.0.zip">
+        <div class="n">Get v0.2.0 ↓</div>
+        <div class="f">smack-versio-0.2.0.zip · 124 KB</div>
         <div class="w">Firmware, manual, flashing guide, disclaimer, printable faceplate
           and a checksum.</div>
       </a>
       <div class="dlalt">
-        <a href="https://github.com/timncox/smack-versio/releases/download/v0.1.0/smack_versio-0.1.0.bin">just the .bin ↓</a>
+        <a href="https://github.com/timncox/smack-versio/releases/download/v0.2.0/smack_versio-0.2.0.bin">just the .bin ↓</a>
         <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
         <a href="https://github.com/timncox/smack-versio">source</a>
       </div>
-      <div class="sha"><b>smack_versio.bin</b> · 142,292 bytes<br>
-        SHA-256 769df66ca17d0d3be801444fb5e10645ea488f805d058a7dbe131ef7694c56fc</div>
+      <div class="sha"><b>smack_versio.bin</b> · 158,468 bytes<br>
+        SHA-256 a1e536affb5b172033bf2eeff0864d69b1c3f600e554bd1a771ea4789a39d9ed</div>
     </div>
     <div class="alarm" style="margin-top:0;border-left-color:var(--led-clock);border-color:rgba(255,77,77,.5);background:linear-gradient(90deg,rgba(255,77,77,.10),rgba(255,77,77,.02) 60%,transparent)">
       <h3 style="color:var(--led-clock)">⚠ Do not flash v0.1.0</h3>
@@ -429,8 +436,8 @@ footer a:hover{color:var(--cy)}
         callback overran its buffer on every block, so it emitted noise rather than
         anything you patched into it. The download above is left in place only so the
         checksums on the release stay honest.</p>
-      <p><b>Wait for v0.2.0</b>, which is what this manual describes — or build from
-        <a href="https://github.com/timncox/smack-versio">source</a> in the meantime.</p>
+      <p><b>The download above is v0.2.0</b>, which is what this manual describes. v0.1.0 is
+        kept only so its checksums stay honest, and is marked as such on the releases page.</p>
     </div>
     <div class="alarm" style="margin-top:14px">
       <h3>⚠ Before you flash it</h3>
@@ -497,9 +504,36 @@ footer a:hover{color:var(--cy)}
     silently scaling to Letter — is invisible except as a ruler that is not 50&nbsp;mm.</p>
 </div></section>
 
+<section id="sheet"><div class="wrap reveal">
+  <h2 class="sh">The sheet</h2>
+  <div class="sub">08 — One page, for posting somewhere</div>
+  <p class="lede">Everything the module does, on a single page: the panel on the left, what
+    every control does on the right. Made for a forum post or a photo caption, where nobody is
+    going to click through to a manual.</p>
+
+  <a href="smack-versio-promo.png" target="_blank" rel="noopener" class="sheetlink">
+    <img src="smack-versio-promo.png" alt="Smack Versio one-page control sheet: panel diagram
+      on the left, colour-coded control descriptions on the right" loading="lazy">
+  </a>
+
+  <div class="dlalt" style="margin-top:18px">
+    <a href="smack-versio-promo.png" download>PNG &#183; 2000&#215;1640 &#8595;</a>
+    <a href="smack-versio-promo.svg" download>SVG &#183; scalable &#8595;</a>
+  </div>
+
+  <p style="margin-top:22px">The panel in it is not a drawing of the panel &#8212; it is the
+    same SVG the faceplate template emits, from the same measured hole centres, so the sheet
+    cannot drift away from the thing you would actually cut. Rebuild it with
+    <code>python3 faceplate/make_promo.py</code>.</p>
+  <p><span class="tag ok">worth knowing</span> Drawing the panel at poster size is what caught
+    two defects invisible at 50&nbsp;mm wide: the GATE switch legend printed over the CAPTURE
+    button hole, and the button caption printed in the warning colour long after its position
+    had been confirmed. Both are fixed. Scale is a debugging tool.</p>
+</div></section>
+
 <section id="status"><div class="wrap reveal">
   <h2 class="sh">What is real</h2>
-  <div class="sub">08 — Verified, and not</div>
+  <div class="sub">09 — Verified, and not</div>
   <p class="lede">The most useful thing about this project is knowing which half of it is
     trustworthy. Nothing below is rounded up.</p>
   <table>
@@ -640,7 +674,7 @@ const PANEL = {
       "y": 28.65,
       "d": 8.99,
       "name": "LENGTH",
-      "sub": "8/16/32/64"
+      "sub": "8-256 steps"
     },
     {
       "x": 7.72,
@@ -654,7 +688,7 @@ const PANEL = {
       "y": 39.43,
       "d": 8.99,
       "name": "BLEND",
-      "sub": "clean/glitch"
+      "sub": "dry/wet"
     },
     {
       "x": 25.1,
@@ -726,7 +760,7 @@ const PANEL = {
     "y": 67.34,
     "d": 6.0,
     "name": "CAPTURE",
-    "sub": "hold = re-roll",
+    "sub": "tap = re-roll",
     "verified": true
   },
   "jacks": [
@@ -898,10 +932,11 @@ function drawPanel() {
     cx: b.x, cy: b.y, r: b.d / 2, fill: "#120c05",
     stroke: b.verified ? "rgba(223,231,236,.3)" : "var(--am)", "stroke-width": .28
   }, b.verified ? "" : "unver", {
-    k: "Momentary", t: b.name, s: "tap = capture · hold = " + b.sub.replace("hold = ", ""),
-    d: "Tap and the last N steps of what you just played become a loop. Hold past 0.6 s and the " +
-       "pattern re-rolls without touching the audio. This is the only hole the template " +
-       "extraction never found — its position comes from looking at the module.",
+    k: "Momentary", t: b.name, s: "tap = re-roll · hold 0.6 s = capture · hold 2 s = clear",
+    d: "Hold for about a second and the last LENGTH steps of what you just played become a " +
+       "loop — LENGTH is read when you press, so you choose how much to keep after playing it. " +
+       "A tap re-rolls the pattern without touching the audio. This is the only hole the " +
+       "template extraction never found — its position comes from looking at the module.",
     m: ["x <b>" + b.x + " mm</b>", "y <b>" + b.y + " mm</b>",
         "confidence <b>observed, not measured</b>"]
   });

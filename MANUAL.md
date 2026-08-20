@@ -46,8 +46,8 @@ Use at your own risk. No warranty, express or implied.
 ## What it does
 
 Audio runs through the module continuously and is always being recorded into a
-rolling buffer. When you press **CAPTURE**, the last N steps of what you just
-played become a loop — you do not have to arm anything first or know in advance
+rolling buffer. When you hold **CAPTURE**, the last **LENGTH** steps of what
+you just played become a loop — you do not have to arm anything first or know in advance
 that you wanted it.
 
 That loop is then cut into a grid of slices. The slices get re-ordered, and a
@@ -110,7 +110,7 @@ thing this version can do that the Move version cannot.
 | **PITCH** | How far pitch-shifting effects are allowed to move |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
 | **GATE** switch | What the gate jack means — see below |
-| **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last N steps. Hold >2 s: drop the loop |
+| **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
 **Very slow clocks shorten the longest LENGTH.** A loop may take at most half

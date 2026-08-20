@@ -88,8 +88,13 @@ def panel_body(P):
     # switches
     for (x, y), (name, poss) in zip(G.SWITCHES, G.SWITCH_LABELS):
         a(circle(x, y, G.SWITCH_DIA, P["hole"], P["holeline"], 0.15))
-        a(text(x + 4.6, y - 1.6, name, 2.0, P["ink"], "bold", anchor="start"))
-        a(text(x + 4.6, y + 0.8, " / ".join(poss), 1.5, P["dim"], anchor="start"))
+        a(text(x + 4.6, y - 1.9, name, 2.0, P["ink"], "bold", anchor="start"))
+        # Stacked, not " / "-joined on one line: joined, GATE's three positions
+        # run ~13 mm to the right, and only ~9 mm of panel is clear before the
+        # CAPTURE button hole starts -- so TRIG printed over the hole. Stacking
+        # also matches how a three-position toggle is normally legended.
+        for i, pos in enumerate(poss):
+            a(text(x + 4.6, y + 0.6 + i * 1.7, pos, 1.4, P["dim"], anchor="start"))
 
     # button - centre column, so its label goes underneath like the knobs.
     # (Alongside would run into the PITCH knob, which is only ~13 mm away.)
@@ -97,7 +102,8 @@ def panel_body(P):
     unver = not getattr(G, "BUTTON_VERIFIED", True)
     a(circle(bx, by, G.BUTTON_DIA, P["hole"], P["accent"] if unver else P["holeline"],
              0.2, dash="0.7 0.5" if unver else None))
-    a(text(bx, by + G.BUTTON_DIA / 2 + 2.4, G.BUTTON_LABEL[0], 2.1, P["accent"], "bold"))
+    a(text(bx, by + G.BUTTON_DIA / 2 + 2.4, G.BUTTON_LABEL[0], 2.1,
+           P["accent"] if unver else P["ink"], "bold"))
     a(text(bx, by + G.BUTTON_DIA / 2 + 4.5, G.BUTTON_LABEL[1], 1.5, P["dim"]))
 
     # jacks
