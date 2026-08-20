@@ -202,15 +202,20 @@ signals being cut up differently.
 **It costs most of the module's remaining CPU, and that is measured.** The
 effected path renders twice instead of once. Driven hard:
 
-| | Boot report | Peak |
+| Run | Boot report | Peak |
 |---|---|---|
-| Normal | STATE + PLAY | 50–75% |
-| **DUAL** | STATE + PLAY + **BLEND amber** | **75–90%** |
+| Normal, driven hard | STATE + PLAY | 50–75% |
+| DUAL, driven hard | STATE + PLAY + **BLEND amber** | **75–90%** |
+| DUAL + BPM detect | STATE + PLAY | 50–75% |
 
-It fits — the readout never reached red, which is 90% — but DUAL spends nearly
-all of what was left. Treat it as a deliberate setting rather than somewhere to
-leave the switch. If you want it cheaper, **BLEND is the lever**: only the wet
-path doubles, so pulling BLEND back reduces the cost proportionally.
+Note the last two: DUAL is not a fixed surcharge. What it costs depends on what
+else is running — how many slices carry an effect, how finely the loop is cut —
+so it reached amber in one hard run and stayed green in another. **75–90% is
+the worst seen**, and it never reached red, which is 90%.
+
+Treat DUAL as a deliberate setting rather than somewhere to leave the switch.
+If you want it cheaper, **BLEND is the lever**: only the wet path renders
+twice, so pulling BLEND back reduces the cost proportionally.
 
 The position used to be TRIG, which forced tempo to be inferred from trigger
 intervals. Very little is lost: AUTO already tells a steady clock from sparse
