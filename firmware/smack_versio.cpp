@@ -289,14 +289,21 @@ static bool  cfg_moved[P_COUNT];
 #define CFG_PICKUP 0.06f
 
 /*
- * SW_1, by what the button does in each position.
+ * SW_1, by what the module does in each position.
  *
- * The centre is the module as it has always been. The two ends each take the
- * button away and give it to something else -- which is the whole reason this
- * switch can carry three roles on a panel with only one button.
+ * The centre is the module as it has always been. The two ends each add
+ * something, and the PUNCH end does it by taking the button away -- which is
+ * the whole reason this switch can carry three roles on a panel with only one
+ * button.
+ *
+ * The panel calls this MODE. It was called GATE while it chose how the gate
+ * jack was read; it has not done that since the clock source moved into the
+ * config layer, and the old name pointed at the wrong jack -- the gate input
+ * is legended CLK. The names here follow the panel, because a reader holding
+ * the module is the one who has to reconcile them.
  */
-enum gate_role_t { GATE_PUNCH = 0, GATE_NORMAL, GATE_DUAL };
-static gate_role_t G_GATE     = GATE_NORMAL;
+enum mode_sel_t { MODE_PUNCH = 0, MODE_NORMAL, MODE_DUAL };
+static mode_sel_t G_MODE      = MODE_NORMAL;
 static bool        G_PUNCHING = false;
 
 /*
@@ -478,9 +485,9 @@ static void update_dj_ctl(void)
 
 /* ---- switches ----------------------------------------------------------- */
 
-static void set_gate_role(gate_role_t role)
+static void set_mode(mode_sel_t mode)
 {
-    if (role == G_GATE) return;
+    if (mode == G_MODE) return;
 
     /*
      * Release a punch that is still held.
@@ -508,13 +515,13 @@ static void set_gate_role(gate_role_t role)
      * This has to agree with what handle_button() will open, or the switch
      * would kick you out of somewhere you can walk straight back into.
      */
-    if (G_CONFIG && role == GATE_PUNCH) config_exit();
+    if (G_CONFIG && mode == MODE_PUNCH) config_exit();
 
-    G_GATE = role;
-    smack_set_param(S, "channel_mode", role == GATE_DUAL ? "1" : "0");
+    G_MODE = mode;
+    smack_set_param(S, "channel_mode", mode == MODE_DUAL ? "1" : "0");
 }
 
-/* SW_0 = clock ratio, SW_1 = gate role. Switch3::Read() returns
+/* SW_0 = clock ratio, SW_1 = module mode. Switch3::Read() returns
  * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2.
  *
  * POS_UP and POS_DOWN are libDaisy's names, not the panel's. These switches
@@ -533,7 +540,7 @@ static void set_gate_role(gate_role_t role)
  *
  * So the panel reads:
  *     SW_0  left = x2 (fast),  centre = =1,     right = /2 (slow)
- *     SW_1  left = PUNCH,      centre = NORMAL, right = DUAL
+ *     SW_1  left = PUNCH,      centre = NORM,   right = DUAL
  *
  * This comment briefly claimed the two switches were mounted inverted from
  * each other. They are not. That came from reading "left is 2x, right is /2"
@@ -557,10 +564,10 @@ static void dispatch_switches(void)
     }
 
     /*
-     * SW_1: left = PUNCH, centre = NORMAL, right = DUAL.
+     * SW_1 (panel: MODE): left = PUNCH, centre = NORM, right = DUAL.
      *
-     * This switch decides who owns the button, which is the only way a panel
-     * with one button can offer three things that all want it.
+     * Mostly this switch decides who owns the button, which is the only way a
+     * panel with one button can offer three things that all want it.
      *
      *   NORMAL  the module as it has always been -- tap re-rolls, hold
      *           captures, hold longer clears, double-tap is LIVE, triple-tap
@@ -588,9 +595,9 @@ static void dispatch_switches(void)
     int s1 = hw.sw[DaisyVersio::SW_1].Read();
     if (s1 != last1) {
         last1 = s1;
-        set_gate_role(s1 == Switch3::POS_UP   ? GATE_PUNCH
-                    : s1 == Switch3::POS_DOWN ? GATE_DUAL
-                                              : GATE_NORMAL);
+        set_mode(s1 == Switch3::POS_UP   ? MODE_PUNCH
+               : s1 == Switch3::POS_DOWN ? MODE_DUAL
+                                         : MODE_NORMAL);
     }
 }
 
@@ -645,7 +652,7 @@ static void dispatch_switches(void)
 static volatile bool G_LIVE = false;
 
 /* btn_down / btn_cleared / btn_t0 / btn_last_tap / btn_tap_n are declared up
- * in the CONFIG LAYER section, because set_gate_role() has to reset them. */
+ * in the CONFIG LAYER section, because set_mode() has to reset them. */
 
 static void handle_button(void)
 {
@@ -684,7 +691,7 @@ static void handle_button(void)
      * write per gesture instead of one per millisecond -- smack_set_param is an
      * strcmp chain and this loop runs at 1 kHz.
      */
-    if (G_GATE == GATE_PUNCH) {
+    if (G_MODE == MODE_PUNCH) {
         if (pressed != G_PUNCHING) {
             G_PUNCHING = pressed;
             char b[8];

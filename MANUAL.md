@@ -111,7 +111,7 @@ thing this version can do that the Move version cannot.
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move — or the **DJ filter**, if you set it that way |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
-| **GATE** switch | Left **PUNCH**, centre normal, right **DUAL** — the switch decides what the button does |
+| **MODE** switch | Left **PUNCH**, centre **NORM**, right **DUAL** — mostly, what the button does |
 | **CAPTURE** | Tap: re-roll. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop. Double-tap: LIVE. Triple-tap: the config layer |
 | **CLK** jack | Clock and/or capture trigger |
 
@@ -173,7 +173,7 @@ loop pass is the floor.
 
 ## PUNCH
 
-**Put the GATE switch left and the button becomes a momentary effect punch.**
+**Put the MODE switch left and the button becomes a momentary effect punch.**
 Hold it and every slice in the loop is forced through one chosen effect;
 release and the pattern comes straight back.
 
@@ -265,12 +265,14 @@ The one case that needs telling is a deliberately uneven clock — swung, or
 gated, or otherwise not steady — that you still want read as a clock. Set
 **always-a-clock** in the [config layer](#the-config-layer) and it will be.
 
-> **The GATE switch no longer selects the clock source.** It used to, in its
-> left position. Almost nothing is lost by the move: AUTO already picks
+> **The MODE switch no longer selects the clock source, and is no longer
+> called GATE.** It used to be both, in its left position. Almost nothing is lost by the move: AUTO already picks
 > correctly, so what the position was really offering was a manual override for
 > a case that rarely comes up — a set-once decision, and set-once decisions are
 > what a config layer is for. A performance switch position is worth more than
-> that, and it is now PUNCH.
+> that, and it is now PUNCH. The name went with the job: a switch legended
+> GATE that has nothing to do with the gate jack — which is itself legended
+> CLK — is a panel arguing with itself.
 >
 > **Both switches read the same way round.** Left is left on both, which is
 > worth stating because this manual once said the opposite. That claim came
@@ -427,7 +429,7 @@ mode from working on every build before v0.2.0.
 | Symptom | Likely cause |
 |---|---|
 | No sound at all | Flash did not take, or the bootloader is missing |
-| Sound, but CAPTURE does nothing | You may be tapping — tap re-rolls, *hold* captures. Otherwise check the GATE switch; with nothing patched it should still work |
+| Sound, but CAPTURE does nothing | You may be tapping — tap re-rolls, *hold* captures. Otherwise check the MODE switch — in PUNCH the button only punches |
 | LIVE goes cyan but never refreshes | Firmware older than v0.2.0. `play_frame` came back empty on hardware, so the wrap that triggers LIVE was never detected |
 | PLAY LED steady instead of ramping | Same cause as above — the ramp is derived from the playhead position |
 | A stepped value flickers at one knob position | Deadband too narrow — widen it in `deadband_for()` (`HYST` for LENGTH/SLICE/PITCH; the one-step band for SEED) |

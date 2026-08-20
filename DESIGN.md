@@ -156,12 +156,15 @@ the most exciting thing this port gains.**
 | Knob 7 | **Depth** | global fxp bias / pitch range |
 | SW_0 | **Clock ratio** | `÷2 / =1 / ×2` — ticks per input pulse (§5) |
 | SW_1 | **Gate role** | `CLK / TRIG / AUTO` (§5) — ⚠️ **superseded, see below** |
+|  |  | shipped as **MODE**: `PUNCH / NORM / DUAL` |
 | Button | **Capture** (short) / **Re-Roll** (long) | FRGMNTS's lesson |
 | Gate | clock and/or capture trigger | §5 |
 
-**SW_1 ⚠️ → this row no longer describes the module.** The switch does not
-select a clock source at all; it selects **who owns the button**: `PUNCH /
-NORMAL / DUAL`. Tier 2's TRIG position went first (AUTO subsumes it — see §5),
+**SW_1 ⚠️ → this row no longer describes the module, down to its name.** The
+switch does not select a clock source at all; it mostly selects **who owns the
+button**: `PUNCH / NORM / DUAL`. It is legended **MODE**, because a switch
+called GATE that has nothing to do with the gate jack — legended CLK — is a
+panel arguing with itself. Tier 2's TRIG position went first (AUTO subsumes it — see §5),
 then the explicit CLK position followed, on the grounds that AUTO already picks
 correctly and a manual override for a rare case is a set-once decision. Set-once
 decisions moved to a config layer opened by triple-tapping the button, which
