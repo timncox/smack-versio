@@ -83,7 +83,16 @@ endif
 # Verify after linking with:
 #   arm-none-eabi-nm build/smack_versio.elf | grep _printf_float
 # An empty result means float conversions are silently producing nothing.
+#
+# Omitted for BOOT_NONE, which is flash-bound: the flag costs 4,568 bytes, and
+# an internal-flash build has 128 KB total. Safe *only* because this firmware
+# reads exactly three engine params and all three are integer-formatted --
+# run_state "%d", loop_frames "%u", play_frame "%d". Add a read of any of the
+# engine's six float-formatted params and a BOOT_NONE build will silently see
+# 0 for it, exactly as play_frame did. Check smack_get_param() before you do.
+ifneq ($(APP_TYPE), BOOT_NONE)
 override LDFLAGS  += -u _printf_float
+endif
 
 # Diagnostic builds. Not for release -- DIAG takes LED 3 away from the status
 # display and the CPU alarm.

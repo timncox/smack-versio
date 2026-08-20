@@ -216,7 +216,7 @@ footer a:hover{color:var(--cy)}
 </div></nav>
 
 <header id="top"><div class="wrap">
-  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.2.0</div>
+  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.3.0</div>
   <h1 class="title">Smack<br><em>Versio</em></h1>
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
@@ -412,22 +412,22 @@ footer a:hover{color:var(--cy)}
 
 <section id="download"><div class="wrap reveal">
   <h2 class="sh">Download</h2>
-  <div class="sub">v0.2.0 — played on hardware; parts of it still need testing</div>
+  <div class="sub">v0.3.0 — installs from Noise Engineering's own firmware page</div>
   <div class="dlbox">
     <div>
-      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.2.0/smack-versio-0.2.0.zip">
-        <div class="n">Get v0.2.0 ↓</div>
-        <div class="f">smack-versio-0.2.0.zip · 124 KB</div>
+      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.3.0/smack-versio-0.3.0.zip">
+        <div class="n">Get v0.3.0 ↓</div>
+        <div class="f">smack-versio-0.3.0.zip · 198 KB</div>
         <div class="w">Firmware, manual, flashing guide, disclaimer, printable faceplate
-          and a checksum.</div>
+          and checksums. <b>Installs from NE's firmware page — no terminal.</b></div>
       </a>
       <div class="dlalt">
-        <a href="https://github.com/timncox/smack-versio/releases/download/v0.2.0/smack_versio-0.2.0.bin">just the .bin ↓</a>
+        <a href="https://github.com/timncox/smack-versio/releases/download/v0.3.0/smack_versio-0.3.0.bin">just the .bin ↓</a>
         <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
         <a href="https://github.com/timncox/smack-versio">source</a>
       </div>
-      <div class="sha"><b>smack_versio.bin</b> · 158,468 bytes<br>
-        SHA-256 a1e536affb5b172033bf2eeff0864d69b1c3f600e554bd1a771ea4789a39d9ed</div>
+      <div class="sha"><b>smack_versio.bin</b> · 126,312 bytes<br>
+        SHA-256 467672f8eedf3bad8fbfd4db8abaecf450c0c34dc80f24edb3a0d975cd0258f7</div>
     </div>
     <div class="alarm" style="margin-top:0;border-left-color:var(--led-clock);border-color:rgba(255,77,77,.5);background:linear-gradient(90deg,rgba(255,77,77,.10),rgba(255,77,77,.02) 60%,transparent)">
       <h3 style="color:var(--led-clock)">⚠ Do not flash v0.1.0</h3>
@@ -436,7 +436,7 @@ footer a:hover{color:var(--cy)}
         callback overran its buffer on every block, so it emitted noise rather than
         anything you patched into it. The download above is left in place only so the
         checksums on the release stay honest.</p>
-      <p><b>The download above is v0.2.0</b>, which is what this manual describes. v0.1.0 is
+      <p><b>The download above is v0.3.0</b>, which is what this manual describes. v0.1.0 is
         kept only so its checksums stay honest, and is marked as such on the releases page.</p>
     </div>
     <div class="alarm" style="margin-top:14px">
@@ -460,9 +460,20 @@ footer a:hover{color:var(--cy)}
   <p class="lede">The micro-USB port is on the <b>back of the Daisy Seed</b>, so the module comes
     out of the case either way. Expect that in the edit loop.</p>
 
-  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:34px 0 6px;letter-spacing:.02em">From a browser</h3>
-  <p><b>No terminal needed.</b> Electro-Smith's <a href="https://flash.daisy.audio/">Daisy Web
-    Programmer</a> talks to the module over WebUSB from Chrome or Edge, and does both steps:</p>
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:34px 0 6px;letter-spacing:.02em">From NE's firmware page</h3>
+  <p><b>The easy way, and the one almost everyone wants.</b> Put the module in DFU — hold BOOT,
+    tap RESET, release BOOT — then hand <code>smack_versio.bin</code> to
+    <a href="https://portal.noiseengineering.us/">Noise Engineering's firmware page</a>. That is
+    the whole procedure: no terminal, no bootloader, no extra tools, and it is the same page you
+    would use to go back to stock.</p>
+  <p><span class="tag ok">confirmed 2026-08-20</span> Flashed this way on a real module and it
+    runs. The shipped <code>smack_versio.bin</code> is the exact image that was tested.</p>
+
+  <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From the Daisy programmer</h3>
+  <p>For <code>smack_versio-bootsram.bin</code>, the alternative build — it runs from QSPI and
+    has more room to grow, at the cost of needing the Daisy bootloader installed once.
+    Electro-Smith's <a href="https://flash.daisy.audio/">Daisy Web Programmer</a> does both
+    steps over WebUSB from Chrome or Edge:</p>
   <pre><i># once, ever — hold BOOT, tap RESET, release BOOT, then:</i>
 <b>bootloader tab → a v6.4 image</b>
 
@@ -478,15 +489,16 @@ footer a:hover{color:var(--cy)}
     <code>flash.daisy.audio</code> is a rewrite whose logic ships as WebAssembly. Same vendor,
     same bootloader, same memory map — but nobody has yet flashed <em>this</em> firmware with
     <em>that</em> tool. If it comes up dead, the command-line route below is known good.</p>
-  <p><b>Noise Engineering's own uploader, and why this build cannot use it.</b>
-    <a href="https://portal.noiseengineering.us/">Their firmware page</a> does take a file you
-    choose yourself, and it is also how you go back to stock — which is why none of this is
-    permanent. What it will not do is write QSPI, and that is where this firmware lives.</p>
-  <p>The reference third-party firmwares tell the story: <b>WTF! is 91&nbsp;KB and FRGMNTS
-    85&nbsp;KB</b>, both inside the STM32H750's 128&nbsp;KB of internal flash — plain images at
-    <code>0x08000000</code>, no bootloader, no QSPI. This build is 158&nbsp;KB at
-    <code>0x90040000</code>. Matching their shape means a <code>BOOT_NONE</code> build, which
-    is measured as feasible at 114,472&nbsp;bytes but is not what ships today.</p>
+  <p><span class="tag ok">confirmed on hardware</span> <b>It also flashes from Noise
+    Engineering's own firmware page.</b> <a href="https://portal.noiseengineering.us/">Their
+    uploader</a> takes a file you choose yourself, and on 2026-08-20 it accepted this firmware,
+    flashed it, and the module ran it — no terminal, no bootloader, no Daisy tooling. It is
+    also how you go back to stock, which is why none of this is permanent.</p>
+  <p>That path needs the <code>BOOT_NONE</code> build, which is a plain internal-flash image at
+    <code>0x08000000</code> — the same shape as the other third-party Versio firmwares,
+    <b>WTF! at 91&nbsp;KB and FRGMNTS at 85&nbsp;KB</b>. Ours is 126,312&nbsp;bytes of the
+    128&nbsp;KB available. The <code>BOOT_SRAM</code> build is bigger, lives in QSPI behind the
+    Daisy bootloader, and cannot use their page.</p>
 
   <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From a terminal</h3>
   <p>What these instructions were built and tested against, and the fallback if the browser

@@ -9,11 +9,13 @@ Alternative firmware for the Noise Engineering Versio platform.
 > record; `docs/index.html` is generated alongside it by hand, so if the two
 > disagree, trust this one.
 
-> **Version 0.2.0 — it works.**
-> Confirmed on a module: audio, capture, the knob layout, the effects and LIVE
-> mode. The boot CPU report reads **50–75% at the worst case**, so the headroom
-> question the whole design rested on is answered. See
-> [Is it working?](#is-it-working).
+> **Version 0.3.0 — installs from Noise Engineering's own firmware page.**
+> Put the module in DFU, hand it `smack_versio.bin`, done — no terminal, no
+> bootloader, no extra tools. Confirmed on a module 2026-08-20.
+>
+> Everything else is confirmed too: audio, capture, the knob layout, the
+> effects and LIVE mode, with a boot CPU report of **50–75% at the worst
+> case**. See [Is it working?](#is-it-working).
 >
 > **Do not flash v0.1.0.** It hard-faults on boot — the audio callback treated
 > libDaisy's `size` as frames when it is samples and overran its buffer every

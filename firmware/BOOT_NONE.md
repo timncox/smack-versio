@@ -1,10 +1,9 @@
 # Fitting in internal flash (and why that matters)
 
-> **2026-08-20: the reason for wanting this has mostly gone away.** The premise
-> below is that `BOOT_SRAM` costs the user a terminal and a button chord. It
-> does not have to: the Daisy Web Programmer flashes both the bootloader and a
-> `BOOT_SRAM` app from a browser, and works out the `0x90040000` app address by
-> itself. See "flash it from a browser" in FLASHING.md.
+> **2026-08-20: done, and it works.** A `BOOT_NONE` build fits, runs, costs no
+> visible CPU, and — the thing that mattered — **flashes from Noise
+> Engineering's own firmware page.** Details below. What follows was written
+> when this was still a proposal; the measurements have been updated in place.
 >
 > **2026-08-20, later the same day: the case is back on, for a better reason.**
 > The reference third-party firmwares are internal-flash builds — WTF! at 91 KB,
@@ -41,12 +40,66 @@ one has fed this image to that page yet.
 
 ## The measurements
 
+Rebuilt 2026-08-20 against the current source. **It still fits, but the margin
+is much thinner than it was**, because the code has grown since the first
+measurement — the ring-stall fix, LIVE mode and the float-printf link flag all
+landed in between.
+
 | Configuration | bytes | of 128 KB |
 |---|---:|---:|
-| `BOOT_SRAM` (what ships today) | 142,324 | — |
-| `BOOT_NONE`, libDaisy stock `-O3`, no LTO | ~142,000 | ~108% |
-| `BOOT_NONE`, libDaisy `-O3 -flto` | 134,116 | 102.3% |
-| `BOOT_NONE`, libDaisy `-Os -flto` | **114,472** | **87.3%** |
+| `BOOT_SRAM` (what ships today) | 158,468 | — |
+| `BOOT_NONE`, libDaisy `-Os -flto`, **2026-08-19** | 114,472 | 87.3% |
+| `BOOT_NONE`, libDaisy `-Os -flto`, **2026-08-20** | 130,880 | **99.85%** |
+| `BOOT_NONE`, same, **without `-u _printf_float`** | **126,312** | **96.37%** |
+
+99.85% is 192 bytes of headroom, which is not a configuration anyone should
+ship — it is one edit away from failing to link, which is precisely the failure
+this file warned about at the bottom.
+
+Dropping `-u _printf_float` buys back 4,568 bytes and takes it to 96.37%, with
+4,760 spare. The Makefile now omits that flag for `BOOT_NONE` only. That is
+safe **because this firmware reads exactly three engine params and all three
+are integer-formatted** — `run_state` `"%d"`, `loop_frames` `"%u"`,
+`play_frame` `"%d"`. Read any of the engine's six float-formatted params from a
+`BOOT_NONE` build and it will silently come back 0, exactly as `play_frame`
+did before v0.2.0. The Makefile says so at the flag.
+
+Even 96.37% is tight for something to build on. The next lever, if it is
+needed, is the USB serial logger — the Makefile's own notes put that at
+-7.1 KB, which would land around 91%.
+
+### It flashes from Noise Engineering's own uploader
+
+**2026-08-20, confirmed on hardware: NE's firmware page accepted this build,
+flashed it, and the module runs it.** Driven hard afterwards the CPU bar read
+LED 0 alone — under 50%, the same band as every other reading.
+
+That is the entire point of this file, and it is now demonstrated rather than
+hoped for. A `BOOT_NONE` image is the shape their uploader writes: internal
+flash at `0x08000000`, no bootloader, no QSPI — the same shape as WTF! (91 KB)
+and FRGMNTS (85 KB). Installing this firmware no longer requires a terminal,
+`dfu-util`, or even the Daisy web programmer. It requires the page Versio
+owners already use.
+
+### Flashed, and it runs
+
+**2026-08-20: a `BOOT_NONE` build was flashed to internal flash and works** —
+audio, capture and LIVE all confirmed. That answers the LTO worry: `-Os -flto`
+across libDaisy did not expose latent undefined behaviour that `-O3` per-file
+had been tolerating. A build that links turned out to be a build that works.
+
+**CPU: LED 0 alone, i.e. under 50%**, driven hard. The `-O3` libDaisy baseline
+was 50-75% on its hardest run and under 50% on another (DESIGN.md §8), so this
+lands in the same band as the better of the two with no sign of a regression.
+
+Stated carefully, because the runs are not identical: what was tested is that
+`-Os` on libDaisy **did not visibly cost CPU**, not that it is free to four
+significant figures. A four-LED bar cannot support a stronger claim than that.
+The worry that `-Os` would slow the driver and interrupt paths is not supported
+by anything observed.
+
+Boot is also perceptibly quicker, since the bootloader's 2.5-second grace
+period is simply gone.
 
 Two separate levers, and the order matters:
 
@@ -83,6 +136,18 @@ make -C firmware APP_TYPE=BOOT_NONE USE_LTO=1
 **Back up `libDaisy/build/libdaisy.a` first.** That archive is shared with every
 other Daisy project on the machine, and this rebuild replaces it. Restoring it
 is a file copy; forgetting to is a confusing afternoon in some unrelated repo.
+
+The `-O3` archive from before the 2026-08-20 rebuild is kept at
+`~/tim-os/scratch/libdaisy.a.O3-backup`:
+
+```
+cp ~/tim-os/scratch/libdaisy.a.O3-backup ~/tim-os/daisy-sdk/libDaisy/build/libdaisy.a
+```
+
+This is not academic. With libDaisy at `-Os -flto`, the ordinary `BOOT_SRAM`
+build drops from 158,468 to 132,492 bytes — so **a rebuild today does not
+reproduce the published v0.2.0 binary.** Restore the archive before cutting a
+release, or rebuild libDaisy at stock `-O3` first.
 
 ## What is not established
 
