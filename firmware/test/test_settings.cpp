@@ -179,6 +179,83 @@ static int test_settings_sector_cannot_collide_with_the_app(void)
     return 0;
 }
 
+/* ---- the config layer -------------------------------------------------- */
+
+/*
+ * The config layer's settings are the opposite case to cpu_peak, and the
+ * operator has to treat them that way.
+ *
+ * cpu_peak is a measurement that drifts continuously, so it needs an epsilon
+ * or it would rewrite the sector on nearly every pass. These are choices, made
+ * by hand, a few times in the life of the module. Every one of them is worth
+ * an erase, and none of them can drift -- a knob only writes them while the
+ * config layer is open. So: exact comparison, and a change must always be
+ * saved. A stray epsilon here would silently lose a setting on power-down.
+ */
+static int test_config_changes_always_save(void)
+{
+    VersioSettings a = settings_defaults();
+    VersioSettings b = a;
+
+    CHECK(a == b);
+
+    b.pitch_role = 1;
+    CHECK(a != b); /* DJ filter vs PITCH RANGE must survive a power cycle */
+
+    b = a;
+    b.punch_fx = (uint8_t)(a.punch_fx + 1);
+    CHECK(a != b); /* one effect along is still a real change */
+
+    b = a;
+    b.clock_ext = 1;
+    CHECK(a != b);
+
+    printf("  ok  every config change is worth a flash write\n");
+    return 0;
+}
+
+/*
+ * The bounds matter more here than for the other fields, because these are the
+ * only settings that index something. punch_fx is handed to the engine as an
+ * effect number, and a struct left over from another firmware -- or from a
+ * future version with a longer effect list -- would otherwise be read as one.
+ * settings_valid() is what makes the version guard cover them.
+ */
+static int test_config_bounds_are_enforced(void)
+{
+    VersioSettings d = settings_defaults();
+
+    CHECK(settings_valid(d));
+    CHECK(d.punch_fx >= 1); /* default punches an effect, not silence */
+    CHECK(d.punch_fx <= SETTINGS_PUNCH_FX_MAX);
+
+    /* Both ends of the punch range are legal: 0 is "punch clean". */
+    VersioSettings v = d;
+    v.punch_fx = 0;
+    CHECK(settings_valid(v));
+    v.punch_fx = SETTINGS_PUNCH_FX_MAX;
+    CHECK(settings_valid(v));
+    v.punch_fx = (uint8_t)(SETTINGS_PUNCH_FX_MAX + 1);
+    CHECK(!settings_valid(v));
+
+    v = d;
+    v.pitch_role = 2;
+    CHECK(!settings_valid(v));
+
+    v = d;
+    v.clock_ext = 9;
+    CHECK(!settings_valid(v));
+
+    /* And the whole point of bumping SETTINGS_VERSION: a struct written before
+     * these fields existed is rejected outright rather than read as garbage. */
+    v = d;
+    v.version = SETTINGS_VERSION - 1;
+    CHECK(!settings_valid(v));
+
+    printf("  ok  config values out of range are refused, not clamped\n");
+    return 0;
+}
+
 int main(void)
 {
     printf("settings (M5):\n");
@@ -193,6 +270,10 @@ int main(void)
     if(test_worst_case_session_write_count())
         return 1;
     if(test_settings_sector_cannot_collide_with_the_app())
+        return 1;
+    if(test_config_changes_always_save())
+        return 1;
+    if(test_config_bounds_are_enforced())
         return 1;
     printf("settings: all passed (%d checks)\n", checks);
     return 0;

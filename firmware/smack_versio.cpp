@@ -18,6 +18,7 @@
 #include "daisy_versio.h"
 #include "util/PersistentStorage.h"
 #include "clock_adapter.h"
+#include "dj_filter.h"
 #include "versio_alloc.h"
 #include "settings.h"
 
@@ -26,6 +27,14 @@ extern "C" {
 }
 
 #include <stdio.h>
+#include <stdlib.h>   /* atof, for the detected-BPM readback */
+#include <math.h>     /* powf, for the DJ filter's cutoff curve */
+
+/* settings.h is deliberately engine-free -- that is what lets its comparison
+ * logic be tested on the laptop -- so it carries the punch range as a literal.
+ * This is the thing that stops the two quietly drifting apart. */
+static_assert(SETTINGS_PUNCH_FX_MAX == SMACK_FX_COUNT - 1,
+              "settings.h punch range is out of step with smack_fx_t");
 #include <string.h>
 
 using namespace daisy;
@@ -221,6 +230,12 @@ static void dispatch_knobs(void)
         if (norm < 0.0f) norm = 0.0f;
         if (norm > 1.0f) norm = 1.0f;
 
+        /* The PITCH knob has a second job it can be given (see CONFIG
+         * LAYER). While it has it, pitch_range is pinned and this knob's
+         * position means the filter, so dispatching it here would sweep a
+         * parameter the panel is no longer steering. */
+        if (i == P_PITCH && CFG->pitch_role) continue;
+
         int v = quantize(P[i], norm);
         if (v == P[i].last) continue;
         if (!P[i].key) { P[i].last = v; P[i].last_norm = norm; continue; }
@@ -242,17 +257,293 @@ static void dispatch_knobs(void)
     }
 }
 
+/* ---- CONFIG LAYER ------------------------------------------------------- */
+
+/*
+ * A third gesture tier, because the panel ran out of room before the module
+ * ran out of things worth setting.
+ *
+ * Triple-tap toggles it. While it is on, three of the knobs stop driving their
+ * printed function and address a setting instead. There is no list to scroll
+ * and nothing to page through, and that is not a simplification -- with seven
+ * absolute controls on the front there is nothing to navigate. You turn the
+ * knob for the thing you want, and all three settings are visible at once on
+ * the LEDs rather than one at a time behind a cursor.
+ *
+ *   PITCH   (lower right)  what the PITCH knob does with the layer closed
+ *   FX DENS (top left)     which effect the button punches in
+ *   LENGTH  (centre)       clock: work the gate out, or always trust it
+ *
+ * A knob is only adopted once it MOVES (see CFG_PICKUP). Otherwise opening the
+ * layer would overwrite all three settings with wherever the knobs happen to
+ * be sitting for their printed jobs, and merely looking at your settings would
+ * destroy them. Open it, read the LEDs, close it: nothing changes.
+ */
+static bool  G_CONFIG = false;
+static float cfg_entry[P_COUNT];
+static bool  cfg_moved[P_COUNT];
+
+/* How far a knob must move before the layer believes you meant it. Larger than
+ * HYST because this is a deliberate gesture, not a tracking deadband, and the
+ * cost of a false positive here is a setting you did not ask for. */
+#define CFG_PICKUP 0.06f
+
+/*
+ * SW_1, by what the button does in each position.
+ *
+ * The centre is the module as it has always been. The two ends each take the
+ * button away and give it to something else -- which is the whole reason this
+ * switch can carry three roles on a panel with only one button.
+ */
+enum gate_role_t { GATE_PUNCH = 0, GATE_NORMAL, GATE_DUAL };
+static gate_role_t G_GATE     = GATE_NORMAL;
+static bool        G_PUNCHING = false;
+
+/*
+ * The DJ filter's control, as ONE signed word.
+ *
+ * -1..0 sweeps a lowpass down, 0..+1 sweeps a highpass up, 0 is open. Written
+ * by the main loop, read by the audio callback.
+ *
+ * One word deliberately. Cutoff, mode and an on/off flag as three variables
+ * would tear against each other across the interrupt, and a torn LP/HP flip is
+ * not a stale block -- it is a click. Packing all three into the sign and
+ * magnitude of a single float makes a torn read impossible on an aligned word.
+ *
+ * The two curves meet at zero: a lowpass at 18 kHz and a highpass at 15 Hz are
+ * both "open", so sweeping through the centre is continuous and the mode flip
+ * lands where neither filter is doing anything. That is what lets the notch be
+ * a real bypass without a crossfade to hide the transition.
+ */
+static volatile float G_DJ_CTL = 0.0f;
+
+/*
+ * Has the PITCH knob passed through the notch since it was given the filter?
+ *
+ * You SELECT the DJ filter by turning PITCH to the right, which is also a
+ * filter position -- so without this, closing the config layer would drop a
+ * highpass at roughly 1 kHz straight onto whatever is playing. That breaks the
+ * layer's one promise, which is that leaving it never jumps anything.
+ *
+ * So the filter stays bypassed until the knob next reaches the centre notch,
+ * and picks up from there. The notch is where a DJ filter lives between
+ * gestures anyway, so the move that arms it is the move you were going to make.
+ */
+static bool G_DJ_ARMED = false;
+
+/* Button state. Declared here rather than beside handle_button() because
+ * moving the gate switch has to reset it -- a press that began under one role
+ * must not be completed under another. */
+static bool     btn_down     = false;
+static bool     btn_cleared  = false;
+static uint32_t btn_t0       = 0;
+static uint32_t btn_last_tap = 0;
+static int      btn_tap_n    = 0;
+
+static void config_enter(void)
+{
+    for (int i = 0; i < P_COUNT; i++) {
+        cfg_entry[i] = hw.GetKnobValue(i);
+        cfg_moved[i] = false;
+    }
+    G_CONFIG = true;
+}
+
+static void config_exit(void)
+{
+    G_CONFIG = false;
+
+    /*
+     * Hand the knobs back WITHOUT dispatching them.
+     *
+     * A knob you turned in the config layer is no longer where its printed
+     * function left it. Dispatching on the way out would jump that function to
+     * a position you chose for something else entirely -- turn LENGTH to pick
+     * the clock mode and the loop would re-length itself the moment you closed
+     * the layer. Recording the new position as already-dispatched leaves the
+     * engine exactly where it was and gives the knob back on your next touch,
+     * which is what every soft-takeover control does.
+     *
+     * Note what this is NOT: last = -32768. That is the boot path and it means
+     * "never dispatched", which dispatches on the very next pass -- precisely
+     * the jump this exists to avoid.
+     */
+    for (int i = 0; i < P_COUNT; i++) {
+        float n = hw.GetKnobValue(i);
+        if (n < 0.0f) n = 0.0f;
+        if (n > 1.0f) n = 1.0f;
+        P[i].last      = quantize(P[i], n);
+        P[i].last_norm = n;
+    }
+}
+
+/* Has this knob moved far enough since the layer opened to be taken seriously? */
+static bool cfg_touched(int idx)
+{
+    if (cfg_moved[idx]) return true;
+    float d = hw.GetKnobValue(idx) - cfg_entry[idx];
+    if (d < 0.0f) d = -d;
+    if (d < CFG_PICKUP) return false;
+    cfg_moved[idx] = true;
+    return true;
+}
+
+static void dispatch_config(void)
+{
+    /* No hysteresis and no change detection: these write struct fields, not
+     * engine parameters, so a jittering ADC costs nothing but a redundant
+     * store. The one that reaches the engine (punch_fx) is only sent when the
+     * button is actually pressed. */
+    if (cfg_touched(P_PITCH))
+        CFG->pitch_role = hw.GetKnobValue(P_PITCH) < 0.5f ? 0 : 1;
+
+    if (cfg_touched(P_LEN))
+        CFG->clock_ext = hw.GetKnobValue(P_LEN) < 0.5f ? 0 : 1;
+
+    if (cfg_touched(P_FXD)) {
+        int n = (int)(hw.GetKnobValue(P_FXD) * (float)(SETTINGS_PUNCH_FX_MAX + 1));
+        if (n < 0)                          n = 0;
+        if (n > (int)SETTINGS_PUNCH_FX_MAX) n = (int)SETTINGS_PUNCH_FX_MAX;
+        CFG->punch_fx = (uint8_t)n;
+    }
+}
+
+/*
+ * Push config choices at whatever they actually control, on change only.
+ *
+ * Separate from dispatch_config() because the settings outlive the layer: they
+ * come back from flash at boot, when no knob has been touched at all, and
+ * something still has to act on them. This runs either way.
+ */
+static void apply_config(void)
+{
+    static int applied_role  = -1;
+    static int applied_clock = -1;
+
+    if (applied_role != (int)CFG->pitch_role) {
+        applied_role = (int)CFG->pitch_role;
+        if (CFG->pitch_role) {
+            /* The knob has been taken for the filter, so PITCH RANGE loses its
+             * control -- pin it at one octave, which is what it is worth when
+             * nothing can steer it. */
+            smack_set_param(S, "pitch_range", "12");
+            G_DJ_CTL   = 0.0f;
+            G_DJ_ARMED = false; /* wait for the notch -- see G_DJ_ARMED */
+        } else {
+            /* Handing the knob back: the engine must take its real position,
+             * not the one the filter left behind. This IS the boot path, and
+             * here it is the right one -- an immediate dispatch is exactly what
+             * "the knob means this again" should do. */
+            P[P_PITCH].last = -32768;
+            G_DJ_CTL        = 0.0f;
+        }
+    }
+
+    if (applied_clock != (int)CFG->clock_ext) {
+        applied_clock = (int)CFG->clock_ext;
+        clk_set_mode(&CLK, CFG->clock_ext ? CLK_EXTERNAL : CLK_AUTO);
+    }
+}
+
+/*
+ * PITCH knob -> filter control, with a real notch at the centre.
+ *
+ * The notch is not cosmetic. A DJ filter is a control you park in the middle
+ * and reach for, so the middle has to be genuinely out of circuit rather than
+ * merely nearly-open -- otherwise the module is quietly filtered all the time
+ * and nobody can tell why the top end has gone. DEAD is wide enough to find by
+ * feel on a knob with no detent.
+ */
+static void update_dj_ctl(void)
+{
+    const float DEAD = 0.06f;
+    const float SPAN = 0.5f - DEAD;
+
+    float n = hw.GetKnobValue(P_PITCH);
+    float c = 0.0f;
+    if (n < 0.5f - DEAD)      c = (n - (0.5f - DEAD)) / SPAN; /* -1 .. 0  LP */
+    else if (n > 0.5f + DEAD) c = (n - (0.5f + DEAD)) / SPAN; /*  0 .. +1 HP */
+
+    /* Freshly handed the knob: stay out of circuit until it reaches the notch,
+     * so that selecting the filter cannot itself apply one. */
+    if (!G_DJ_ARMED) {
+        if (c != 0.0f) { G_DJ_CTL = 0.0f; return; }
+        G_DJ_ARMED = true;
+    }
+
+    if (c < -1.0f) c = -1.0f;
+    if (c >  1.0f) c =  1.0f;
+    G_DJ_CTL = c;
+}
+
 /* ---- switches ----------------------------------------------------------- */
+
+static void set_gate_role(gate_role_t role)
+{
+    if (role == G_GATE) return;
+
+    /*
+     * Release a punch that is still held.
+     *
+     * Leaving PUNCH mid-press would latch punch_fx with nothing left to
+     * release it -- the switch has just taken away the button that would have.
+     * Every slice would stay welded to one effect until the next power cycle,
+     * and the control that looks responsible (the button) would do nothing.
+     */
+    if (G_PUNCHING) {
+        smack_set_param(S, "punch_fx", "-1");
+        G_PUNCHING = false;
+    }
+
+    /* A press begun under one role must not be completed under another. */
+    btn_down    = false;
+    btn_cleared = false;
+    btn_tap_n   = 0;
+
+    /*
+     * Only PUNCH closes the config layer, because only PUNCH takes the button
+     * away -- there would be no way left to leave. DUAL keeps every button
+     * gesture, so the layer works there and there is no reason to evict it.
+     *
+     * This has to agree with what handle_button() will open, or the switch
+     * would kick you out of somewhere you can walk straight back into.
+     */
+    if (G_CONFIG && role == GATE_PUNCH) config_exit();
+
+    G_GATE = role;
+    smack_set_param(S, "channel_mode", role == GATE_DUAL ? "1" : "0");
+}
 
 /* SW_0 = clock ratio, SW_1 = gate role. Switch3::Read() returns
  * POS_CENTER 0 / POS_UP 1 / POS_DOWN 2.
  *
  * POS_UP and POS_DOWN are libDaisy's names, not the panel's. These switches
- * are mounted horizontally on the Versio: POS_UP is the RIGHT-hand position
- * and POS_DOWN is the LEFT (confirmed on hardware 2026-08-19). So SW_0 is
- * right = /2, centre = =1, left = x2, and SW_1 is right = CLK, centre = AUTO,
- * left = TRIG. The docs say left/centre/right; only this file speaks
- * libDaisy's vocabulary, and it should not leak back out. */
+ * are mounted horizontally on the Versio, so one position is left and one is
+ * right -- and here is the trap:
+ *
+ *     POS_UP = LEFT,  POS_DOWN = RIGHT   (both switches, same way round)
+ *
+ * Anchored on the one unambiguous observation: DUAL is dispatched on
+ * SW_1's POS_DOWN and appears in the RIGHT-hand position (2026-08-20). It is
+ * a mode rather than a ratio, so there is nothing to misread about it.
+ *
+ * Everything else follows and agrees. SW_0 sends POS_UP to CLK_TICKS_DIV2,
+ * which is 48 ticks per pulse and therefore the FAST side -- and the fast side
+ * is heard on the left, which is what the manual has said all along.
+ *
+ * So the panel reads:
+ *     SW_0  left = x2 (fast),  centre = =1,     right = /2 (slow)
+ *     SW_1  left = PUNCH,      centre = NORMAL, right = DUAL
+ *
+ * This comment briefly claimed the two switches were mounted inverted from
+ * each other. They are not. That came from reading "left is 2x, right is /2"
+ * as a statement about where the labels sit rather than about what was heard,
+ * and then building a whole theory on it. When a report is about behaviour,
+ * work out the wiring from the behaviour -- do not translate it into a claim
+ * about geometry first and reason from that.
+ *
+ * The docs speak left/centre/right; only this file speaks libDaisy's
+ * vocabulary, and it should not leak back out. */
 static void dispatch_switches(void)
 {
     static int last0 = -1, last1 = -1;
@@ -265,12 +556,41 @@ static void dispatch_switches(void)
                                                       : CLK_TICKS_1X);
     }
 
+    /*
+     * SW_1: left = PUNCH, centre = NORMAL, right = DUAL.
+     *
+     * This switch decides who owns the button, which is the only way a panel
+     * with one button can offer three things that all want it.
+     *
+     *   NORMAL  the module as it has always been -- tap re-rolls, hold
+     *           captures, hold longer clears, double-tap is LIVE, triple-tap
+     *           opens the config layer.
+     *   PUNCH   the button becomes a momentary effect punch and nothing else.
+     *           Everything above is suspended here on purpose: a punch you
+     *           have to think about is not a punch, and a gesture that might
+     *           re-roll the pattern instead cannot be played hard.
+     *   DUAL    the engine's dual-lane mode, which this panel has never
+     *           exposed. L and R stop being a stereo pair and become two
+     *           independent lanes, each rolling its own pattern from the same
+     *           seed and hard-panned to its own side (pan_l = 0, pan_r = 100).
+     *           Not free: the wet path renders render_lane() twice instead of
+     *           once. Watch the boot CPU bar in this position.
+     *
+     * The clock source used to live in the left position (CLK vs AUTO). It has
+     * moved to the config layer, and almost nothing is lost by the move: AUTO
+     * already tells a steady train from sparse triggers and picks the right
+     * one, with a test for exactly that in test_clock_adapter.c. Forcing
+     * EXTERNAL only matters for a deliberately uneven clock you still want
+     * read as a clock, which is a set-once decision -- and set-once decisions
+     * are what a config layer is for. A performance switch position is worth
+     * more than that.
+     */
     int s1 = hw.sw[DaisyVersio::SW_1].Read();
     if (s1 != last1) {
         last1 = s1;
-        clk_set_mode(&CLK, s1 == Switch3::POS_UP   ? CLK_EXTERNAL
-                         : s1 == Switch3::POS_DOWN ? CLK_INFER
-                                                   : CLK_AUTO);
+        set_gate_role(s1 == Switch3::POS_UP   ? GATE_PUNCH
+                    : s1 == Switch3::POS_DOWN ? GATE_DUAL
+                                              : GATE_NORMAL);
     }
 }
 
@@ -291,9 +611,20 @@ static void dispatch_switches(void)
 #define LONG_PRESS_MS   600u
 #define CLEAR_PRESS_MS 2000u
 
-/* Two taps closer together than this toggle LIVE mode. The first tap still
- * re-rolls -- re-roll is the most-used gesture and must not wait to find out
- * whether a second tap is coming. Only the second tap is swallowed. */
+/*
+ * Taps closer together than this belong to one gesture: two toggle LIVE, three
+ * open the config layer.
+ *
+ * The first tap still re-rolls immediately. Re-roll is the gesture you use
+ * constantly while playing and it must not wait to find out whether a second
+ * tap is coming -- so the later taps UNDO rather than defer. That is why the
+ * count is tracked as a count and not as a chain of pairs: by the time the
+ * third tap lands, what the second one did is known and reversible.
+ *
+ * The cost is honest: three fast taps re-roll the pattern on the way past. In
+ * the config layer that costs nothing, since the layer is where you go to set
+ * up rather than to play.
+ */
 #define DOUBLE_TAP_MS   400u
 
 /*
@@ -313,10 +644,8 @@ static void dispatch_switches(void)
  */
 static volatile bool G_LIVE = false;
 
-static bool     btn_down     = false;
-static bool     btn_cleared  = false;
-static uint32_t btn_t0       = 0;
-static uint32_t btn_last_tap = 0;
+/* btn_down / btn_cleared / btn_t0 / btn_last_tap / btn_tap_n are declared up
+ * in the CONFIG LAYER section, because set_gate_role() has to reset them. */
 
 static void handle_button(void)
 {
@@ -347,6 +676,28 @@ static void handle_button(void)
      */
     const bool pressed = hw.tap.Pressed();
 
+    /*
+     * In the PUNCH position the button has exactly one job: hold to force every
+     * slice through the chosen effect, release to drop back.
+     *
+     * Edge-triggered rather than level-driven so the engine sees one parameter
+     * write per gesture instead of one per millisecond -- smack_set_param is an
+     * strcmp chain and this loop runs at 1 kHz.
+     */
+    if (G_GATE == GATE_PUNCH) {
+        if (pressed != G_PUNCHING) {
+            G_PUNCHING = pressed;
+            char b[8];
+            /* punch_fx: "-1" releases, "0" punches CLEAN -- momentarily
+             * dropping the glitch pattern, which is as much a punch as adding
+             * an effect is -- and 1.. forces that effect on every slice. */
+            if (pressed) snprintf(b, sizeof(b), "%d", (int)CFG->punch_fx);
+            else         snprintf(b, sizeof(b), "-1");
+            smack_set_param(S, "punch_fx", b);
+        }
+        return;
+    }
+
     if (pressed && !btn_down) {
         btn_down    = true;
         btn_cleared = false;
@@ -356,8 +707,9 @@ static void handle_button(void)
     const uint32_t held = System::GetNow() - btn_t0;
 
     /* Clear fires while held, so passing 2 s cancels the capture that the
-     * release would otherwise trigger. */
-    if (btn_down && !btn_cleared && pressed && held > CLEAR_PRESS_MS) {
+     * release would otherwise trigger. Suspended in the config layer: nothing
+     * there is worth losing a take over. */
+    if (!G_CONFIG && btn_down && !btn_cleared && pressed && held > CLEAR_PRESS_MS) {
         smack_set_param(S, "clear", "1");
         btn_cleared = true;
     }
@@ -366,22 +718,54 @@ static void handle_button(void)
         btn_down = false;
         if (btn_cleared)
             return;
-        if (held > LONG_PRESS_MS) {
-            smack_set_param(S, "capture", "1");
+
+        /*
+         * In the config layer the button has one job: leave.
+         *
+         * A single tap, not another triple. Symmetry would be tidier but this
+         * is the gesture you make when you are unsure where you are, and the
+         * safe direction to resolve that is out. It also makes a fourth fast
+         * tap self-correcting: three taps open the layer, a fourth closes it
+         * again.
+         */
+        if (G_CONFIG) {
+            config_exit();
+            btn_tap_n = 0;
             return;
         }
 
-        /* Tap. A second tap inside the double-tap window toggles LIVE and is
-         * swallowed; the first one has already re-rolled, which is fine --
-         * re-roll is cheap and waiting to disambiguate would put latency on
-         * the gesture used most. */
-        uint32_t now = System::GetNow();
-        if (now - btn_last_tap < DOUBLE_TAP_MS) {
-            G_LIVE       = !G_LIVE;
-            btn_last_tap = 0;
+        if (held > LONG_PRESS_MS) {
+            smack_set_param(S, "capture", "1");
+            /*
+             * With nothing patched to the gate we free-run at whatever tempo
+             * was last locked, which is a guess that survives across power
+             * cycles and is often wrong. The engine can do better: it
+             * autocorrelates an onset envelope over the last 8 s of ring
+             * audio, which at capture time is exactly the audio you just
+             * played. So ask it, and only when there is no real clock to
+             * defer to. The scan is incremental on the audio thread and its
+             * result is picked up in the main loop; nothing blocks here.
+             */
+            if (!clk_locked(&CLK)) smack_set_param(S, "detect_bpm", "1");
             return;
         }
+
+        /* Tap tiers. See DOUBLE_TAP_MS for why later taps undo earlier ones
+         * rather than the first tap waiting to find out what it is. */
+        uint32_t now = System::GetNow();
+        btn_tap_n    = (now - btn_last_tap < DOUBLE_TAP_MS) ? btn_tap_n + 1 : 1;
         btn_last_tap = now;
+
+        if (btn_tap_n == 2) {
+            G_LIVE = !G_LIVE;
+            return;
+        }
+        if (btn_tap_n == 3) {
+            G_LIVE    = !G_LIVE; /* put back what tap two just did */
+            btn_tap_n = 0;
+            config_enter();
+            return;
+        }
         smack_set_param(S, "reroll", "1");
     }
 }
@@ -501,6 +885,34 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
     for (size_t i = 0; i < size; i++)
         out[i] = in[i] * dry + (float)bufi[i] * (1.0f / 32768.0f) * wet;
 
+    /*
+     * DJ filter -- last in the chain, and after the blend on purpose.
+     *
+     * That is what the control is for: one sweep across everything the module
+     * is putting out, dry passthrough included. It is the only thing on this
+     * panel that does anything before you have captured a loop, which for a
+     * module whose every other control needs a recorded buffer is worth having.
+     *
+     * The filter itself is in dj_filter.h so it can be tested off the module;
+     * what belongs here is only the decision to run it. See test_dj_filter.c.
+     */
+    {
+        /* Static storage is zero-initialised, which is exactly what
+         * dj_filter_reset() writes -- so the first block is already clean. */
+        static dj_filter_t djf;
+        static bool        dj_on = false;
+
+        const bool want = CFG->pitch_role != 0;
+        if (want != dj_on) {
+            /* Start from silence rather than from whatever the integrators
+             * held the last time this knob had the job -- otherwise every role
+             * change fires the previous one's decay as a click. */
+            dj_filter_reset(&djf);
+            dj_on = want;
+        }
+        if (dj_on) dj_filter_block(&djf, out, (int)size, G_DJ_CTL);
+    }
+
     cpu.OnBlockEnd();
 }
 
@@ -518,9 +930,53 @@ static void AudioCallback(AudioHandle::InterleavingInputBuffer  in,
  * this fit in the budget?" -- past ~80% it goes red regardless of clock
  * state, so the first flash answers the question without a second one.
  */
+/*
+ * The config layer's entire display: one LED per setting, all three at once.
+ *
+ * That is the payoff for spending knobs instead of building a menu. There is no
+ * cursor, so there is nothing to be "on" and nothing to page past -- what the
+ * module is set to is simply visible, and turning a knob moves the LED that
+ * belongs to it. Opening the layer to check a setting is a complete gesture.
+ *
+ * LED 0 is the layer itself, in a magenta nothing else on this panel uses, so a
+ * module left in config mode can never be mistaken for one doing something else.
+ */
+static void config_leds(void)
+{
+    hw.SetLed(0, 0.8f, 0.0f, 0.8f);                      /* in config  magenta */
+
+    if (CFG->pitch_role) hw.SetLed(1, 0.0f, 0.3f, 1.0f); /* DJ filter     blue */
+    else                 hw.SetLed(1, 0.0f, 1.0f, 0.0f); /* PITCH RANGE  green */
+
+    /*
+     * Punch effect, shown as a position rather than a name. There are 27 and
+     * there are four LEDs, so the honest display is a coarse hue you can find
+     * your way back to, with your ears doing the identifying -- the same deal
+     * SEED already offers, and it works there.
+     *
+     * Clean punch is the exception and gets its own colour, because it is the
+     * one choice you cannot recognise from the effect you hear.
+     */
+    if (CFG->punch_fx == 0) {
+        hw.SetLed(2, 1.0f, 1.0f, 1.0f);                  /* punch clean  white */
+    } else {
+        float t = (float)(CFG->punch_fx - 1)
+                / (float)(SETTINGS_PUNCH_FX_MAX - 1);
+        hw.SetLed(2, 1.0f - t, t, 0.15f);                /* red -> green ramp  */
+    }
+
+    if (CFG->clock_ext) hw.SetLed(3, 0.0f, 0.3f, 1.0f);  /* trust the gate blue */
+    else                hw.SetLed(3, 0.4f, 0.4f, 0.4f);  /* AUTO detect   white */
+}
+
 static void update_leds(void)
 {
     char buf[32];
+
+    /* The config layer owns the whole panel while it is open. Returning here
+     * rather than letting both writers run is not tidiness: this function is
+     * called every 8 ms and would overwrite the display between refreshes. */
+    if (G_CONFIG) { config_leds(); return; }
     int  run = 0;
     if (smack_get_param(S, "run_state", buf, sizeof(buf)) >= 0)
         run = atoi(buf);
@@ -534,6 +990,10 @@ static void update_leds(void)
                  break;
         default: hw.SetLed(0, 0.0f, 0.0f, 0.15f);       /* idle      dim   */
     }
+
+    /* A held punch takes LED 0 outright. It is momentary and it is the loudest
+     * thing the module is doing, so it should be the thing the panel says. */
+    if (G_PUNCHING) hw.SetLed(0, 1.0f, 1.0f, 1.0f);
 
     float pos = 0.0f;
     if (smack_get_param(S, "play_frame", buf, sizeof(buf)) >= 0) {
@@ -920,7 +1380,16 @@ int main(void)
         if (t_led - last_knobs >= KNOB_DISPATCH_MS) {
             last_knobs = t_led;
             dispatch_switches();
-            dispatch_knobs();
+            /* apply_config() before either dispatcher, and outside the branch:
+             * these settings come back from flash at boot, when no knob has
+             * been touched and dispatch_config() has never run. */
+            apply_config();
+            if (G_CONFIG) {
+                dispatch_config();
+            } else {
+                dispatch_knobs();
+                if (CFG->pitch_role) update_dj_ctl();
+            }
         }
 
         if (t_led - last_recalc >= LED_RECALC_MS) {
@@ -940,6 +1409,26 @@ int main(void)
         if (clk_locked(&CLK)) {
             float b = clk_bpm(&CLK);
             if (b > 20.0f && b < 300.0f) CFG->free_run_bpm = b;
+        } else {
+            /*
+             * No clock patched: pick up a finished BPM scan, started by the
+             * last capture. "-1" means still scanning and "0" means it found
+             * nothing usable -- neither is a tempo, and both must be ignored
+             * rather than clamped into one.
+             *
+             * Read here rather than in the audio callback because
+             * smack_get_param is an snprintf. Polling it every loop is fine:
+             * det_active gates the work, so this is a string compare and a
+             * couple of integer divides until a scan actually completes.
+             */
+            char db[32];
+            if (smack_get_param(S, "detected_bpm", db, sizeof(db)) >= 0) {
+                float d = (float)atof(db);
+                if (d >= 50.0f && d <= 200.0f) {
+                    clk_set_free_bpm(&CLK, d);
+                    CFG->free_run_bpm = d;
+                }
+            }
         }
 
         /*

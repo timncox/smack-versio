@@ -2279,6 +2279,30 @@ void smack_set_param(smack_t *s, const char *key, const char *val) {
     if (strcmp(key, "punch_pressure") && strcmp(key, "pad_note")) s->edit_rev++;
 }
 
+/*
+ * One-decimal formatting without a float conversion.
+ *
+ * "%.1f" would be the obvious way to write these, and it is what this file
+ * used to do. It cannot be, on the Versio: that build links newlib-nano
+ * without -u _printf_float, where _printf_float is a weak reference nothing
+ * defines and a "%f" conversion silently emits NOTHING. The caller gets an
+ * empty string and atoi()/atof() turn it into 0, with no error anywhere.
+ *
+ * That is not theoretical -- it is what made play_frame read 0 forever and
+ * LIVE mode never fire on any build before v0.2.0. Decomposing into integers
+ * produces byte-identical output ("128.5") and cannot fail that way, so the
+ * engine now formats every parameter without a float conversion and the link
+ * flag is not needed at all.
+ */
+static int fmt_tenths(char *buf, int buf_len, float v)
+{
+    int t = (int)(v * 10.0f + (v < 0.0f ? -0.5f : 0.5f));
+    int whole = t / 10;
+    int frac  = (t < 0 ? -t : t) % 10;
+    return snprintf(buf, (size_t)buf_len, "%s%d.%d",
+                    (t < 0 && whole == 0) ? "-" : "", whole, frac);
+}
+
 int smack_get_param(smack_t *s, const char *key, char *buf, int buf_len) {
     if (!s || !key || !buf || buf_len < 2) return -1;
     if (!strcmp(key, "run_state")) /* machine state: 0 idle..3 looping */
@@ -2288,13 +2312,13 @@ int smack_get_param(smack_t *s, const char *key, char *buf, int buf_len) {
     if (!strcmp(key, "slice_res"))
         return snprintf(buf, (size_t)buf_len, "%d", s->slice_res_idx);
     if (!strcmp(key, "fx_density"))
-        return snprintf(buf, (size_t)buf_len, "%.0f", s->fx_density * 100.0f);
+        return snprintf(buf, (size_t)buf_len, "%d", (int)(s->fx_density * 100.0f + 0.5f));
     if (!strcmp(key, "order_density"))
-        return snprintf(buf, (size_t)buf_len, "%.0f", s->order_density * 100.0f);
+        return snprintf(buf, (size_t)buf_len, "%d", (int)(s->order_density * 100.0f + 0.5f));
     if (!strcmp(key, "pitch_range"))
         return snprintf(buf, (size_t)buf_len, "%d", s->pitch_range);
     if (!strcmp(key, "wet"))
-        return snprintf(buf, (size_t)buf_len, "%.0f", s->wet * 100.0f);
+        return snprintf(buf, (size_t)buf_len, "%d", (int)(s->wet * 100.0f + 0.5f));
     if (!strcmp(key, "ab"))
         return snprintf(buf, (size_t)buf_len, "%d", s->ab);
     if (!strcmp(key, "quantize"))
@@ -2449,10 +2473,10 @@ int smack_get_param(smack_t *s, const char *key, char *buf, int buf_len) {
         return snprintf(buf, (size_t)buf_len, "%d", s->hw_input);
     if (!strcmp(key, "detected_bpm")) { /* -1 scanning, 0 none, else BPM */
         if (s->det_active) return snprintf(buf, (size_t)buf_len, "-1");
-        return snprintf(buf, (size_t)buf_len, "%.1f", (double)s->det_bpm);
+        return fmt_tenths(buf, buf_len, s->det_bpm);
     }
     if (!strcmp(key, "bpm_override"))
-        return snprintf(buf, (size_t)buf_len, "%.1f", (double)s->bpm_override);
+        return fmt_tenths(buf, buf_len, s->bpm_override);
     /* trigger params always read back as 0 (see below) */
     if (!strcmp(key, "detect_bpm") || !strcmp(key, "unlock_all"))
         return snprintf(buf, (size_t)buf_len, "0");

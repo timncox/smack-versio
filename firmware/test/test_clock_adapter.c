@@ -230,6 +230,54 @@ static void test_engine_captures_a_bar_from_gate_clock(void)
     smack_destroy(e.s);
 }
 
+
+/*
+ * The ratio switch must move free-run speed the same way it moves a locked
+ * clock. It used to do nothing at all with the gate unpatched, because
+ * ticks_per_pulse was only ever consulted where a pulse arrives -- so you
+ * could not capture a loop in /2 and flip to x2 to hear it at 4x, which is
+ * the obvious reach on a module with no tempo knob.
+ */
+static void test_ratio_scales_free_run(void)
+{
+    clock_adapter_t c;
+    rec_t           r = {0, 0};
+    int             at_1x, at_div2, at_2x;
+
+    /* Nothing patched: count ticks emitted over a fixed span at each ratio. */
+    clk_init(&c, SR, 120.0f);
+    clk_set_ratio(&c, CLK_TICKS_1X);
+    run(&c, &r, 400, 0.0);
+    at_1x = r.ticks;
+
+    clk_init(&c, SR, 120.0f);
+    r.ticks = 0;
+    clk_set_ratio(&c, CLK_TICKS_DIV2);
+    run(&c, &r, 400, 0.0);
+    at_div2 = r.ticks;
+
+    clk_init(&c, SR, 120.0f);
+    r.ticks = 0;
+    clk_set_ratio(&c, CLK_TICKS_2X);
+    run(&c, &r, 400, 0.0);
+    at_2x = r.ticks;
+
+    printf("   [ratio] free-run ticks: /2=%d  =1=%d  x2=%d\n",
+           at_div2, at_1x, at_2x);
+
+    /* Same direction and magnitude as the locked case, where the tick length
+     * is interval / ticks_per_pulse: DIV2 is 48 ticks per pulse and so runs
+     * twice as many ticks as 1X, and 2X is 12 and runs half. */
+    assert(at_1x > 0);
+    assert(abs(at_div2 - 2 * at_1x) <= 2);
+    assert(abs(at_2x * 2 - at_1x) <= 2);
+
+    /* And the whole point: /2 to x2 is a factor of four. */
+    assert(abs(at_div2 - 4 * at_2x) <= 4);
+
+    printf("ok: ratio scales free-run tempo, /2 to x2 is 4x\n");
+}
+
 int main(void)
 {
     test_external_locks_to_quarter_notes();
@@ -238,6 +286,7 @@ int main(void)
     test_infer_folds_into_musical_range();
     test_free_run_when_nothing_patched();
     test_auto_distinguishes_clock_from_trigger();
+    test_ratio_scales_free_run();
     test_engine_captures_a_bar_from_gate_clock();
     printf("clock_adapter: all assertions passed\n");
     return 0;

@@ -137,7 +137,7 @@ KNOB_LABELS = [
     ("SLICE", "resolution"),
     ("BLEND", "dry/wet"),
     ("SEED", "pattern"),
-    ("PITCH", "range"),
+    ("PITCH", "range / filter"),
 ]
 
 # Jack legend, same order as jacks(). The first seven mirror the knobs; CLK is
@@ -148,9 +148,14 @@ JACK_LABELS = [
     "IN L", "IN R", "OUT L", "OUT R",
 ]
 
+# The GATE switch no longer selects a clock source -- it selects what the
+# BUTTON does, which is the only way a panel with one button can offer three
+# things that all want it. The centre is the module's normal behaviour, so it
+# is labelled for what it is rather than left blank: a blank position on a
+# faceplate reads as "off".
 SWITCH_LABELS = [
     ("CLK", ["/2", "=1", "x2"]),
-    ("GATE", ["CLK", "AUTO", "TRIG"]),
+    ("GATE", ["PUNCH", "NORM", "DUAL"]),
 ]
 
 # Tap re-rolls, hold captures -- reversed from the original after playing it,

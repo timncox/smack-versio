@@ -205,18 +205,19 @@ footer a:hover{color:var(--cy)}
   <a class="s" href="#what"><b>01</b>What</a>
   <a class="s" href="#panel"><b>02</b>Panel</a>
   <a class="s" href="#play"><b>03</b>Playing</a>
-  <a class="s" href="#clock"><b>04</b>Clock</a>
-  <a class="s" href="#leds"><b>05</b>LEDs</a>
-  <a class="s" href="#install"><b>06</b>Install</a>
-  <a class="s" href="#faceplate"><b>07</b>Faceplate</a>
-  <a class="s" href="#sheet"><b>08</b>Sheet</a>
-  <a class="s" href="#status"><b>09</b>Status</a>
-  <a class="s" href="#family"><b>10</b>Family</a>
+  <a class="s" href="#deeper"><b>04</b>Deeper</a>
+  <a class="s" href="#clock"><b>05</b>Clock</a>
+  <a class="s" href="#leds"><b>06</b>LEDs</a>
+  <a class="s" href="#install"><b>07</b>Install</a>
+  <a class="s" href="#faceplate"><b>08</b>Faceplate</a>
+  <a class="s" href="#sheet"><b>09</b>Sheet</a>
+  <a class="s" href="#status"><b>10</b>Status</a>
+  <a class="s" href="#family"><b>11</b>Family</a>
   <a class="s dl" href="#download"><b>↓</b>Download</a>
 </div></nav>
 
 <header id="top"><div class="wrap">
-  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.3.0</div>
+  <div class="eyebrow">Alternative firmware · Noise Engineering Versio · v0.4.0</div>
   <h1 class="title">Smack<br><em>Versio</em></h1>
   <div class="tagline">Catch what you just played. Cut it up. Let a seed decide the rest.</div>
 
@@ -344,20 +345,89 @@ footer a:hover{color:var(--cy)}
     band would make the knob skip most of the 128 seeds.</p>
 </div></section>
 
+<section id="deeper"><div class="wrap reveal">
+  <h2 class="sh">Three more things</h2>
+  <div class="sub">04 — A switch position, a knob, and a third tap</div>
+  <p class="lede">The panel ran out of room before the module ran out of things worth
+    having. These three are what the GATE switch and a triple-tap buy back.</p>
+
+  <div class="alarm" style="margin-top:26px">
+    <h3>PUNCH — GATE switch left</h3>
+    <p>The button becomes a momentary effect punch. <b>Hold it and every slice is forced
+      through one chosen effect; release and the pattern snaps back.</b></p>
+    <p>Nothing else is on the button here — no re-roll, no capture, no clear, no LIVE. That
+      is the point: a punch you have to think about is not a punch, and a gesture that might
+      re-roll your pattern instead cannot be played hard. Capture in the centre position,
+      then flip left to perform.</p>
+    <p><b>Punch CLEAN is the one to try first.</b> Instead of adding an effect it momentarily
+      <i>drops</i> the glitch pattern, so a busy loop snaps back to unmangled for as long as
+      you hold. On a dense pattern it is the biggest gesture on the module.
+      <span class="tag no">feel unverified</span></p>
+  </div>
+
+  <div class="alarm" style="margin-top:22px">
+    <h3>The config layer — triple-tap CAPTURE</h3>
+    <p>STATE turns <span style="color:#d36fd3">magenta</span>. Three knobs stop driving their
+      printed functions and address a setting instead. Any single tap leaves again.</p>
+    <div class="cols" style="margin-top:18px">
+      <div class="card"><div class="k">PITCH knob</div><h4>Knob role</h4>
+        <p>Left: PITCH range, as printed. Right: the DJ filter.</p></div>
+      <div class="card"><div class="k">FX knob</div><h4>Punch effect</h4>
+        <p>Punch clean at the bottom, then the whole effect list.</p></div>
+      <div class="card"><div class="k">LENGTH knob</div><h4>Clock source</h4>
+        <p>Left: work out what the gate is. Right: always treat it as a clock.</p></div>
+    </div>
+    <p style="margin-top:20px">There is no cursor and nothing to scroll, because with seven
+      absolute controls on the front there is nothing to navigate — and all three settings
+      show on the LEDs at once rather than one at a time behind a selection.</p>
+    <p><b>Opening the layer to look cannot change anything.</b> A knob is only adopted once
+      you actually move it, so the resting positions — wherever their normal jobs left them —
+      are ignored until you turn one. And <b>leaving hands the knobs back without jumping
+      anything</b>: turn LENGTH to pick a clock mode and your loop does not re-length itself
+      on the way out. All three settings are saved to flash.</p>
+  </div>
+
+  <div class="alarm" style="margin-top:22px">
+    <h3>The DJ filter — the PITCH knob's other job</h3>
+    <p><b>Left sweeps a lowpass down to 40&nbsp;Hz, right sweeps a highpass up to 6&nbsp;kHz,
+      and the centre is a real bypass</b> — a notch wide enough to find by feel on a knob with
+      no detent.</p>
+    <p>It runs last, after BLEND, across the module's whole output. So it works on your dry
+      input before you have captured anything at all, which nothing else on this panel does.
+      <span class="tag ok">verified</span> measured off the module rather than judged by ear:
+      &minus;56&nbsp;dB at 1&nbsp;kHz fully left, &minus;72&nbsp;dB at 100&nbsp;Hz fully right,
+      and within 0.01&nbsp;dB of flat at the centre.</p>
+    <p><b>It takes over when the knob next reaches the centre</b>, not when you select it.
+      You choose the filter by turning PITCH to the <i>right</i> — which is also a filter
+      position, so without the wait, closing the layer would drop a highpass onto whatever is
+      playing. Bring the knob back to the notch and it picks up from there.</p>
+    <p>The trade is that PITCH range loses its knob and is pinned at one octave while the
+      filter has it. A deliberate swap rather than a compromise: pitch range is a
+      set-and-forget parameter and a filter sweep is a performance one.</p>
+  </div>
+</div></section>
+
 <section id="clock"><div class="wrap reveal">
   <h2 class="sh">The clock</h2>
-  <div class="sub">04 — One jack, two jobs</div>
+  <div class="sub">05 — One jack, two jobs</div>
   <p class="lede">The Versio has exactly one gate jack, and this module wants two things from
-    it: a tempo, and a "capture now" trigger. The GATE switch decides which.</p>
+    it: a tempo, and a "capture now" trigger. By default it works out which for itself.</p>
   <div class="cols">
-    <div class="card"><div class="k">Switch right</div><h4>CLK</h4>
-      <p>The jack is a clock. Tempo comes from the pulse intervals.</p></div>
-    <div class="card"><div class="k">Switch centre</div><h4>Auto</h4>
+    <div class="card"><div class="k">Default</div><h4>Auto</h4>
       <p>Worked out from what arrives — a steady train reads as a clock, sporadic hits read as
-        triggers. <span class="tag no">feel unverified</span></p></div>
-    <div class="card"><div class="k">Switch left</div><h4>Trig</h4>
-      <p>The jack is a capture trigger. Tempo is inferred from the gaps between hits.</p></div>
+        triggers. Nothing to set. <span class="tag no">feel unverified</span></p></div>
+    <div class="card"><div class="k">Config layer</div><h4>Always a clock</h4>
+      <p>For a deliberately uneven clock — swung, or gated — that you still want read as a
+        clock rather than as triggers.</p></div>
+    <div class="card"><div class="k">Either way</div><h4>Both jobs</h4>
+      <p>Every setting still clocks <i>and</i> still captures from the jack. The switch has
+        never chosen whether the module listens.</p></div>
   </div>
+  <p style="margin-top:26px"><b>The GATE switch no longer selects the clock source.</b> It used
+    to, and almost nothing is lost: auto already picks correctly, so the position was really
+    offering a manual override for a case that rarely comes up — a set-once decision, and
+    set-once decisions belong in the config layer. A performance switch position is worth more
+    than that, and it is now <a href="#deeper">PUNCH</a>.</p>
   <p style="margin-top:26px">Internally the module turns gate edges into 24&nbsp;ppqn MIDI clock,
     because that is what the engine already speaks — so the timing model that runs on the Move
     runs here untouched. This is the piece with the most design risk in the whole port, and it
@@ -370,16 +440,19 @@ footer a:hover{color:var(--cy)}
 
 <section id="leds"><div class="wrap reveal">
   <h2 class="sh">Reading the LEDs</h2>
-  <div class="sub">05 — Four lights are the entire display</div>
+  <div class="sub">06 — Four lights are the entire display</div>
   <table>
     <thead><tr><th>LED</th><th>Shows</th></tr></thead>
     <tbody>
-      <tr><td style="color:var(--led-state)">STATE</td><td>dim blue idle · amber armed · red recording · green looping · <b style="color:#48d5e3">cyan = LIVE</b></td></tr>
+      <tr><td style="color:var(--led-state)">STATE</td><td>dim blue idle · amber armed · red recording · green looping · <b style="color:#48d5e3">cyan = LIVE</b> · <b>white while a PUNCH is held</b> · <b style="color:#d36fd3">magenta = config layer</b></td></tr>
       <tr><td style="color:var(--led-play)">PLAY</td><td>Ramps once per pass through the loop. Moving = a loop is playing. <b>Steady when it should ramp</b> means firmware older than v0.2.0</td></tr>
       <tr><td style="color:var(--led-blend)">BLEND</td><td>The BLEND knob's position</td></tr>
       <tr><td style="color:var(--led-clock)">CLOCK</td><td>blue external · purple inferred · white free-running · <b style="color:var(--led-clock)">red = CPU above 80%</b></td></tr>
     </tbody>
   </table>
+  <p style="margin-top:18px">In the <a href="#deeper">config layer</a> all four change meaning
+    at once: magenta says you are in it, then knob role, punch effect and clock source, left to
+    right.</p>
   <p style="margin-top:18px"><b>All four solid red</b> means the engine could not allocate its
     buffer. That should be impossible — it needs 27.63&nbsp;MB of a 32&nbsp;MB pool,
     <span class="tag ok">measured</span> — but it fails loudly rather than running silently
@@ -412,17 +485,17 @@ footer a:hover{color:var(--cy)}
 
 <section id="download"><div class="wrap reveal">
   <h2 class="sh">Download</h2>
-  <div class="sub">v0.3.0 — installs from Noise Engineering's own firmware page</div>
+  <div class="sub">v0.4.0 — installs from Noise Engineering's own firmware page</div>
   <div class="dlbox">
     <div>
-      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.3.0/smack-versio-0.3.0.zip">
-        <div class="n">Get v0.3.0 ↓</div>
-        <div class="f">smack-versio-0.3.0.zip · 198 KB</div>
+      <a class="dlbtn" href="https://github.com/timncox/smack-versio/releases/download/v0.4.0/smack-versio-0.4.0.zip">
+        <div class="n">Get v0.4.0 ↓</div>
+        <div class="f">smack-versio-0.4.0.zip · 197 KB</div>
         <div class="w">Firmware, manual, flashing guide, disclaimer, printable faceplate
           and checksums. <b>Installs from NE's firmware page — no terminal.</b></div>
       </a>
       <div class="dlalt">
-        <a href="https://github.com/timncox/smack-versio/releases/download/v0.3.0/smack_versio-0.3.0.bin">just the .bin ↓</a>
+        <a href="https://github.com/timncox/smack-versio/releases/download/v0.4.0/smack_versio-0.4.0.bin">just the .bin ↓</a>
         <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
         <a href="https://github.com/timncox/smack-versio">source</a>
       </div>
@@ -436,7 +509,7 @@ footer a:hover{color:var(--cy)}
         callback overran its buffer on every block, so it emitted noise rather than
         anything you patched into it. The download above is left in place only so the
         checksums on the release stay honest.</p>
-      <p><b>The download above is v0.3.0</b>, which is what this manual describes. v0.1.0 is
+      <p><b>The download above is v0.4.0</b>, which is what this manual describes. v0.1.0 is
         kept only so its checksums stay honest, and is marked as such on the releases page.</p>
     </div>
     <div class="alarm" style="margin-top:14px">
@@ -456,7 +529,7 @@ footer a:hover{color:var(--cy)}
 
 <section id="install"><div class="wrap reveal">
   <h2 class="sh">Installing</h2>
-  <div class="sub">06 — And getting back to stock</div>
+  <div class="sub">07 — And getting back to stock</div>
   <p class="lede">The micro-USB port is on the <b>back of the Daisy Seed</b>, so the module comes
     out of the case either way. Expect that in the edit loop.</p>
 
@@ -520,7 +593,7 @@ footer a:hover{color:var(--cy)}
 
 <section id="faceplate"><div class="wrap reveal">
   <h2 class="sh">The faceplate</h2>
-  <div class="sub">07 — Where these coordinates came from</div>
+  <div class="sub">08 — Where these coordinates came from</div>
   <p class="lede">Your module's panel says whatever it said before, so the repository generates a
     printable overlay with the right words on it.</p>
   <pre><b>python3 faceplate/make_faceplate.py</b></pre>
@@ -551,7 +624,7 @@ footer a:hover{color:var(--cy)}
 
 <section id="sheet"><div class="wrap reveal">
   <h2 class="sh">The sheet</h2>
-  <div class="sub">08 — One page, for posting somewhere</div>
+  <div class="sub">09 — One page, for posting somewhere</div>
   <p class="lede">Everything the module does, on a single page: the panel on the left, what
     every control does on the right. Made for a forum post or a photo caption, where nobody is
     going to click through to a manual.</p>
@@ -578,7 +651,7 @@ footer a:hover{color:var(--cy)}
 
 <section id="status"><div class="wrap reveal">
   <h2 class="sh">What is real</h2>
-  <div class="sub">09 — Verified, and not</div>
+  <div class="sub">10 — Verified, and not</div>
   <p class="lede">The most useful thing about this project is knowing which half of it is
     trustworthy. Nothing below is rounded up.</p>
   <table>
@@ -610,7 +683,7 @@ footer a:hover{color:var(--cy)}
   <div class="cols">
     <div class="card"><div class="k">Platform</div><h4>Daisy Seed</h4><p>STM32H750, 480 MHz Cortex-M7, 64 MB SDRAM. Noise Engineering Versio, 10 HP.</p></div>
     <div class="card"><div class="k">Audio</div><h4>48 kHz · 128</h4><p>libDaisy offers no 44.1 kHz. The 128-frame block is required — the engine's clock regression was built against it.</p></div>
-    <div class="card"><div class="k">Memory</div><h4>~70 s buffer</h4><p>13.4 MB ring in a 16 MB SDRAM pool, of 64 MB available.</p></div>
+    <div class="card"><div class="k">Memory</div><h4>150 s buffer</h4><p>27.6 MB used of a 32 MB SDRAM pool, of 64 MB available.</p></div>
     <div class="card"><div class="k">Effects</div><h4>26</h4><p>One per lane at a time, not all at once — which is what makes the CPU question winnable.</p></div>
   </div>
 </div></section>
@@ -747,7 +820,7 @@ const PANEL = {
       "y": 60.36,
       "d": 8.99,
       "name": "PITCH",
-      "sub": "range"
+      "sub": "range / filter"
     }
   ],
   "leds": [
@@ -794,9 +867,9 @@ const PANEL = {
       "d": 5.1,
       "name": "GATE",
       "pos": [
-        "CLK",
-        "AUTO",
-        "TRIG"
+        "PUNCH",
+        "NORM",
+        "DUAL"
       ]
     }
   ],
