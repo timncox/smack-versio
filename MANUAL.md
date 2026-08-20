@@ -111,7 +111,7 @@ thing this version can do that the Move version cannot.
 | **SEED** | Which pattern. Same seed, same result, every time |
 | **PITCH** | How far pitch-shifting effects are allowed to move |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
-| **GATE** switch | What the gate jack means — see below |
+| **GATE** switch | Right CLK, centre AUTO, left DUAL (two independent lanes) — see below |
 | **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop |
 | **CLK** jack | Clock and/or capture trigger, per the GATE switch |
 
@@ -173,14 +173,33 @@ loop pass is the floor.
 
 ## The clock
 
-The Versio has exactly one gate jack, and this module wants two things from it:
-a tempo, and a "capture now" trigger. The **GATE** switch decides which.
+The Versio has exactly one gate jack, and the **GATE** switch decides how it is
+read — and, in one position, does something else entirely.
 
-| Position | The gate jack is |
+| Position | What happens |
 |---|---|
-| **CLK** | A clock. Tempo comes from the pulse intervals |
+| **CLK** | The jack is a clock. Tempo comes from the pulse intervals |
 | **AUTO** | Worked out from what arrives — a steady train reads as a clock, sporadic hits read as triggers |
-| **TRIG** | A capture trigger. Tempo is inferred from the gaps between hits |
+| **DUAL** | Clock stays on AUTO, and **L and R become two independent lanes** — see below |
+
+### DUAL
+
+**Left and right stop being a stereo pair.** Each becomes its own lane, rolling
+its own pattern from the same SEED, and hard-panned to its own side. Same
+knobs, same seed, two different manglings — one in each ear.
+
+It is the widest thing this module does, and it is genuinely hard to get any
+other way from a 10 HP effect: not a stereo effect on one signal, but two
+signals being cut up differently.
+
+**It costs CPU.** The effected path renders twice instead of once, which is
+the one place the module's headroom actually gets spent. If you drive it hard
+in DUAL, that is the setting worth checking the boot CPU report against.
+
+The position used to be TRIG, which forced tempo to be inferred from trigger
+intervals. Very little is lost: AUTO already tells a steady clock from sparse
+triggers and picks correctly, so DUAL keeps the clock on AUTO rather than
+dropping to a worse mode. All three positions still clock.
 
 Internally the module turns gate edges into 24 ppqn MIDI clock, because that is
 what the engine already speaks. This is the piece with the most design risk in

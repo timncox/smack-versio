@@ -48,7 +48,7 @@
 <text x="12.95" y="65.44" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
 <text x="12.95" y="67.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK</text>
 <text x="12.95" y="69.64" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">AUTO</text>
-<text x="12.95" y="71.34" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">TRIG</text>
+<text x="12.95" y="71.34" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">DUAL</text>
 <circle cx="25.10" cy="67.34" r="3.00" fill="#000000" stroke="#5a5a5a" stroke-width="0.2"/>
 <text x="25.10" y="72.74" font-family="Helvetica, Arial, sans-serif" font-size="2.1" font-weight="bold" fill="#f2f2f2" text-anchor="middle">CAPTURE</text>
 <text x="25.10" y="74.84" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="middle">tap = re-roll</text>
@@ -118,7 +118,7 @@
 <text x="730.9279999999999" y="976" font-size="25" font-weight="700" fill="#ffb454">CLK switch</text>
 <text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock ratio: /2, =1, x2</text>
 <text x="730.9279999999999" y="1008" font-size="25" font-weight="700" fill="#ffb454">GATE switch</text>
-<text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">what the gate jack means — clock, auto, or capture trigger</text>
+<text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">clock, auto, or DUAL — two independent L/R lanes</text>
 <text x="718.9279999999999" y="1062" font-size="27" font-weight="700" fill="#c08cff" letter-spacing="1.2">THE LIGHTS</text>
 <text x="730.9279999999999" y="1098" font-size="25" font-weight="700" fill="#c08cff">STATE</text>
 <text x="950.9279999999999" y="1098" font-size="25" fill="#f4f7f9">blue idle · red recording · green looping · cyan LIVE</text>

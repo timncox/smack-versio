@@ -131,7 +131,7 @@ SECTIONS = [
         ("BLEND", "your live input vs the effected loop. Fully left is dry"),
         ("CLK jack", "clock in. Nothing patched? It free-runs, and that is fine"),
         ("CLK switch", "clock ratio: /2, =1, x2"),
-        ("GATE switch", "what the gate jack means — clock, auto, or capture trigger"),
+        ("GATE switch", "clock, auto, or DUAL — two independent L/R lanes"),
     ]),
     (VI, "THE LIGHTS", [
         ("STATE", "blue idle · red recording · green looping · cyan LIVE"),

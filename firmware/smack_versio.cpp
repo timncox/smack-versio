@@ -265,12 +265,33 @@ static void dispatch_switches(void)
                                                       : CLK_TICKS_1X);
     }
 
+    /*
+     * SW_1: right = external clock, centre = auto, left = DUAL.
+     *
+     * The left position used to be CLK_INFER -- force the tempo to be derived
+     * from trigger intervals rather than read as a clock. It is gone, and
+     * almost nothing goes with it: CLK_AUTO already distinguishes a steady
+     * train from sparse triggers and picks the right one (there is a test for
+     * exactly that in test_clock_adapter.c). INFER was the manual override for
+     * when AUTO guesses wrong, so the left position keeps AUTO rather than
+     * dropping to a worse clock mode -- all three positions still clock.
+     *
+     * What the position buys instead is the engine's dual-lane mode, which
+     * this panel has never exposed. L and R stop being a stereo pair and
+     * become two independent lanes, each rolling its own pattern from the same
+     * seed and hard-panned to its own side (pan_l = 0, pan_r = 100 by default).
+     * It is the one thing in the engine that can actually spend the CPU
+     * headroom the boot report says we have.
+     *
+     * It is not free: the wet path renders render_lane() twice instead of
+     * once. Watch the boot CPU bar in this position before assuming it fits.
+     */
     int s1 = hw.sw[DaisyVersio::SW_1].Read();
     if (s1 != last1) {
         last1 = s1;
-        clk_set_mode(&CLK, s1 == Switch3::POS_UP   ? CLK_EXTERNAL
-                         : s1 == Switch3::POS_DOWN ? CLK_INFER
-                                                   : CLK_AUTO);
+        const bool dual = (s1 == Switch3::POS_DOWN);
+        clk_set_mode(&CLK, s1 == Switch3::POS_UP ? CLK_EXTERNAL : CLK_AUTO);
+        smack_set_param(S, "channel_mode", dual ? "1" : "0");
     }
 }
 

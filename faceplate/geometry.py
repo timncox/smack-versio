@@ -150,7 +150,7 @@ JACK_LABELS = [
 
 SWITCH_LABELS = [
     ("CLK", ["/2", "=1", "x2"]),
-    ("GATE", ["CLK", "AUTO", "TRIG"]),
+    ("GATE", ["CLK", "AUTO", "DUAL"]),
 ]
 
 # Tap re-rolls, hold captures -- reversed from the original after playing it,
