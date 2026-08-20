@@ -116,6 +116,12 @@ longer fits, so LENGTH drops one notch — to 128 steps, then 64 — rather than
 being trimmed to a partial loop, which would leave it off the grid and drifting
 against your clock. At any normal tempo you will never see this.
 
+Note that 51 BPM is the tempo the *engine* sees, not the one on your clock
+source: with **CLK** set to `×2`, a 100 BPM clock lands there. The drop sticks
+until the knob moves — if the tempo comes back up, LENGTH stays at the shorter
+setting, because a parked knob sends nothing. Sweep LENGTH off its position and
+back to restore it.
+
 **LENGTH, SLICE and SEED are stepped**, and a stepped control parked exactly on
 a boundary would otherwise chatter between two values as CV noise nudges it
 back and forth — re-slicing the loop, or re-rolling the pattern, continuously.

@@ -39,8 +39,9 @@ static CpuLoadMeter cpu;
  *
  * The ring grew from 70 s to 150 s to hold two maximum loops rather than one
  * -- see the comment on SMACK_MAX_SECONDS. Cost is boot time: versio_calloc
- * zeroes the block, and 28.8 MB of SDRAM memset lands inside the 2.5 s boot
- * readout rather than delaying audio. */
+ * zeroes the block, and smack_create() runs before the CPU readout, so ~29 MB
+ * of SDRAM memset is added to boot latency rather than hidden by it. It lands
+ * once, before audio starts. */
 #define POOL_BYTES VERSIO_POOL_BYTES
 static uint8_t DSY_SDRAM_BSS g_pool[POOL_BYTES];
 

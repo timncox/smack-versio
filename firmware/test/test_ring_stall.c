@@ -115,14 +115,24 @@ static void rig_run(rig_t *r, double secs, int level, int recapture_on_wrap)
     }
 }
 
-/* Play one full loop pass with a silent input and report the loudest sample.
- * With wet = 0 the output is the clean loop tap, so this is the DC level that
- * was recorded into the loop -- i.e. which era the loop came from. */
-static int loop_content(rig_t *r)
+/*
+ * Play one full loop pass with a silent input and report what FRACTION of it
+ * is at or above `floor`. With wet = 0 the output is the clean loop tap, so
+ * this measures how much of the loop came from the newest era.
+ *
+ * A fraction, not a peak. A stalled recorder is not frozen forever: each
+ * capture moves the protected region and buys the recorder a few seconds
+ * before it jams again, so a stalled engine still lands a little fresh audio
+ * in the ring. That was enough to make a max-abs check read "fresh" -- the
+ * pre-fix LIVE run measured a peak of 24000 while stalled for 49 of 60
+ * samples. Asking how much of the loop is fresh separates the two cleanly:
+ * a 64 s loop carrying 6 s of new audio fails outright.
+ */
+static double loop_fraction_above(rig_t *r, int floor_val)
 {
     int  frames = get_int(r->s, "loop_frames");
-    long blocks = frames > 0 ? (frames / BLK) + 2 : 0;
-    int  peak = 0;
+    long blocks = frames > 0 ? (frames / BLK) : 0;
+    long above = 0, total = 0;
     long b, i;
 
     for (i = 0; i < BLK * 2; i++) r->in[i] = 0;
@@ -130,10 +140,11 @@ static int loop_content(rig_t *r)
         smack_process(r->s, r->in, r->out, BLK);
         for (i = 0; i < BLK * 2; i++) {
             int v = r->out[i] < 0 ? -r->out[i] : r->out[i];
-            if (v > peak) peak = v;
+            if (v >= floor_val) above++;
+            total++;
         }
     }
-    return peak;
+    return total > 0 ? (double)above / (double)total : 0.0;
 }
 
 /*
@@ -146,11 +157,16 @@ static int loop_content(rig_t *r)
 #define ERA_MID 12000
 #define ERA_NEW 24000
 
-static void assert_fresh(const char *what, int got)
+/* Nearly all of the loop must be the newest era. Not all of it: the engine
+ * fades slice and loop edges over ~2.2 ms, which dips a few samples below any
+ * fixed floor. 0.9 clears that by a wide margin while still failing a loop
+ * that is mostly stale. */
+static void assert_fresh(rig_t *r, const char *what)
 {
-    printf("   [%s] loop peak=%d (pre=%d mid=%d new=%d)\n",
-           what, got, ERA_PRE, ERA_MID, ERA_NEW);
-    assert(got > (ERA_MID + ERA_NEW) / 2);
+    double frac = loop_fraction_above(r, (ERA_MID + ERA_NEW) / 2);
+    printf("   [%s] %.1f%% of the loop is the newest era (want >90%%)\n",
+           what, frac * 100.0);
+    assert(frac > 0.9);
 }
 
 /*
@@ -177,7 +193,7 @@ static void test_capture_after_stall_is_fresh(void)
     rig_run(&r, 30.0, ERA_NEW, 0);  /* only reaches the ring if it recovered */
     smack_set_param(r.s, "capture", "1");
 
-    assert_fresh("manual", loop_content(&r));
+    assert_fresh(&r, "manual");
     printf("ok: capture long after the previous one returns current audio\n");
     smack_destroy(r.s);
 }
@@ -213,10 +229,13 @@ static void test_live_refreshes_with_a_long_loop(void)
            SMACK_RING_FRAMES, SMACK_RING_FRAMES / (double)SR);
     assert(get_int(r.s, "loop_frames") > 60 * SR); /* the long-loop case */
 
+    /* ERA_NEW runs for three loop passes, so the last wrap-triggered capture
+     * falls entirely inside it. Two passes leaves the final capture straddling
+     * the era boundary and the measurement lands near the threshold. */
     rig_run(&r, 70.0,  ERA_MID, 1);
-    rig_run(&r, 100.0, ERA_NEW, 1);
+    rig_run(&r, 200.0, ERA_NEW, 1);
 
-    assert_fresh("live", loop_content(&r));
+    assert_fresh(&r, "live");
     printf("ok: LIVE keeps refreshing with a loop longer than half the old ring\n");
     smack_destroy(r.s);
 }
@@ -254,11 +273,19 @@ static void test_slow_tempo_steps_length_down_musically(void)
     smack_destroy(r.s);
 }
 
-int main(void)
+/*
+ * An optional test number runs just that one. assert() aborts the process, so
+ * without this only the first failure is ever visible -- which is how two of
+ * these were briefly believed to fail against the pre-fix engine when only the
+ * first had been seen to.
+ */
+int main(int argc, char **argv)
 {
-    test_capture_after_stall_is_fresh();
-    test_live_refreshes_with_a_long_loop();
-    test_slow_tempo_steps_length_down_musically();
+    int only = argc > 1 ? atoi(argv[1]) : 0;
+
+    if (only == 0 || only == 1) test_capture_after_stall_is_fresh();
+    if (only == 0 || only == 2) test_live_refreshes_with_a_long_loop();
+    if (only == 0 || only == 3) test_slow_tempo_steps_length_down_musically();
     printf("ring_stall: all assertions passed\n");
     return 0;
 }
