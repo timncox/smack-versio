@@ -117,6 +117,7 @@ SECTIONS = [
         ("hold ~1 s", "grab the last LENGTH steps of what you played"),
         ("tap", "re-roll — same loop, brand new pattern"),
         ("double-tap", "LIVE: re-captures itself once per loop pass"),
+        ("triple-tap", "the config layer — three knobs become settings"),
         ("hold 2 s", "drop the loop, back to dry passthrough"),
     ]),
     (GR, "THE PATTERN", [
@@ -125,16 +126,17 @@ SECTIONS = [
         ("ORDER", "how scrambled the slice order is"),
         ("SLICE", "how finely the loop is cut up"),
         ("LENGTH", "8 / 16 / 32 / 64 / 128 / 256 steps (256 = 16 bars)"),
-        ("PITCH", "how far the pitch effects are allowed to move"),
+        ("PITCH", "how far pitch effects may move — or a DJ filter"),
     ]),
     (AM, "BLEND & CLOCK", [
         ("BLEND", "your live input vs the effected loop. Fully left is dry"),
         ("CLK jack", "clock in. Nothing patched? It free-runs, and that is fine"),
         ("CLK switch", "clock ratio: right /2, centre =1, left x2"),
-        ("GATE switch", "left clock, centre auto, right DUAL (two L/R lanes)"),
+        ("GATE switch", "what the button does: left PUNCH, right DUAL lanes"),
     ]),
     (VI, "THE LIGHTS", [
         ("STATE", "blue idle · red recording · green looping · cyan LIVE"),
+        ("", "white while a PUNCH is held · magenta in the config layer"),
         ("PLAY", "ramps once per pass through the loop"),
         ("CLOCK", "clock source — and red if the CPU goes over 80%"),
     ]),

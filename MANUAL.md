@@ -109,11 +109,11 @@ thing this version can do that the Move version cannot.
 | **SLICE** | How finely the loop is cut up |
 | **BLEND** | Your live input ←→ the effected loop. Fully left is dry thru |
 | **SEED** | Which pattern. Same seed, same result, every time |
-| **PITCH** | How far pitch-shifting effects are allowed to move |
+| **PITCH** | How far pitch-shifting effects are allowed to move — or the **DJ filter**, if you set it that way |
 | **CLK** switch | Clock ratio: right `/2`, centre `=1`, left `×2` |
-| **GATE** switch | Left CLK, centre AUTO, **right DUAL** (two independent lanes) — see below |
-| **CAPTURE** | Tap: re-roll the pattern. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop |
-| **CLK** jack | Clock and/or capture trigger, per the GATE switch |
+| **GATE** switch | Left **PUNCH**, centre normal, right **DUAL** — the switch decides what the button does |
+| **CAPTURE** | Tap: re-roll. Hold >0.6 s: grab the last LENGTH steps. Hold >2 s: drop the loop. Double-tap: LIVE. Triple-tap: the config layer |
+| **CLK** jack | Clock and/or capture trigger |
 
 **Very slow clocks shorten the longest LENGTH.** A loop may take at most half
 the module's 150-second buffer, because the recorder has to keep writing a
@@ -171,23 +171,105 @@ loop pass is the floor.
 
 ---
 
+## PUNCH
+
+**Put the GATE switch left and the button becomes a momentary effect punch.**
+Hold it and every slice in the loop is forced through one chosen effect;
+release and the pattern comes straight back.
+
+Nothing else is on the button in this position. No re-roll, no capture, no
+clear, no LIVE, no config layer — all of it stands down. That is the point: a
+punch you have to think about is not a punch, and a gesture that might re-roll
+your pattern instead cannot be played hard. **Capture your loop in the centre
+position, then flip left to perform.**
+
+Which effect it punches is set in the [config layer](#the-config-layer), and
+the choice is remembered across power cycles. **Punch CLEAN** is one of the
+options and is worth trying first: instead of adding an effect it momentarily
+*drops* the glitch pattern, so the loop snaps back to unmangled for as long as
+you hold. On a busy pattern that reads as the biggest gesture on the module.
+
+LED 0 goes white while a punch is held.
+
+Flipping the switch away while you are still holding the button releases the
+punch for you. It has to — the switch has just taken away the button that
+would otherwise have done it.
+
+---
+
+## The config layer
+
+**Triple-tap CAPTURE.** LED 0 turns magenta. Any single tap leaves again.
+
+Three knobs stop driving their printed functions and address a setting
+instead. There is nothing to scroll and no cursor to move, because with seven
+absolute controls on the front there is nothing to navigate — you turn the
+knob for the thing you want, and all three settings are visible at once.
+
+| Knob | Setting | Left | Right |
+|---|---|---|---|
+| **PITCH** (lower right) | What the PITCH knob does normally | PITCH range | **DJ filter** |
+| **FX** (top left) | Which effect PUNCH uses | punch clean, then the effect list | |
+| **LENGTH** (centre) | How the CLK jack is read | AUTO — work it out | Always treat it as a clock |
+
+| LED | Shows |
+|---|---|
+| **0** | Magenta — you are in the config layer |
+| **1** | Green PITCH range · blue DJ filter |
+| **2** | White = punch clean · a red→green ramp across the effect list |
+| **3** | White AUTO · blue always-a-clock |
+
+**Opening the layer to look at your settings cannot change them.** A knob is
+only adopted once you actually move it, so the knobs' resting positions — which
+are wherever their normal jobs left them — are ignored until you turn one.
+
+**Leaving hands the knobs back without jumping anything.** A knob you moved in
+here is no longer where its printed function left it, so the module keeps that
+function exactly where it was and picks the knob up on your next touch. Turn
+LENGTH to choose a clock mode and your loop does not re-length itself when you
+leave.
+
+All three settings are saved to flash.
+
+### The DJ filter
+
+Set PITCH's role to **DJ filter** and the knob becomes one sweep across
+everything the module puts out: **left sweeps a lowpass down to 40 Hz, right
+sweeps a highpass up to 6 kHz, and the centre is a real bypass** — a detent-free
+notch you can find by feel.
+
+It runs last, after BLEND, on the module's whole output. So it works on your dry
+input before you have captured anything at all, which nothing else on this panel
+does.
+
+The trade is that PITCH range loses its knob and is pinned at **one octave**
+while the filter has it. That is a deliberate swap and not a compromise: pitch
+range is a set-and-forget parameter and a filter sweep is a performance one.
+
+---
+
 ## The clock
 
-The Versio has exactly one gate jack, and the **GATE** switch decides how it is
-read — and, in one position, does something else entirely.
+The Versio has exactly one gate jack, and by default the module works out for
+itself what is arriving: **a steady train reads as a clock, sporadic hits read
+as triggers** and the tempo is inferred from the intervals between them. There
+is nothing to set, and in almost every patch there is nothing to think about.
 
-| Position | What happens |
-|---|---|
-| **Left — CLK** | The jack is a clock. Tempo comes from the pulse intervals |
-| **Centre — AUTO** | Worked out from what arrives — a steady train reads as a clock, sporadic hits read as triggers |
-| **Right — DUAL** | Clock stays on AUTO, and **L and R become two independent lanes** — see below |
+The one case that needs telling is a deliberately uneven clock — swung, or
+gated, or otherwise not steady — that you still want read as a clock. Set
+**always-a-clock** in the [config layer](#the-config-layer) and it will be.
 
-> **The two switches are mirror images of each other**, which is worth knowing
-> if you are reading the source. CLK runs `/2` on the right; GATE runs its
-> third position, DUAL, on the right as well — but internally those are
-> *opposite* switch positions. Both were checked on hardware. Nothing in the
-> table above is inferred from the other switch, because doing exactly that
-> produced a wrong manual once already.
+> **The GATE switch no longer selects the clock source.** It used to, in its
+> left position. Almost nothing is lost by the move: AUTO already picks
+> correctly, so what the position was really offering was a manual override for
+> a case that rarely comes up — a set-once decision, and set-once decisions are
+> what a config layer is for. A performance switch position is worth more than
+> that, and it is now PUNCH.
+>
+> **Both switches read the same way round.** Left is left on both, which is
+> worth stating because this manual once said the opposite. That claim came
+> from reading a report about what was *heard* as a report about where the
+> *labels sit* — the switches were fine, the reasoning was not.
 
 ### DUAL
 
@@ -217,10 +299,9 @@ Treat DUAL as a deliberate setting rather than somewhere to leave the switch.
 If you want it cheaper, **BLEND is the lever**: only the wet path renders
 twice, so pulling BLEND back reduces the cost proportionally.
 
-The position used to be TRIG, which forced tempo to be inferred from trigger
-intervals. Very little is lost: AUTO already tells a steady clock from sparse
-triggers and picks correctly, so DUAL keeps the clock on AUTO rather than
-dropping to a worse mode. All three positions still clock.
+**All three switch positions still clock**, and all three still capture from
+the jack. The switch has never selected whether the module listens to the gate,
+only what the button does.
 
 Internally the module turns gate edges into 24 ppqn MIDI clock, because that is
 what the engine already speaks. This is the piece with the most design risk in
@@ -244,8 +325,12 @@ Four RGB LEDs are the entire status display.
 | **BLEND** | The BLEND knob's position |
 | **CLOCK** | blue external · purple inferred · white free-running · **red = CPU above 80%** |
 
+**STATE goes white while a PUNCH is held**, and magenta while the config layer
+is open — where all four LEDs change meaning, as tabulated
+[above](#the-config-layer).
+
 **All four solid red** means the engine could not allocate its buffer. That
-should be impossible — it needs 12.98 MB of a 16 MB pool, measured — but it
+should be impossible — it needs 27.63 MB of a 32 MB pool, measured — but it
 fails loudly rather than running silently broken.
 
 ### At power-up
@@ -352,7 +437,7 @@ mode from working on every build before v0.2.0.
 | Clock adapter | **Verified natively.** 7 tests; captures a bar from synthetic gate pulses to within 0.02% |
 | Persistent settings | **Verified natively.** 6 tests covering the flash-wear limiter and the version guard |
 | Engine at 48 kHz | **Verified natively.** The upstream suite passes at 48 k unmodified |
-| Allocator | **Verified natively.** Engine runs on the SDRAM pool, 12.98 MB of 16 MB |
+| Allocator | **Verified natively.** Engine runs on the SDRAM pool, 27.63 MB of 32 MB |
 | Host shim, controls, LEDs | **Built, never run.** Compiles; nobody has heard it |
 | CPU headroom | **Unmeasured.** The one thing that needs hardware |
 

@@ -38,7 +38,7 @@
 <text x="25.10" y="59.21" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">pattern</text>
 <circle cx="43.30" cy="60.36" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
 <text x="43.30" y="67.76" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">PITCH</text>
-<text x="43.30" y="70.26" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">range</text>
+<text x="43.30" y="70.26" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">range / filter</text>
 <circle cx="8.35" cy="57.82" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
 <text x="12.95" y="55.92" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">CLK</text>
 <text x="12.95" y="58.42" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">/2</text>
@@ -46,8 +46,8 @@
 <text x="12.95" y="61.82" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">x2</text>
 <circle cx="8.35" cy="67.34" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
 <text x="12.95" y="65.44" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
-<text x="12.95" y="67.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK</text>
-<text x="12.95" y="69.64" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">AUTO</text>
+<text x="12.95" y="67.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">PUNCH</text>
+<text x="12.95" y="69.64" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">NORM</text>
 <text x="12.95" y="71.34" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">DUAL</text>
 <circle cx="25.10" cy="67.34" r="3.00" fill="#000000" stroke="#5a5a5a" stroke-width="0.2"/>
 <text x="25.10" y="72.74" font-family="Helvetica, Arial, sans-serif" font-size="2.1" font-weight="bold" fill="#f2f2f2" text-anchor="middle">CAPTURE</text>
@@ -95,50 +95,54 @@
 <text x="950.9279999999999" y="508" font-size="25" fill="#f4f7f9">re-roll — same loop, brand new pattern</text>
 <text x="730.9279999999999" y="540" font-size="25" font-weight="700" fill="#4fd8e8">double-tap</text>
 <text x="950.9279999999999" y="540" font-size="25" fill="#f4f7f9">LIVE: re-captures itself once per loop pass</text>
-<text x="730.9279999999999" y="572" font-size="25" font-weight="700" fill="#4fd8e8">hold 2 s</text>
-<text x="950.9279999999999" y="572" font-size="25" fill="#f4f7f9">drop the loop, back to dry passthrough</text>
-<text x="718.9279999999999" y="626" font-size="27" font-weight="700" fill="#5fe08a" letter-spacing="1.2">THE PATTERN</text>
-<text x="730.9279999999999" y="662" font-size="25" font-weight="700" fill="#5fe08a">SEED</text>
-<text x="950.9279999999999" y="662" font-size="25" fill="#f4f7f9">which pattern. Same seed, same result, every time</text>
-<text x="730.9279999999999" y="694" font-size="25" font-weight="700" fill="#5fe08a">FX</text>
-<text x="950.9279999999999" y="694" font-size="25" fill="#f4f7f9">how many slices get an effect, from none to all</text>
-<text x="730.9279999999999" y="726" font-size="25" font-weight="700" fill="#5fe08a">ORDER</text>
-<text x="950.9279999999999" y="726" font-size="25" fill="#f4f7f9">how scrambled the slice order is</text>
-<text x="730.9279999999999" y="758" font-size="25" font-weight="700" fill="#5fe08a">SLICE</text>
-<text x="950.9279999999999" y="758" font-size="25" fill="#f4f7f9">how finely the loop is cut up</text>
-<text x="730.9279999999999" y="790" font-size="25" font-weight="700" fill="#5fe08a">LENGTH</text>
-<text x="950.9279999999999" y="790" font-size="25" fill="#f4f7f9">8 / 16 / 32 / 64 / 128 / 256 steps (256 = 16 bars)</text>
-<text x="730.9279999999999" y="822" font-size="25" font-weight="700" fill="#5fe08a">PITCH</text>
-<text x="950.9279999999999" y="822" font-size="25" fill="#f4f7f9">how far the pitch effects are allowed to move</text>
-<text x="718.9279999999999" y="876" font-size="27" font-weight="700" fill="#ffb454" letter-spacing="1.2">BLEND &amp; CLOCK</text>
-<text x="730.9279999999999" y="912" font-size="25" font-weight="700" fill="#ffb454">BLEND</text>
-<text x="950.9279999999999" y="912" font-size="25" fill="#f4f7f9">your live input vs the effected loop. Fully left is dry</text>
-<text x="730.9279999999999" y="944" font-size="25" font-weight="700" fill="#ffb454">CLK jack</text>
-<text x="950.9279999999999" y="944" font-size="25" fill="#f4f7f9">clock in. Nothing patched? It free-runs, and that is fine</text>
-<text x="730.9279999999999" y="976" font-size="25" font-weight="700" fill="#ffb454">CLK switch</text>
-<text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock ratio: right /2, centre =1, left x2</text>
-<text x="730.9279999999999" y="1008" font-size="25" font-weight="700" fill="#ffb454">GATE switch</text>
-<text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">left clock, centre auto, right DUAL (two L/R lanes)</text>
-<text x="718.9279999999999" y="1062" font-size="27" font-weight="700" fill="#c08cff" letter-spacing="1.2">THE LIGHTS</text>
-<text x="730.9279999999999" y="1098" font-size="25" font-weight="700" fill="#c08cff">STATE</text>
-<text x="950.9279999999999" y="1098" font-size="25" fill="#f4f7f9">blue idle · red recording · green looping · cyan LIVE</text>
-<text x="730.9279999999999" y="1130" font-size="25" font-weight="700" fill="#c08cff">PLAY</text>
-<text x="950.9279999999999" y="1130" font-size="25" fill="#f4f7f9">ramps once per pass through the loop</text>
-<text x="730.9279999999999" y="1162" font-size="25" font-weight="700" fill="#c08cff">CLOCK</text>
-<text x="950.9279999999999" y="1162" font-size="25" fill="#f4f7f9">clock source — and red if the CPU goes over 80%</text>
-<line x1="718.9279999999999" y1="1222" x2="1930" y2="1222" stroke="#243039" stroke-width="2"/>
-<text x="718.9279999999999" y="1262" font-size="27" font-weight="700" fill="#ff7ab8" letter-spacing="1.2">QUICK START</text>
-<text x="730.9279999999999" y="1298" font-size="25" font-weight="700" fill="#ff7ab8">1</text>
-<text x="762.9279999999999" y="1298" font-size="25" fill="#f4f7f9">Patch audio to IN L / IN R. It passes through straight away.</text>
-<text x="730.9279999999999" y="1330" font-size="25" font-weight="700" fill="#ff7ab8">2</text>
-<text x="762.9279999999999" y="1330" font-size="25" fill="#f4f7f9">Play something. Hold CAPTURE for about a second.</text>
-<text x="730.9279999999999" y="1362" font-size="25" font-weight="700" fill="#ff7ab8">3</text>
-<text x="762.9279999999999" y="1362" font-size="25" fill="#f4f7f9">Bring up FX and ORDER, then turn SEED until you like it.</text>
-<text x="730.9279999999999" y="1394" font-size="25" font-weight="700" fill="#ff7ab8">4</text>
-<text x="762.9279999999999" y="1394" font-size="25" fill="#f4f7f9">BLEND decides how much of the mangling you hear.</text>
-<text x="730.9279999999999" y="1426" font-size="25" font-weight="700" fill="#ff7ab8">5</text>
-<text x="762.9279999999999" y="1426" font-size="25" fill="#f4f7f9">Tap CAPTURE for a new pattern. Hold 2 s to let the loop go.</text>
-<line x1="718.9279999999999" y1="1498" x2="1930" y2="1498" stroke="#243039" stroke-width="2"/>
-<text x="718.9279999999999" y="1536" font-size="25" fill="#ff7ab8" font-weight="700">Free &amp; open source — timncox.github.io/smack-versio</text>
-<text x="718.9279999999999" y="1568" font-size="21" fill="#8b98a3">Third-party firmware. Not a Noise Engineering product and not supported by them. Reversible: flash any official NE firmware to go back.</text>
+<text x="730.9279999999999" y="572" font-size="25" font-weight="700" fill="#4fd8e8">triple-tap</text>
+<text x="950.9279999999999" y="572" font-size="25" fill="#f4f7f9">the config layer — three knobs become settings</text>
+<text x="730.9279999999999" y="604" font-size="25" font-weight="700" fill="#4fd8e8">hold 2 s</text>
+<text x="950.9279999999999" y="604" font-size="25" fill="#f4f7f9">drop the loop, back to dry passthrough</text>
+<text x="718.9279999999999" y="658" font-size="27" font-weight="700" fill="#5fe08a" letter-spacing="1.2">THE PATTERN</text>
+<text x="730.9279999999999" y="694" font-size="25" font-weight="700" fill="#5fe08a">SEED</text>
+<text x="950.9279999999999" y="694" font-size="25" fill="#f4f7f9">which pattern. Same seed, same result, every time</text>
+<text x="730.9279999999999" y="726" font-size="25" font-weight="700" fill="#5fe08a">FX</text>
+<text x="950.9279999999999" y="726" font-size="25" fill="#f4f7f9">how many slices get an effect, from none to all</text>
+<text x="730.9279999999999" y="758" font-size="25" font-weight="700" fill="#5fe08a">ORDER</text>
+<text x="950.9279999999999" y="758" font-size="25" fill="#f4f7f9">how scrambled the slice order is</text>
+<text x="730.9279999999999" y="790" font-size="25" font-weight="700" fill="#5fe08a">SLICE</text>
+<text x="950.9279999999999" y="790" font-size="25" fill="#f4f7f9">how finely the loop is cut up</text>
+<text x="730.9279999999999" y="822" font-size="25" font-weight="700" fill="#5fe08a">LENGTH</text>
+<text x="950.9279999999999" y="822" font-size="25" fill="#f4f7f9">8 / 16 / 32 / 64 / 128 / 256 steps (256 = 16 bars)</text>
+<text x="730.9279999999999" y="854" font-size="25" font-weight="700" fill="#5fe08a">PITCH</text>
+<text x="950.9279999999999" y="854" font-size="25" fill="#f4f7f9">how far pitch effects may move — or a DJ filter</text>
+<text x="718.9279999999999" y="908" font-size="27" font-weight="700" fill="#ffb454" letter-spacing="1.2">BLEND &amp; CLOCK</text>
+<text x="730.9279999999999" y="944" font-size="25" font-weight="700" fill="#ffb454">BLEND</text>
+<text x="950.9279999999999" y="944" font-size="25" fill="#f4f7f9">your live input vs the effected loop. Fully left is dry</text>
+<text x="730.9279999999999" y="976" font-size="25" font-weight="700" fill="#ffb454">CLK jack</text>
+<text x="950.9279999999999" y="976" font-size="25" fill="#f4f7f9">clock in. Nothing patched? It free-runs, and that is fine</text>
+<text x="730.9279999999999" y="1008" font-size="25" font-weight="700" fill="#ffb454">CLK switch</text>
+<text x="950.9279999999999" y="1008" font-size="25" fill="#f4f7f9">clock ratio: right /2, centre =1, left x2</text>
+<text x="730.9279999999999" y="1040" font-size="25" font-weight="700" fill="#ffb454">GATE switch</text>
+<text x="950.9279999999999" y="1040" font-size="25" fill="#f4f7f9">what the button does: left PUNCH, right DUAL lanes</text>
+<text x="718.9279999999999" y="1094" font-size="27" font-weight="700" fill="#c08cff" letter-spacing="1.2">THE LIGHTS</text>
+<text x="730.9279999999999" y="1130" font-size="25" font-weight="700" fill="#c08cff">STATE</text>
+<text x="950.9279999999999" y="1130" font-size="25" fill="#f4f7f9">blue idle · red recording · green looping · cyan LIVE</text>
+<text x="730.9279999999999" y="1162" font-size="25" font-weight="700" fill="#c08cff"></text>
+<text x="950.9279999999999" y="1162" font-size="25" fill="#f4f7f9">white while a PUNCH is held · magenta in the config layer</text>
+<text x="730.9279999999999" y="1194" font-size="25" font-weight="700" fill="#c08cff">PLAY</text>
+<text x="950.9279999999999" y="1194" font-size="25" fill="#f4f7f9">ramps once per pass through the loop</text>
+<text x="730.9279999999999" y="1226" font-size="25" font-weight="700" fill="#c08cff">CLOCK</text>
+<text x="950.9279999999999" y="1226" font-size="25" fill="#f4f7f9">clock source — and red if the CPU goes over 80%</text>
+<line x1="718.9279999999999" y1="1286" x2="1930" y2="1286" stroke="#243039" stroke-width="2"/>
+<text x="718.9279999999999" y="1326" font-size="27" font-weight="700" fill="#ff7ab8" letter-spacing="1.2">QUICK START</text>
+<text x="730.9279999999999" y="1362" font-size="25" font-weight="700" fill="#ff7ab8">1</text>
+<text x="762.9279999999999" y="1362" font-size="25" fill="#f4f7f9">Patch audio to IN L / IN R. It passes through straight away.</text>
+<text x="730.9279999999999" y="1394" font-size="25" font-weight="700" fill="#ff7ab8">2</text>
+<text x="762.9279999999999" y="1394" font-size="25" fill="#f4f7f9">Play something. Hold CAPTURE for about a second.</text>
+<text x="730.9279999999999" y="1426" font-size="25" font-weight="700" fill="#ff7ab8">3</text>
+<text x="762.9279999999999" y="1426" font-size="25" fill="#f4f7f9">Bring up FX and ORDER, then turn SEED until you like it.</text>
+<text x="730.9279999999999" y="1458" font-size="25" font-weight="700" fill="#ff7ab8">4</text>
+<text x="762.9279999999999" y="1458" font-size="25" fill="#f4f7f9">BLEND decides how much of the mangling you hear.</text>
+<text x="730.9279999999999" y="1490" font-size="25" font-weight="700" fill="#ff7ab8">5</text>
+<text x="762.9279999999999" y="1490" font-size="25" fill="#f4f7f9">Tap CAPTURE for a new pattern. Hold 2 s to let the loop go.</text>
+<line x1="718.9279999999999" y1="1500" x2="1930" y2="1500" stroke="#243039" stroke-width="2"/>
+<text x="718.9279999999999" y="1538" font-size="25" fill="#ff7ab8" font-weight="700">Free &amp; open source — timncox.github.io/smack-versio</text>
+<text x="718.9279999999999" y="1570" font-size="21" fill="#8b98a3">Third-party firmware. Not a Noise Engineering product and not supported by them. Reversible: flash any official NE firmware to go back.</text>
 </svg>

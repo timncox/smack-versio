@@ -155,9 +155,23 @@ the most exciting thing this port gains.**
 | Knob 6 | **Seed** | quantized; the "I don't like this pattern" knob |
 | Knob 7 | **Depth** | global fxp bias / pitch range |
 | SW_0 | **Clock ratio** | `÷2 / =1 / ×2` — ticks per input pulse (§5) |
-| SW_1 | **Gate role** | `CLK / TRIG / AUTO` (§5) |
+| SW_1 | **Gate role** | `CLK / TRIG / AUTO` (§5) — ⚠️ **superseded, see below** |
 | Button | **Capture** (short) / **Re-Roll** (long) | FRGMNTS's lesson |
 | Gate | clock and/or capture trigger | §5 |
+
+**SW_1 ⚠️ → this row no longer describes the module.** The switch does not
+select a clock source at all; it selects **who owns the button**: `PUNCH /
+NORMAL / DUAL`. Tier 2's TRIG position went first (AUTO subsumes it — see §5),
+then the explicit CLK position followed, on the grounds that AUTO already picks
+correctly and a manual override for a rare case is a set-once decision. Set-once
+decisions moved to a config layer opened by triple-tapping the button, which
+also carries the punch effect and the PITCH knob's second role as a DJ filter.
+A performance switch position is worth more than a preference.
+
+The deeper point this doc did not anticipate: with seven absolute controls on
+the front there is nothing for a menu to navigate. Borrowing three knobs for
+the length of a gesture beats any list, and all three settings can then show at
+once instead of one at a time behind a cursor.
 
 **Quantized knobs need hysteresis.** Loop Length, Slice Res and Seed are
 discrete, and the knob reading includes summed CV noise. Without a deadband
@@ -200,7 +214,7 @@ every `I/T` frames using a fractional accumulator, re-locking phase on each
 pulse so error can't accumulate. After >2 s of silence, the next pulse also
 emits `0xFA` to reset bar phase.
 
-**Tier 2 — inferred tempo (SW_1 = TRIG).** WTF!'s approach. The gate is a
+**Tier 2 — inferred tempo (⚠️ not a switch position; AUTO selects it).** WTF!'s approach. The gate is a
 *capture trigger*, and the intervals between triggers give the tempo: median
 of the last N intervals, octave-folded into 60–180 BPM. Smack already has
 octave-biasing logic in its v0.6.0 `detect_bpm` — reuse that helper rather
