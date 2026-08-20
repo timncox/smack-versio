@@ -27,13 +27,13 @@
 <text x="43.30" y="28.40" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">density</text>
 <circle cx="25.10" cy="28.65" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
 <text x="25.10" y="36.05" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">LENGTH</text>
-<text x="25.10" y="38.55" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">8/16/32/64</text>
+<text x="25.10" y="38.55" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">8-256 steps</text>
 <circle cx="7.72" cy="39.43" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
 <text x="7.72" y="46.83" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SLICE</text>
 <text x="7.72" y="49.33" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">resolution</text>
 <circle cx="43.30" cy="39.43" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
 <text x="43.30" y="46.83" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">BLEND</text>
-<text x="43.30" y="49.33" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">clean/glitch</text>
+<text x="43.30" y="49.33" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">dry/wet</text>
 <circle cx="25.10" cy="49.31" r="4.50" fill="#000000" stroke="#5a5a5a" stroke-width="0.18" stroke-dasharray="0.6 0.5"/>
 <text x="25.10" y="56.71" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">SEED</text>
 <text x="25.10" y="59.21" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">pattern</text>
@@ -41,14 +41,18 @@
 <text x="43.30" y="67.76" font-family="Helvetica, Arial, sans-serif" font-size="2.5" font-weight="bold" fill="#f2f2f2" text-anchor="middle">PITCH</text>
 <text x="43.30" y="70.26" font-family="Helvetica, Arial, sans-serif" font-size="1.7" font-weight="normal" fill="#8a8a8a" text-anchor="middle">range</text>
 <circle cx="8.35" cy="57.82" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
-<text x="12.95" y="56.22" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">CLK</text>
-<text x="12.95" y="58.62" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">/2 / =1 / x2</text>
+<text x="12.95" y="55.92" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">CLK</text>
+<text x="12.95" y="58.42" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">/2</text>
+<text x="12.95" y="60.12" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">=1</text>
+<text x="12.95" y="61.82" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">x2</text>
 <circle cx="8.35" cy="67.34" r="2.55" fill="#000000" stroke="#5a5a5a" stroke-width="0.15"/>
-<text x="12.95" y="65.74" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
-<text x="12.95" y="68.14" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK / AUTO / TRIG</text>
+<text x="12.95" y="65.44" font-family="Helvetica, Arial, sans-serif" font-size="2.0" font-weight="bold" fill="#f2f2f2" text-anchor="start">GATE</text>
+<text x="12.95" y="67.94" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">CLK</text>
+<text x="12.95" y="69.64" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">AUTO</text>
+<text x="12.95" y="71.34" font-family="Helvetica, Arial, sans-serif" font-size="1.4" font-weight="normal" fill="#8a8a8a" text-anchor="start">TRIG</text>
 <circle cx="25.10" cy="67.34" r="3.00" fill="#000000" stroke="#5a5a5a" stroke-width="0.2"/>
-<text x="25.10" y="72.74" font-family="Helvetica, Arial, sans-serif" font-size="2.1" font-weight="bold" fill="#e8532a" text-anchor="middle">CAPTURE</text>
-<text x="25.10" y="74.84" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="middle">hold = re-roll</text>
+<text x="25.10" y="72.74" font-family="Helvetica, Arial, sans-serif" font-size="2.1" font-weight="bold" fill="#f2f2f2" text-anchor="middle">CAPTURE</text>
+<text x="25.10" y="74.84" font-family="Helvetica, Arial, sans-serif" font-size="1.5" font-weight="normal" fill="#8a8a8a" text-anchor="middle">tap = re-roll</text>
 <circle cx="5.18" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
 <text x="5.18" y="78.59" font-family="Helvetica, Arial, sans-serif" font-size="1.75" font-weight="bold" fill="#f2f2f2" text-anchor="middle">FX</text>
 <circle cx="18.50" cy="83.19" r="3.40" fill="#000000" stroke="#5a5a5a" stroke-width="0.18"/>
