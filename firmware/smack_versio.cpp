@@ -252,25 +252,26 @@ static void dispatch_knobs(void)
  * are mounted horizontally on the Versio, so one position is left and one is
  * right -- and here is the trap:
  *
- *   **THE TWO SWITCHES READ INVERTED FROM EACH OTHER.**
+ *     POS_UP = LEFT,  POS_DOWN = RIGHT   (both switches, same way round)
  *
- *     SW_0:  POS_UP = RIGHT,  POS_DOWN = LEFT
- *     SW_1:  POS_UP = LEFT,   POS_DOWN = RIGHT
+ * Anchored on the one unambiguous observation: DUAL is dispatched on
+ * SW_1's POS_DOWN and appears in the RIGHT-hand position (2026-08-20). It is
+ * a mode rather than a ratio, so there is nothing to misread about it.
  *
- * Both halves are observed, not inferred. SW_0 dispatches POS_UP to /2 and /2
- * is heard on the right; SW_1 dispatches POS_DOWN to DUAL and DUAL appears on
- * the right (both 2026-08-20, by ear and by eye on a module).
+ * Everything else follows and agrees. SW_0 sends POS_UP to CLK_TICKS_DIV2,
+ * which is 48 ticks per pulse and therefore the FAST side -- and the fast side
+ * is heard on the left, which is what the manual has said all along.
  *
  * So the panel reads:
- *     SW_0  right = /2,   centre = =1,   left = x2
- *     SW_1  left  = CLK,  centre = AUTO, right = DUAL
+ *     SW_0  left = x2 (fast),  centre = =1,   right = /2 (slow)
+ *     SW_1  left = CLK,        centre = AUTO, right = DUAL
  *
- * Do not "fix" one of these to match the other. That is exactly the mistake
- * made here on 2026-08-20: SW_1's orientation was observed, assumed to apply
- * to SW_0 as well, and SW_0's correct documentation was helpfully corrected
- * into being wrong. It took a ten-second listening test to undo. If a third
- * switch behaviour is ever added, measure that switch rather than reasoning
- * from this one.
+ * This comment briefly claimed the two switches were mounted inverted from
+ * each other. They are not. That came from reading "left is 2x, right is /2"
+ * as a statement about where the labels sit rather than about what was heard,
+ * and then building a whole theory on it. When a report is about behaviour,
+ * work out the wiring from the behaviour -- do not translate it into a claim
+ * about geometry first and reason from that.
  *
  * The docs speak left/centre/right; only this file speaks libDaisy's
  * vocabulary, and it should not leak back out. */

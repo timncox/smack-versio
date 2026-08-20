@@ -63,7 +63,23 @@ void clk_init(clock_adapter_t *c, int sample_rate, float free_bpm)
     c->iv_n            = 0;
     c->free_bpm        = free_bpm > 0 ? free_bpm : 120.0f;
     c->locked          = 0;
-    c->pending_start   = 0;
+    /*
+     * Announce the free-run clock as a running transport straight away.
+     *
+     * The engine only sets clock_running on MIDI Start, and Start was only
+     * emitted on the first gate edge -- so with nothing patched it never
+     * arrived. That matters more than it sounds: loop_playback_increment()
+     * returns a hard 1.0 unless clock_running, so the captured loop ignored
+     * the tick rate entirely and the ratio switch could not re-time playback
+     * even once free-run honoured it.
+     *
+     * Free-run IS a running clock from the engine's point of view -- ticks are
+     * emitted continuously from the first block. Saying so once, here, is what
+     * makes varispeed follow the switch. A gate edge still re-sends Start to
+     * re-anchor the downbeat, which is a phase reset rather than a state
+     * change, so nothing downstream sees this twice.
+     */
+    c->pending_start   = 1;
     c->tick_now        = 0;
     c->ticks_this_pulse = 0;
 }
