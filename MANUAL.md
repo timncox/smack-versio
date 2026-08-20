@@ -241,9 +241,11 @@ Programmer](https://flash.daisy.audio/) flashes the bootloader and then the
 firmware from Chrome or Edge, and works out the app's `0x90040000` address
 itself — you never type one.
 
-Noise Engineering's own uploader at <https://portal.noiseengineering.us/> is a
-different tool: it flashes *their* firmwares, which is how you put the module
-back to stock. It will not install this one.
+Noise Engineering's own firmware page does accept a file you choose yourself,
+and it is how you put the module back to stock — but it writes internal flash,
+and this build lives in QSPI behind the Daisy bootloader, so it cannot install
+this one. See [FLASHING.md](firmware/FLASHING.md) for why, and what would have
+to change.
 
 ---
 

@@ -48,13 +48,23 @@ unchanged — but nobody has yet flashed *this* firmware with *that* tool. If yo
 do, the check is simple: the module should boot and pass audio. If it comes up
 dead, fall back to the `dfu-util` route below, which is known good.
 
-### Noise Engineering's own uploader is a different thing
+### Noise Engineering's own uploader — and why this build cannot use it
 
-<https://portal.noiseengineering.us/> flashes **Noise Engineering's** firmwares
-onto their modules, chosen from a list. It is how you put the module **back to
-stock** — which is worth knowing, and is the reason none of this is permanent.
-It is not a way to install this firmware, and third-party Versio firmware in
-general is installed with the Daisy tool above.
+NE's firmware page does take a file you choose yourself; there is a real file
+input on it. It is also how you put the module **back to stock**, which is the
+reason none of this is permanent.
+
+**What it will not do is write QSPI**, and that is where this firmware lives.
+The reference third-party firmwares tell the story: WTF! is 91 KB and FRGMNTS
+85 KB, both comfortably inside the STM32H750's 128 KB of internal flash. They
+are plain images at `0x08000000` — no bootloader, no QSPI — which is exactly
+what a stock-firmware flasher writes. This build is 158 KB at `0x90040000`, so
+it needs the Daisy bootloader and the tool above.
+
+Making this installable from NE's page therefore means matching their shape: a
+`BOOT_NONE` build small enough for internal flash. That is measured as feasible
+— 114,472 bytes, right in WTF!/FRGMNTS territory — and written up in
+[BOOT_NONE.md](BOOT_NONE.md). It is not what ships today.
 
 ## What you need
 

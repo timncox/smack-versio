@@ -478,10 +478,15 @@ footer a:hover{color:var(--cy)}
     <code>flash.daisy.audio</code> is a rewrite whose logic ships as WebAssembly. Same vendor,
     same bootloader, same memory map — but nobody has yet flashed <em>this</em> firmware with
     <em>that</em> tool. If it comes up dead, the command-line route below is known good.</p>
-  <p><b>Noise Engineering's own uploader is a different thing.</b>
-    <a href="https://portal.noiseengineering.us/">portal.noiseengineering.us</a> flashes
-    <em>their</em> firmwares from a list — it is how you go back to stock, which is why none of
-    this is permanent. It is not a way to install this.</p>
+  <p><b>Noise Engineering's own uploader, and why this build cannot use it.</b>
+    <a href="https://portal.noiseengineering.us/">Their firmware page</a> does take a file you
+    choose yourself, and it is also how you go back to stock — which is why none of this is
+    permanent. What it will not do is write QSPI, and that is where this firmware lives.</p>
+  <p>The reference third-party firmwares tell the story: <b>WTF! is 91&nbsp;KB and FRGMNTS
+    85&nbsp;KB</b>, both inside the STM32H750's 128&nbsp;KB of internal flash — plain images at
+    <code>0x08000000</code>, no bootloader, no QSPI. This build is 158&nbsp;KB at
+    <code>0x90040000</code>. Matching their shape means a <code>BOOT_NONE</code> build, which
+    is measured as feasible at 114,472&nbsp;bytes but is not what ships today.</p>
 
   <h3 style="font-family:var(--disp);font-size:32px;text-transform:uppercase;margin:44px 0 6px;letter-spacing:.02em">From a terminal</h3>
   <p>What these instructions were built and tested against, and the fallback if the browser
