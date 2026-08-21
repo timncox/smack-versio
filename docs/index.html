@@ -280,7 +280,6 @@ footer a:hover{color:var(--cy)}
 
   <div class="toggles">
     <button class="tg" id="tgDim" aria-pressed="true">Dimensions</button>
-    <button class="tg" id="tgConf" aria-pressed="false">Confidence</button>
   </div>
 
   <div class="drawing">
@@ -505,20 +504,10 @@ footer a:hover{color:var(--cy)}
         <a href="https://github.com/timncox/smack-versio/releases">all releases</a>
         <a href="https://github.com/timncox/smack-versio">source</a>
       </div>
-      <div class="sha"><b>smack_versio.bin</b> · 126,312 bytes<br>
-        SHA-256 467672f8eedf3bad8fbfd4db8abaecf450c0c34dc80f24edb3a0d975cd0258f7</div>
+      <div class="sha"><b>smack_versio.bin</b> · 117,132 bytes<br>
+        SHA-256 53735983020df3a44433249adefabf0a92b3ecc5ce928fea3e07b2c4f3130b2d</div>
     </div>
-    <div class="alarm" style="margin-top:0;border-left-color:var(--led-clock);border-color:rgba(255,77,77,.5);background:linear-gradient(90deg,rgba(255,77,77,.10),rgba(255,77,77,.02) 60%,transparent)">
-      <h3 style="color:var(--led-clock)">⚠ Do not flash v0.1.0</h3>
-      <p><b>v0.1.0 hard-faults on boot.</b> It was tagged before the firmware had ever run on
-        hardware, and the first module to run it produced only a steady buzz — the audio
-        callback overran its buffer on every block, so it emitted noise rather than
-        anything you patched into it. The download above is left in place only so the
-        checksums on the release stay honest.</p>
-      <p><b>The download above is v0.4.1</b>, which is what this manual describes. v0.1.0 is
-        kept only so its checksums stay honest, and is marked as such on the releases page.</p>
-    </div>
-    <div class="alarm" style="margin-top:14px">
+    <div class="alarm" style="margin-top:0">
       <h3>⚠ Before you flash it</h3>
       <p>It is third-party firmware. Noise Engineering did not write it and cannot support
         it, so <b>please do not contact them about it</b>. Installing is fully reversible:
@@ -1142,25 +1131,11 @@ gP.addEventListener("click", e => { const id = e.target.dataset && e.target.data
 gP.addEventListener("mousemove", e => { const id = e.target.dataset && e.target.dataset.id; if (id && id !== selected) select(id); });
 
 /* toggles */
-const tgDim = document.getElementById("tgDim"), tgConf = document.getElementById("tgConf");
+const tgDim = document.getElementById("tgDim");
 tgDim.addEventListener("click", () => {
   const on = tgDim.getAttribute("aria-pressed") === "true";
   tgDim.setAttribute("aria-pressed", String(!on));
   gD.style.display = on ? "none" : "";
-});
-tgConf.addEventListener("click", () => {
-  const on = tgConf.getAttribute("aria-pressed") === "true";
-  tgConf.setAttribute("aria-pressed", String(!on));
-  /* Confidence view: everything derived from the 1:1 template goes cyan; the one
-     hole that was inferred rather than observed goes amber. */
-  gP.querySelectorAll(".hole").forEach(h => {
-    if (on) { h.style.stroke = ""; h.style.strokeWidth = ""; }
-    else {
-      const unver = h.classList.contains("unver");
-      h.style.stroke = unver ? "var(--am)" : "var(--cy)";
-      h.style.strokeWidth = unver ? ".55" : ".32";
-    }
-  });
 });
 
 /* ---------- boot CPU readout simulator ---------- */
