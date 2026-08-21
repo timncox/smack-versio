@@ -561,7 +561,7 @@ footer a:hover{color:var(--cy)}
     also how you go back to stock, which is why none of this is permanent.</p>
   <p>That path needs the <code>BOOT_NONE</code> build, which is a plain internal-flash image at
     <code>0x08000000</code> — the same shape as the other third-party Versio firmwares,
-    <b>WTF! at 91&nbsp;KB and FRGMNTS at 85&nbsp;KB</b>. Ours is 126,312&nbsp;bytes of the
+    <b>WTF! at 91&nbsp;KB and FRGMNTS at 85&nbsp;KB</b>. Ours is 117,132&nbsp;bytes of the
     128&nbsp;KB available. The <code>BOOT_SRAM</code> build is bigger, lives in QSPI behind the
     Daisy bootloader, and cannot use their page.</p>
 
@@ -573,9 +573,10 @@ footer a:hover{color:var(--cy)}
 
 <i># every time — power-cycle first, then while the bootloader waits</i>
 <b>make -C firmware program-dfu</b></pre>
-  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is ~158&nbsp;KB and
-    the STM32H750 has only <b>128&nbsp;KB of internal flash</b>, so it runs from SRAM via the
-    bootloader. Only 26&nbsp;KB of that is this project — the rest is libDaisy and the ST HAL.
+  <p style="margin-top:22px">This is a <code>BOOT_SRAM</code> build. The app is
+    135,592&nbsp;bytes and the STM32H750 has only <b>128&nbsp;KB of internal flash</b>, so it
+    runs from SRAM via the bootloader. About 40&nbsp;KB of that is this project — the rest is
+    libDaisy and the ST HAL.
     It is also why the two reference firmwares are 85–91&nbsp;KB: they were built to fit
     internal flash.</p>
   <p><b>Everything here is reversible.</b> Flashing any official Noise Engineering firmware
