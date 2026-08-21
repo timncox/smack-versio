@@ -267,8 +267,8 @@ footer a:hover{color:var(--cy)}
     </div>
   </div>
   <p style="margin-top:26px">It is a port of <a href="https://github.com/timncox/schwung-smack">Smack</a>,
-    a module for the Ableton Move. The DSP engine is the same code, vendored unmodified — so the
-    sound is not a reimplementation of the original, it <em>is</em> the original.</p>
+    a module for the Ableton Move: the same C engine, recompiled for seven knobs instead of a
+    screen and 23 pads.</p>
 </div></section>
 
 <section id="panel"><div class="wrap reveal">
@@ -653,7 +653,7 @@ footer a:hover{color:var(--cy)}
       <tr><td>Clock adapter</td><td>Gate edges become 24&nbsp;ppqn MIDI clock, so the engine's timing model runs here untouched. It captures a bar from a synthetic pulse train to 0.02%</td></tr>
       <tr><td>Ring recorder</td><td>150 seconds, sized to hold <i>two</i> of the longest loop — the loop that is playing is protected from the recorder, so one would stall it</td></tr>
       <tr><td>SDRAM allocator</td><td>The engine runs on a bump pool in external RAM, 27.63&nbsp;MB of 32&nbsp;MB, which is what let it be ported with no surgery</td></tr>
-      <tr><td>Engine @ 48 kHz</td><td>The upstream Smack suite passes unmodified. Two sample-rate constants differ; nothing else does</td></tr>
+      <tr><td>Engine @ 48 kHz</td><td>The upstream Smack suite passes unmodified — the rate cost two constants and no engine logic. Three later fixes, all found on hardware, do diverge from upstream</td></tr>
       <tr><td>DJ filter</td><td>Two cascaded TPT one-poles per channel: &minus;56&nbsp;dB at 1&nbsp;kHz fully left, &minus;72&nbsp;dB at 100&nbsp;Hz fully right, flat to 0.01&nbsp;dB at centre</td></tr>
       <tr><td>Persistent settings</td><td>The config layer and the free-run tempo survive power cycles, behind a guard that refuses a struct written by any other build</td></tr>
       <tr><td>Flash budget</td><td>The shipping image is 117,132 of 131,072 bytes. It is built for size where the alternative build is built for speed, because only one of them is flash-bound</td></tr>
@@ -687,7 +687,7 @@ footer a:hover{color:var(--cy)}
     <a href="https://timncox.github.io/schwung-smack/">
       <div class="fn">Smack</div>
       <div class="fd">Quantized loop capture, auto-slicing and seeded glitch effects. The
-        original — this firmware runs its engine unmodified.</div>
+        module this one was ported from — same engine, a screen and 23 pads instead of knobs.</div>
       <div class="fh">the parent</div>
     </a>
     <a href="https://timncox.github.io/schwung-mark/">

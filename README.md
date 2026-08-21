@@ -48,7 +48,9 @@ arrangement of the same audio. **BLEND** crossfades clean against glitched.
 Everything stays quantised to the rack's clock.
 
 It is a port of [Smack](https://github.com/timncox/schwung-smack), a module for
-the Ableton Move. The DSP engine is the same code, vendored unmodified.
+the Ableton Move: the same C engine, recompiled for seven knobs instead of a
+screen and 23 pads. The vendored copy has since picked up three fixes of its
+own — see the header of `firmware/vendor/smack_core.h` before re-vendoring.
 
 Because the Versio has seven knobs and no screen, the Move version's per-slice
 editing does not come across. What is left is a density-and-seed instrument:
@@ -92,7 +94,7 @@ bootloader. That is why the bootloader step exists, and it is reversible.
 | [`MANUAL.md`](MANUAL.md) | What the controls do |
 | [`firmware/FLASHING.md`](firmware/FLASHING.md) | Installing, and going back to stock |
 | [`DESIGN.md`](DESIGN.md) | Why it is built this way — hardware constraints, clock architecture, prior art |
-| `firmware/` | The firmware. `vendor/` is the unmodified engine |
+| `firmware/` | The firmware. `vendor/` is the engine, vendored and since diverged |
 | `faceplate/` | Generates a printable panel overlay |
 | [`faceplate/MEASURE.md`](faceplate/MEASURE.md) | Correcting the derived panel geometry |
 

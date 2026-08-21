@@ -17,13 +17,24 @@
 #include "plugin_api_v1.h"
 
 /* ------------------------------------------------------------------------
- * VENDORED from timncox/schwung-smack @ 169905d ("Release Smack 0.15.2").
- * smack_core.c and plugin_api_v1.h alongside are byte-identical to that SHA.
- * The ONLY edits in this directory are the two constants below.
+ * VENDORED from timncox/schwung-smack @ 169905d ("Release Smack 0.15.2"),
+ * and SINCE DIVERGED. plugin_api_v1.h is still byte-identical to that SHA.
+ * smack_core.c is NOT, and neither is this header.
  *
- * Do not fix bugs here — fix them upstream in ~/tim-os/smack and re-vendor,
- * or the two copies drift. Re-vendor with:
+ * Fixes that exist ONLY in this copy — all three found on Versio hardware:
+ *   7e73978  ring recorder stalled behind the playing loop  (+62 lines)
+ *   73aa079  LIVE never fired: play_frame was empty on hardware
+ *   3b18a70  auto BPM detection; all float formatting removed from the engine
+ *
+ * So DO NOT re-vendor by overwriting these files — that silently reverts all
+ * three. The ring stall is the dangerous one: captures keep succeeding and
+ * quietly return pre-stall audio, so nothing looks broken. Land the fixes
+ * upstream first (~/tim-os/scratch/smack-ring-stall.patch applies cleanly
+ * from the smack root), then re-vendor from a SHA that contains them:
  *   git -C ~/tim-os/smack show <sha>:src/smack_core.c > smack_core.c   (etc.)
+ *
+ * For NEW bugs the old rule still stands: prefer fixing upstream and
+ * re-vendoring, or the two copies drift further apart than they already have.
  * ------------------------------------------------------------------------ */
 
 /* 48000, not 44100: libDaisy offers 8/16/32/48/96 kHz only (sai.h). Verified
