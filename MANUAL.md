@@ -62,7 +62,8 @@ Everything is quantised to a clock, so it stays in time with the rest of the
 rack.
 
 This is a port of [Smack](https://github.com/timncox/schwung-smack), a module
-for the Ableton Move. The DSP is the same engine, unmodified.
+for the Ableton Move: the same C engine, recompiled for seven knobs instead of
+a screen and 23 pads.
 
 ### What did not come across
 
