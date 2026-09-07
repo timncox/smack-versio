@@ -287,7 +287,7 @@ static void dispatch_knobs(void)
          * from P[P_PITCH].last at the flip because config_exit() rewrites
          * .last for every knob on the way out of the layer -- and the flip is
          * selected by turning this very knob, so .last would be the position
-         * that chose the filter, not the range Tim set. See apply_config(). */
+         * that chose the filter, not the range you set. See apply_config(). */
         if (i == P_PITCH) G_PITCH_RANGE = v;
     }
 }
@@ -463,7 +463,7 @@ static void apply_config(void)
     static int applied_clock = -1;
 
     if (applied_role != (int)CFG->pitch_role) {
-        /* -1 means this is the first pass after boot rather than a flip Tim
+        /* -1 means this is the first pass after boot rather than a flip you
          * just made. The two paths differ below, and only on the way back. */
         const bool boot = (applied_role == -1);
         applied_role    = (int)CFG->pitch_role;
