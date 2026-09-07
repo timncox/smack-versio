@@ -249,9 +249,17 @@ filter position — without the wait, closing the layer would drop a highpass on
 whatever is playing. Bring the knob back to the notch and it picks up from there,
 which is where a filter sits between gestures anyway.
 
-The trade is that PITCH range loses its knob and is pinned at **one octave**
-while the filter has it. That is a deliberate swap and not a compromise: pitch
-range is a set-and-forget parameter and a filter sweep is a performance one.
+The trade is that PITCH range loses its knob while the filter has it — but it
+**keeps its value**. Whatever you last set the range to is what the pitch
+effects go on using, through the filter and through a power cycle taken with
+the filter still selected. Reaching for a filter does not retune the module.
+
+Hand the knob back and the range is still where you left it. The knob does not
+snap it to wherever the last filter sweep ended: it picks up on your next
+touch, the same soft takeover the config layer uses when you leave it.
+
+That is a deliberate swap and not a compromise: pitch range is a
+set-and-forget parameter and a filter sweep is a performance one.
 
 ---
 
