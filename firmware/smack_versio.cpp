@@ -187,7 +187,13 @@ static Param P[P_COUNT] = {
      * the crossfade in AudioCallback. The entry stays so the knob is read and
      * still drives LED 2. */
     { NULL,            0, 100, -32768, 0.0f },   /* ADC 5 - mid-right   */
-    { "pitch_range",   1,  24, -32768, 0.0f },   /* ADC 6 - lower-right */
+    /* Range taken from settings.h rather than repeated, because the stored
+     * pitch_range is validated against those bounds -- a literal here that
+     * drifted wider would write values that flash then rejects on the next
+     * boot, silently throwing the whole settings sector back to defaults. */
+    { "pitch_range",   (int)SETTINGS_PITCH_RANGE_MIN,
+                       (int)SETTINGS_PITCH_RANGE_MAX, -32768, 0.0f },
+                                                 /* ADC 6 - lower-right */
 };
 
 /*
@@ -222,6 +228,26 @@ static int quantize(const Param &p, float norm)
     return v;
 }
 
+/*
+ * The last value the PITCH knob actually dispatched, in semitones.
+ *
+ * This exists so that handing the knob to the DJ filter does not destroy the
+ * setting. It used to: taking the knob pinned pitch_range at 12, and handing
+ * it back dispatched wherever the filter sweep had left the knob -- so a range
+ * you had set was gone the moment you reached for a filter, and came back as
+ * whatever the last cutoff happened to quantize to.
+ *
+ * RAM, not CFG->pitch_range directly, because the settings compare has no
+ * epsilon on it: writing every dispatch straight to the struct would turn one
+ * sweep of PITCH into a flash erase on the next save tick. apply_config()
+ * copies it into CFG at the role flip, which is the only moment the stored
+ * value can ever be read back.
+ *
+ * Seeded from flash at boot -- see main() -- so it survives a power cycle
+ * taken with the filter still holding the knob.
+ */
+static int G_PITCH_RANGE = 12;
+
 static void dispatch_knobs(void)
 {
     char buf[16];
@@ -231,9 +257,10 @@ static void dispatch_knobs(void)
         if (norm > 1.0f) norm = 1.0f;
 
         /* The PITCH knob has a second job it can be given (see CONFIG
-         * LAYER). While it has it, pitch_range is pinned and this knob's
-         * position means the filter, so dispatching it here would sweep a
-         * parameter the panel is no longer steering. */
+         * LAYER). While it has it, this knob's position means the filter, so
+         * dispatching it here would sweep a parameter the panel is no longer
+         * steering. pitch_range is not pinned while that is true -- it simply
+         * stops moving, holding the last value the knob dispatched. */
         if (i == P_PITCH && CFG->pitch_role) continue;
 
         int v = quantize(P[i], norm);
@@ -254,6 +281,14 @@ static void dispatch_knobs(void)
         P[i].last_norm = norm;
         snprintf(buf, sizeof(buf), "%d", v);
         smack_set_param(S, P[i].key, buf);
+
+        /* Remember what PITCH last meant, so giving its knob to the DJ filter
+         * does not throw the setting away. Shadowed here rather than read back
+         * from P[P_PITCH].last at the flip because config_exit() rewrites
+         * .last for every knob on the way out of the layer -- and the flip is
+         * selected by turning this very knob, so .last would be the position
+         * that chose the filter, not the range you set. See apply_config(). */
+        if (i == P_PITCH) G_PITCH_RANGE = v;
     }
 }
 
@@ -428,21 +463,61 @@ static void apply_config(void)
     static int applied_clock = -1;
 
     if (applied_role != (int)CFG->pitch_role) {
-        applied_role = (int)CFG->pitch_role;
+        /* -1 means this is the first pass after boot rather than a flip you
+         * just made. The two paths differ below, and only on the way back. */
+        const bool boot = (applied_role == -1);
+        applied_role    = (int)CFG->pitch_role;
+
         if (CFG->pitch_role) {
-            /* The knob has been taken for the filter, so PITCH RANGE loses its
-             * control -- pin it at one octave, which is what it is worth when
-             * nothing can steer it. */
-            smack_set_param(S, "pitch_range", "12");
+            /*
+             * The knob has been taken for the filter, so PITCH RANGE loses its
+             * control -- but not its value. It holds the last range the knob
+             * dispatched, and that is the whole point: reaching for a filter
+             * should not silently retune every pitch effect on the module.
+             *
+             * Committed to flash here, and only here. The stored value is
+             * unreadable in role 0 (the knob overwrites it), so this flip is
+             * the only moment it can matter -- and writing it once per flip
+             * rather than once per knob movement is what keeps a PITCH sweep
+             * from costing an erase cycle. See FLASH WEAR in settings.h.
+             */
+            CFG->pitch_range = (uint8_t)G_PITCH_RANGE;
+
+            /* At boot the engine is at its own default and has never been told
+             * this, so it has to be sent. On a live flip the engine already
+             * holds it -- nothing writes pitch_range while role 1 is up -- but
+             * sending it costs one snprintf at a gesture the module is not
+             * otherwise busy with, and it makes the invariant local instead of
+             * an assumption about the rest of the file. */
+            char b[16];
+            snprintf(b, sizeof(b), "%d", G_PITCH_RANGE);
+            smack_set_param(S, "pitch_range", b);
+
             G_DJ_CTL   = 0.0f;
             G_DJ_ARMED = false; /* wait for the notch -- see G_DJ_ARMED */
-        } else {
-            /* Handing the knob back: the engine must take its real position,
-             * not the one the filter left behind. This IS the boot path, and
-             * here it is the right one -- an immediate dispatch is exactly what
-             * "the knob means this again" should do. */
+        } else if (boot) {
+            /* Booting into the printed role. The knob is the truth here and
+             * has never been read, so dispatch on the very next pass. */
             P[P_PITCH].last = -32768;
             G_DJ_CTL        = 0.0f;
+        } else {
+            /*
+             * Handing the knob back after the filter had it.
+             *
+             * This used to be the boot path too -- last = -32768 -- which
+             * dispatches immediately and so jumped pitch_range to wherever the
+             * filter sweep had abandoned the knob. That is the same jump
+             * config_exit() exists to prevent, and the same soft takeover
+             * fixes it: record the current position as already-dispatched, so
+             * the range stays where it was and the knob picks it up on your
+             * next touch.
+             */
+            float n = hw.GetKnobValue(P_PITCH);
+            if (n < 0.0f) n = 0.0f;
+            if (n > 1.0f) n = 1.0f;
+            P[P_PITCH].last      = quantize(P[P_PITCH], n);
+            P[P_PITCH].last_norm = n;
+            G_DJ_CTL             = 0.0f;
         }
     }
 
@@ -1286,6 +1361,12 @@ int main(void)
 
     /* Last session's peak, before this session starts overwriting it. */
     float boot_peak = CFG->cpu_peak;
+
+    /* What PITCH meant when its knob was last taken by the DJ filter. Only
+     * meaningful if it still holds it -- in role 0 the knob overwrites this on
+     * its first dispatch, which is why the stored value is never trusted over
+     * a control that can actually report itself. */
+    G_PITCH_RANGE = (int)CFG->pitch_range;
 
     memset(&HOST, 0, sizeof(HOST));
     HOST.api_version      = 1;

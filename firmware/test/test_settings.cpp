@@ -210,6 +210,15 @@ static int test_config_changes_always_save(void)
     b.clock_ext = 1;
     CHECK(a != b);
 
+    /* pitch_range is the field a knob can move, so it is the one most likely
+     * to acquire an epsilon "to save flash". It must not have one: it is
+     * written exactly once per role flip, and losing that write means the DJ
+     * filter eats the pitch range on the next power cycle -- the bug this
+     * field exists to fix. One semitone is a real change. */
+    b = a;
+    b.pitch_range = (uint8_t)(a.pitch_range + 1);
+    CHECK(a != b);
+
     printf("  ok  every config change is worth a flash write\n");
     return 0;
 }
@@ -244,6 +253,23 @@ static int test_config_bounds_are_enforced(void)
 
     v = d;
     v.clock_ext = 9;
+    CHECK(!settings_valid(v));
+
+    /* pitch_range is handed to the engine verbatim when the DJ filter takes
+     * the knob, so a stale struct must not be able to smuggle a range through.
+     * Zero is the interesting end: the engine's range starts at 1, and 0 would
+     * come from a zeroed sector rather than from anything a knob can produce. */
+    CHECK(d.pitch_range >= SETTINGS_PITCH_RANGE_MIN);
+    CHECK(d.pitch_range <= SETTINGS_PITCH_RANGE_MAX);
+
+    v = d;
+    v.pitch_range = SETTINGS_PITCH_RANGE_MIN;
+    CHECK(settings_valid(v));
+    v.pitch_range = SETTINGS_PITCH_RANGE_MAX;
+    CHECK(settings_valid(v));
+    v.pitch_range = 0;
+    CHECK(!settings_valid(v));
+    v.pitch_range = (uint8_t)(SETTINGS_PITCH_RANGE_MAX + 1);
     CHECK(!settings_valid(v));
 
     /* And the whole point of bumping SETTINGS_VERSION: a struct written before

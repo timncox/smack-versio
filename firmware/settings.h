@@ -31,6 +31,25 @@
  *                 about the setting once you have left -- which is exactly
  *                 the property that makes flash the only place they can live.
  *
+ *   pitch_range   The one exception to the paragraph above, and it earns its
+ *                 place by the same test rather than in spite of it.
+ *
+ *                 pitch_range IS an absolute knob and so has no business
+ *                 here -- while PITCH does its printed job. But pitch_role
+ *                 can hand that knob to the DJ filter, and the moment it
+ *                 does, the knob's position means a filter cutoff and
+ *                 nothing on the panel reports the pitch range any more.
+ *                 It has become exactly the kind of value this sector is
+ *                 for: one no control can express.
+ *
+ *                 So it is written here only at the 0->1 role flip, from a
+ *                 RAM shadow of the last value the knob actually dispatched
+ *                 (G_PITCH_RANGE in smack_versio.cpp). Not on every knob
+ *                 movement -- see FLASH WEAR; a sweep of PITCH would
+ *                 otherwise cost an erase. In role 0 the stored value is
+ *                 simply stale and unread, because the knob overwrites it on
+ *                 the first ADC read, which is the original argument intact.
+ *
  *   cpu_peak      The worst-case block load seen during the *previous* session,
  *                 replayed on the LEDs at boot. This exists because DESIGN.md
  *                 §8 lists CPU headroom as the one open question that can kill
@@ -83,7 +102,7 @@
  * field is added, removed, reordered or re-scaled.
  */
 #define SETTINGS_MAGIC   0x534D4B56u /* 'SMKV' */
-#define SETTINGS_VERSION 2u
+#define SETTINGS_VERSION 3u
 
 /*
  * Config-layer bounds.
@@ -96,6 +115,13 @@
 #define SETTINGS_PITCH_ROLE_MAX 1u
 #define SETTINGS_PUNCH_FX_MAX  26u /* == SMACK_FX_COUNT - 1 */
 #define SETTINGS_CLOCK_EXT_MAX  1u
+
+/* pitch_range mirrors the engine parameter of the same name, whose range is
+ * set by the P[] table in smack_versio.cpp (1..24 semitones). Kept as a
+ * literal for the same reason SETTINGS_PUNCH_FX_MAX is: this header has no
+ * engine dependency, which is what lets it be tested natively. */
+#define SETTINGS_PITCH_RANGE_MIN 1u
+#define SETTINGS_PITCH_RANGE_MAX 24u
 
 /* Significance thresholds — see FLASH WEAR above. */
 #define SETTINGS_BPM_EPS 0.5f  /* BPM      */
@@ -113,7 +139,8 @@ struct VersioSettings
     uint8_t  pitch_role; /* 0 = PITCH RANGE knob, 1 = DJ filter */
     uint8_t  punch_fx;   /* 0 = punch clean, 1.. = force that effect */
     uint8_t  clock_ext;  /* 0 = AUTO detect, 1 = always trust the gate */
-    uint8_t  reserved;   /* keeps the struct a whole number of words */
+    uint8_t  pitch_range; /* semitones, 1..24 -- see PITCH RANGE below.
+                            Also keeps the struct a whole number of words. */
 
     /* A change only counts as a change if it is big enough to be worth a flash
      * erase cycle. Identity fields are compared exactly — a magic/version
@@ -129,9 +156,13 @@ struct VersioSettings
         /* No epsilon: these are choices, not measurements. Every change is
          * deliberate and every one is worth the erase it costs -- and there
          * is no drift to rate-limit, because a knob only writes them while
-         * the config layer is open. */
+         * the config layer is open. pitch_range is the one field a knob can
+         * move outside the layer, which is why smack_versio.cpp shadows it in
+         * RAM and stores it here only at the role flip; if it were written on
+         * every dispatch, an exact compare would turn one sweep of PITCH into
+         * an erase. The rate limiting lives at the write, not here. */
         if(pitch_role != o.pitch_role || punch_fx != o.punch_fx
-           || clock_ext != o.clock_ext)
+           || clock_ext != o.clock_ext || pitch_range != o.pitch_range)
             return false;
         return true;
     }
@@ -149,7 +180,7 @@ static inline VersioSettings settings_defaults(void)
     s.pitch_role   = 0;      /* the knob does what the panel says it does */
     s.punch_fx     = 1;      /* SMACK_FX_RETRIG -- the stutter you expect */
     s.clock_ext    = 0;      /* AUTO: work out whether the gate is a clock */
-    s.reserved     = 0;
+    s.pitch_range  = 12;     /* one octave, until the PITCH knob sets one */
     return s;
 }
 
@@ -161,7 +192,9 @@ static inline bool settings_valid(const VersioSettings &s)
            && s.cpu_peak >= 0.0f && s.cpu_peak <= 1.0f
            && s.pitch_role <= SETTINGS_PITCH_ROLE_MAX
            && s.punch_fx <= SETTINGS_PUNCH_FX_MAX
-           && s.clock_ext <= SETTINGS_CLOCK_EXT_MAX;
+           && s.clock_ext <= SETTINGS_CLOCK_EXT_MAX
+           && s.pitch_range >= SETTINGS_PITCH_RANGE_MIN
+           && s.pitch_range <= SETTINGS_PITCH_RANGE_MAX;
 }
 
 #endif /* SMACK_VERSIO_SETTINGS_H */
